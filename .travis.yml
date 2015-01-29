@@ -1,0 +1,19 @@
+language: python
+
+sudo: false
+
+python:
+  - 3.4
+  - 3.3
+  - 2.7
+  - 2.6
+
+install:
+  - pip install -r requirements-test.txt
+
+before_script:
+  - flake8 taiga
+
+script: nosetests --with-coverage --cover-package=taiga
+
+after_success: coveralls

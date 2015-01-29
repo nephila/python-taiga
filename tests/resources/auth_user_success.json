@@ -1,0 +1,16 @@
+{
+   "color":"#a81523",
+   "id":10,
+   "email":"taiga@taiga.it",
+   "bio":"",
+   "full_name_display":"Andrea Stagi",
+   "username":"astagi",
+   "is_active":true,
+   "default_language":"",
+   "photo":"http://taiga/media/user/b/1/3/1/r2d2android2.png.80x80_q85_crop.jpg",
+   "github_id":null,
+   "big_photo":"http://taiga/media/user/b/1/3/1/r2d2android2.png.300x300_q85_crop.jpg",
+   "full_name":"Andrea Stagi",
+   "auth_token":"f4k3",
+   "default_timezone":""
+}

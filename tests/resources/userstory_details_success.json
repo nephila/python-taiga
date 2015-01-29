@@ -1,0 +1,53 @@
+{
+    "tags":[
+
+    ],
+    "external_reference":null,
+    "points":{
+        "140067":277714,
+        "140064":277714,
+        "140066":277714,
+        "140065":277714
+    },
+    "total_points":null,
+    "comment":"",
+    "milestone_slug":null,
+    "milestone_name":null,
+    "origin_issue":null,
+    "blocked_note_html":"",
+    "description_html":"<p>Description of the story</p>",
+    "id":58190,
+    "version":1,
+    "is_blocked":false,
+    "blocked_note":"",
+    "ref":1,
+    "milestone":null,
+    "project":23145,
+    "owner":21921,
+    "status":116330,
+    "is_closed":false,
+    "is_archived":false,
+    "backlog_order":10000,
+    "sprint_order":10000,
+    "kanban_order":10000,
+    "created_date":"2015-01-22T14:31:37+0000",
+    "modified_date":"2015-01-22T14:31:37+0000",
+    "finish_date":null,
+    "subject":"Test story",
+    "description":"Description of the story",
+    "assigned_to":null,
+    "client_requirement":false,
+    "team_requirement":false,
+    "generated_from_issue":null,
+    "watchers":[
+
+    ],
+    "neighbors":{
+        "next":{
+
+        },
+        "previous":{
+
+        }
+    }
+}
