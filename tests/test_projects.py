@@ -1,6 +1,6 @@
 from taiga.requestmaker import RequestMaker, RequestMakerException
 from taiga.models.base import InstanceResource, ListResource
-from taiga.models import User, Point, UserStoryStatus, Severity
+from taiga.models import User, Point, UserStoryStatus, Severity, Project
 from taiga import TaigaAPI
 import taiga.exceptions
 import json
@@ -34,3 +34,23 @@ class TestProjects(unittest.TestCase):
         self.assertEqual(len(projects), 1)
         self.assertEqual(len(projects[0].users), 1)
         self.assertTrue(isinstance(projects[0].users[0], User))
+
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_star(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        self.assertEqual(project.star().id, 1)
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/star',
+            endpoint='projects', id=1
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_unstar(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        self.assertEqual(project.unstar().id, 1)
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/unstar',
+            endpoint='projects', id=1
+        )
