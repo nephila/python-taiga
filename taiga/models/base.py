@@ -86,9 +86,23 @@ class InstanceResource(Resource):
     def __init__(self, requester, **params):
         self.requester = requester
         for key, value in six.iteritems(params):
-            if six.PY2 and isinstance(value, six.string_types):
-                value = value.encode('utf-8')
+            if six.PY2:
+                value = self._encode_element(value)
             setattr(self, key, value)
+
+    def _encode_element(self, element):
+        if isinstance(element, six.string_types):
+            return element.encode('utf-8')
+        elif isinstance(element, list):
+            for idx, value in enumerate(element):
+                element[idx] = self._encode_element(value)
+            return element
+        elif isinstance(element, dict):
+            for key, value in six.iteritems(element):
+                element[key] = self._encode_element(value)
+            return element
+        else:
+            return element
 
     def update(self):
         self.requester.put(

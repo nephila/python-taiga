@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from taiga.requestmaker import RequestMaker, RequestMakerException
 from taiga.models.base import InstanceResource, ListResource, SearchableList
 import taiga.exceptions
@@ -26,6 +28,20 @@ class Fakes(ListResource):
 
 
 class TestModelBase(unittest.TestCase):
+
+    def test_encoding(self):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        param2 = {
+            'list' : [u'Caf\xe9 project', 'Andrea'],
+            'dict' : {
+                'el1' : 'Andrea',
+                'el2' : u'Caf\xe9 project'
+            }
+        }
+        fake = Fake(rm, id=1, param1=u'Caf\xe9 project', param2=param2)
+        self.assertEqual(fake.param1, 'Café project')
+        self.assertEqual(fake.param2['list'][0], 'Café project')
+        self.assertEqual(fake.param2['dict']['el2'], 'Café project')
 
     @patch('taiga.requestmaker.RequestMaker.put')
     def test_call_model_base_update(self, mock_requestmaker_put):
