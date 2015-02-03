@@ -31,7 +31,10 @@ class TestRequestMaker(unittest.TestCase):
         requests_post.assert_called_once_with(
             'http://host/v1/nowhere', files={'sample' : file_desc},
             data=None, params={},
-            headers={'Authorization': 'Bearer f4k3'}
+            headers={
+                'Authorization': 'Bearer f4k3',
+                'x-disable-pagination': True
+            }
         )
 
     @patch('taiga.requestmaker.requests.put')

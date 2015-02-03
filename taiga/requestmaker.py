@@ -21,7 +21,8 @@ class RequestMaker(object):
     def headers(self):
         headers = {
             'Content-type': 'application/json',
-            'Authorization': 'Bearer {0}'.format(self.token)
+            'Authorization': 'Bearer {0}'.format(self.token),
+            'x-disable-pagination': True
         }
         return headers
 
@@ -55,7 +56,8 @@ class RequestMaker(object):
     def post(self, uri, payload=None, query={}, files={}, **parameters):
         if files:
             headers = {
-                'Authorization': 'Bearer {0}'.format(self.token)
+                'Authorization': 'Bearer {0}'.format(self.token),
+                'x-disable-pagination': True
             }
             data = payload
         else:
