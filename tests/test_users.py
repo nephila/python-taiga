@@ -1,6 +1,6 @@
 from taiga.requestmaker import RequestMaker, RequestMakerException
 from taiga.models.base import InstanceResource, ListResource
-from taiga.models import User, Point, UserStoryStatus, Severity, Project
+from taiga.models import User, Users, Point, UserStoryStatus, Severity, Project
 from taiga import TaigaAPI
 import taiga.exceptions
 import json
@@ -23,3 +23,12 @@ class TestUsers(unittest.TestCase):
         self.assertEqual(len(projects), 2)
         self.assertTrue(isinstance(projects[0], Project))
         self.assertTrue(isinstance(projects[1], Project))
+
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_list_all_users(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(200,
+            create_mock_json('tests/resources/projects_list_success.json'))
+        api = TaigaAPI(token='f4k3')
+        users = api.users.list()
+        self.assertEqual(len(users), 1)
+        self.assertTrue(isinstance(users[0], User))
