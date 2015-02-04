@@ -1,6 +1,6 @@
 from taiga.requestmaker import RequestMaker, RequestMakerException
 from taiga.models.base import InstanceResource, ListResource
-from taiga.models import UserStory, Task
+from taiga.models import UserStory, UserStories, Task
 from taiga import TaigaAPI
 import taiga.exceptions
 import json
@@ -9,6 +9,12 @@ import unittest
 from mock import patch
 from .tools import create_mock_json
 from .tools import MockResponse
+import six
+
+if six.PY2:
+    import_open = '__builtin__.open'
+else:
+    import_open = 'builtins.open'
 
 class TestUserStories(unittest.TestCase):
 
@@ -46,3 +52,26 @@ class TestUserStories(unittest.TestCase):
         userstory = UserStory(rm, id=1, project=1)
         tasks = userstory.list_tasks()
         self.assertEqual(len(tasks), 2)
+
+    @patch(import_open)
+    @patch('taiga.models.base.ListResource._new_resource')
+    def test_file_attach(self, mock_new_resource, mock_open):
+        fd = open('tests/resources/tasks_list_success.json')
+        mock_open.return_value = fd
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        userstory = UserStory(rm, id=1, project=1)
+        userstory.attach('tests/resources/tasks_list_success.json')
+        mock_new_resource.assert_called_with(
+            files={'attached_file': fd},
+            payload={'project': 1, 'object_id': 1}
+        )
+
+    @patch('taiga.models.base.ListResource._new_resource')
+    def test_create_user_story(self, mock_new_resource):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        mock_new_resource.return_value = UserStory(rm)
+        user_story = UserStories(rm).create(1, 'UserStory 1')
+        mock_new_resource.assert_called_with(
+            payload={'project': 1, 'subject': 'UserStory 1'}
+        )
+
