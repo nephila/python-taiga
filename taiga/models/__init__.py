@@ -22,11 +22,17 @@ from .models import IssueStatus
 from .models import IssueStatuses
 from .models import TaskStatus
 from .models import TaskStatuses
+from .models import WikiPage
+from .models import WikiPages
+from .models import WikiLink
+from .models import WikiLinks
+
 
 __all__ = [
     'User', 'Users', 'Project', 'Projects', 'UserStory', 'UserStories',
     'Task', 'Tasks', 'Issue', 'Issues', 'Milestone', 'Milestones',
     'Point', 'Points', 'UserStoryStatus', 'UserStoryStatuses',
     'Severity', 'Severities', 'Priority', 'Priorities', 'IssueStatus',
-    'IssueStatuses', 'TaskStatus', 'TaskStatuses'
+    'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
+    'WikiLink', 'WikiLinks'
 ]

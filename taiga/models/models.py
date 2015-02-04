@@ -487,6 +487,20 @@ class Project(InstanceResource):
     def list_issue_statuses(self):
         return IssueStatuses(self.requester).list(project=self.id)
 
+    def add_wikipage(self, slug, content, **attrs):
+        return WikiPages(self.requester).create(
+            self.id, slug, content, **attrs
+        )
+
+    def list_wikipages(self):
+        return WikiPages(self.requester).list(project=self.id)
+
+    def add_wikilink(self, title, href, **attrs):
+        return WikiLinks(self.requester).create(self.id, title, href, **attrs)
+
+    def list_wikilinks(self):
+        return WikiLinks(self.requester).list(project=self.id)
+
 
 class Projects(ListResource):
 
@@ -494,4 +508,38 @@ class Projects(ListResource):
 
     def create(self, name, description, **attrs):
         attrs.update({'name': name, 'description': description})
+        return self._new_resource(payload=attrs)
+
+
+class WikiPage(InstanceResource):
+
+    endpoint = 'wiki'
+
+    def __unicode__(self):
+        return '{0}'.format(self.slug)
+
+
+class WikiPages(ListResource):
+
+    instance = WikiPage
+
+    def create(self, project, slug, content, **attrs):
+        attrs.update({'project': project, 'slug': slug, 'content': content})
+        return self._new_resource(payload=attrs)
+
+
+class WikiLink(InstanceResource):
+
+    endpoint = 'wiki-links'
+
+    def __unicode__(self):
+        return '{0}'.format(self.title)
+
+
+class WikiLinks(ListResource):
+
+    instance = WikiLink
+
+    def create(self, project, title, href, **attrs):
+        attrs.update({'project': project, 'title': title, 'href': href})
         return self._new_resource(payload=attrs)
