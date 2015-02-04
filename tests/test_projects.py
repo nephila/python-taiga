@@ -1,6 +1,6 @@
 from taiga.requestmaker import RequestMaker, RequestMakerException
 from taiga.models.base import InstanceResource, ListResource
-from taiga.models import User, Point, UserStoryStatus, Severity, Project
+from taiga.models import User, Point, UserStoryStatus, Severity, Project, Projects
 from taiga import TaigaAPI
 import taiga.exceptions
 import json
@@ -53,4 +53,13 @@ class TestProjects(unittest.TestCase):
         mock_requestmaker_post.assert_called_with(
             '/{endpoint}/{id}/unstar',
             endpoint='projects', id=1
+        )
+
+    @patch('taiga.models.base.ListResource._new_resource')
+    def test_create_project(self, mock_new_resource):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        mock_new_resource.return_value = Project(rm)
+        sv = Projects(rm).create('PR 1', 'PR desc 1')
+        mock_new_resource.assert_called_with(
+            payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
