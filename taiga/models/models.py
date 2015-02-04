@@ -63,7 +63,7 @@ class Attachment(InstanceResource):
 
 class Attachments(ListResource):
 
-    def create(self, project, object_id, subject, attached_file, **attrs):
+    def create(self, project, object_id, attached_file, **attrs):
         attrs.update({'project': project, 'object_id': object_id})
         return self._new_resource(
             files={'attached_file': open(attached_file, 'rb')},
@@ -102,10 +102,10 @@ class UserStory(InstanceResource):
     def list_tasks(self):
         return Tasks(self.requester).list(user_story=self.id)
 
-    def attach(self, subject, attached_file, **attrs):
+    def attach(self, attached_file, **attrs):
         return UserStoryAttachments(self.requester).create(
             self.project, self.id,
-            subject, attached_file, **attrs
+            attached_file, **attrs
         )
 
     def __unicode__(self):
@@ -237,10 +237,10 @@ class Task(InstanceResource):
         'is_iocaine', 'external_reference', 'watchers'
     ]
 
-    def attach(self, subject, attached_file, **attrs):
+    def attach(self, attached_file, **attrs):
         return TaskAttachments(self.requester).create(
             self.project, self.id,
-            subject, attached_file, **attrs
+            attached_file, **attrs
         )
 
     def __unicode__(self):
@@ -333,10 +333,10 @@ class Issue(InstanceResource):
         )
         return self
 
-    def attach(self, subject, attached_file, **attrs):
+    def attach(self, attached_file, **attrs):
         return IssueAttachments(self.requester).create(
             self.project, self.id,
-            subject, attached_file, **attrs
+            attached_file, **attrs
         )
 
     def __unicode__(self):
