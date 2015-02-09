@@ -63,3 +63,16 @@ class TestProjects(unittest.TestCase):
         mock_new_resource.assert_called_with(
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
+    @patch('taiga.models.Points.create')
+    def test_add_point(self, mock_new_point):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_point('Point 1', 1.5)
+        mock_new_point.assert_called_with(1, 'Point 1', 1.5)
+
+    @patch('taiga.models.Points.list')
+    def test_list_points(self, mock_list_points):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_points()
+        mock_list_points.assert_called_with(project=1)
