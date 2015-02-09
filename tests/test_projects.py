@@ -64,6 +64,20 @@ class TestProjects(unittest.TestCase):
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
 
+    @patch('taiga.models.Priorities.create')
+    def test_add_priority(self, mock_new_priority):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_priority('Priority 1')
+        mock_new_priority.assert_called_with(1, 'Priority 1')
+
+    @patch('taiga.models.Priorities.list')
+    def test_list_priorities(self, mock_list_priorities):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_priorities()
+        mock_list_priorities.assert_called_with(project=1)
+
     @patch('taiga.models.Severities.create')
     def test_add_severity(self, mock_new_severity):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
