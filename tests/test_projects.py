@@ -64,6 +64,20 @@ class TestProjects(unittest.TestCase):
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
 
+    @patch('taiga.models.UserStoryStatuses.create')
+    def test_add_us_status(self, mock_new_us_status):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_user_story_status('US status 1')
+        mock_new_us_status.assert_called_with(1, 'US status 1')
+
+    @patch('taiga.models.UserStoryStatuses.list')
+    def test_list_us_statuses(self, mock_list_us_statuses):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_user_story_statuses()
+        mock_list_us_statuses.assert_called_with(project=1)
+
     @patch('taiga.models.TaskStatuses.create')
     def test_add_task_status(self, mock_new_task_status):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
