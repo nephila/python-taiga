@@ -64,6 +64,20 @@ class TestProjects(unittest.TestCase):
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
 
+    @patch('taiga.models.Severities.create')
+    def test_add_severity(self, mock_new_severity):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_severity('Severity 1')
+        mock_new_severity.assert_called_with(1, 'Severity 1')
+
+    @patch('taiga.models.Severities.list')
+    def test_list_severities(self, mock_list_severities):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_severities()
+        mock_list_severities.assert_called_with(project=1)
+
     @patch('taiga.models.models.IssueTypes.create')
     def test_add_issue_type(self, mock_new_issue_type):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
