@@ -63,6 +63,21 @@ class TestProjects(unittest.TestCase):
         mock_new_resource.assert_called_with(
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
+
+    @patch('taiga.models.TaskStatuses.create')
+    def test_add_task_status(self, mock_new_task_status):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_task_status('Task status 1')
+        mock_new_task_status.assert_called_with(1, 'Task status 1')
+
+    @patch('taiga.models.TaskStatuses.list')
+    def test_list_task_statuses(self, mock_list_task_statuses):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_task_statuses()
+        mock_list_task_statuses.assert_called_with(project=1)
+
     @patch('taiga.models.Points.create')
     def test_add_point(self, mock_new_point):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
