@@ -142,7 +142,7 @@ for user_story in search_result.user_stories:
 ```
 
 [travis-url]: https://travis-ci.org/nephila/python-taiga
-[travis-image]: http://img.shields.io/travis/nephila/python-taiga.svg
+[travis-image]: http://img.shields.io/travis/nephila/python-taiga.svg?branch=master
 
 [coveralls-url]: https://coveralls.io/r/nephila/python-taiga
 [coveralls-image]: http://img.shields.io/coveralls/nephila/python-taiga/master.svg
