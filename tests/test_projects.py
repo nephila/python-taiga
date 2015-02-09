@@ -161,3 +161,16 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_points()
         mock_list_points.assert_called_with(project=1)
+    @patch('taiga.models.UserStories.create')
+    def test_add_userstory(self, mock_new_userstory):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_user_story('US 1')
+        mock_new_userstory.assert_called_with(1, 'US 1')
+
+    @patch('taiga.models.UserStories.list')
+    def test_list_userstories(self, mock_list_userstories):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_user_stories()
+        mock_list_userstories.assert_called_with(project=1)
