@@ -1,3 +1,4 @@
+from datetime import datetime
 from taiga.requestmaker import RequestMaker, RequestMakerException
 from taiga.models.base import InstanceResource, ListResource
 from taiga.models import User, Point, UserStoryStatus, Severity, Project, Projects
@@ -161,6 +162,23 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_points()
         mock_list_points.assert_called_with(project=1)
+
+    @patch('taiga.models.Milestones.create')
+    def test_add_milestone(self, mock_new_milestone):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        time1 = datetime.now()
+        time2 = datetime.now()
+        project.add_milestone('Milestone 1', time1, time2)
+        mock_new_milestone.assert_called_with(1, 'Milestone 1', time1, time2)
+
+    @patch('taiga.models.Milestones.list')
+    def test_list_milestones(self, mock_list_milestones):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_milestones()
+        mock_list_milestones.assert_called_with(project=1)
+
     @patch('taiga.models.Issues.create')
     def test_add_issue(self, mock_new_issue):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
