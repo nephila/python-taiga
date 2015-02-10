@@ -9,7 +9,12 @@ import unittest
 from mock import patch
 from .tools import create_mock_json
 from .tools import MockResponse
+import six
 
+if six.PY2:
+    import_open = '__builtin__.open'
+else:
+    import_open = 'builtins.open'
 
 class TestIssues(unittest.TestCase):
 
@@ -40,3 +45,16 @@ class TestIssues(unittest.TestCase):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         issue = Issues(rm).create(1, 2, 3, 4, 5, 6)
         self.assertTrue(isinstance(issue, Issue))
+
+    @patch(import_open)
+    @patch('taiga.models.base.ListResource._new_resource')
+    def test_file_attach(self, mock_new_resource, mock_open):
+        fd = open('tests/resources/tasks_list_success.json')
+        mock_open.return_value = fd
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue = Issue(rm, id=1, project=1)
+        issue.attach('tests/resources/tasks_list_success.json')
+        mock_new_resource.assert_called_with(
+            files={'attached_file': fd},
+            payload={'project': 1, 'object_id': 1}
+        )
