@@ -9,6 +9,7 @@ import unittest
 from mock import patch
 from .tools import create_mock_json
 from .tools import MockResponse
+import datetime
 import six
 
 class Fake(InstanceResource):
@@ -122,3 +123,30 @@ class TestModelBase(unittest.TestCase):
         self.assertFalse(searchable_list.get(param1='notexists'), 0)
         self.assertTrue(searchable_list.get(param1='one', param2='a'), 1)
         self.assertTrue(searchable_list.get())
+
+    @patch('taiga.requestmaker.RequestMaker.put')
+    def test_call_model_base_update(self, mock_requestmaker_put):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two')
+        fake.update()
+        mock_requestmaker_put.assert_called_once_with('/{endpoint}/{id}', endpoint='fakes',
+            id=1, payload=fake.to_dict())
+
+    @patch('taiga.requestmaker.RequestMaker.put')
+    def test_datetime_parsing(self, mock_requestmaker_put):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(
+            rm, id=1,
+            created_date='2015-02-10T17:55:05+0000',
+            modified_date='2015-02-10T17:55:05+0000'
+        )
+        self.assertTrue(isinstance(fake.created_date, datetime.datetime))
+        self.assertTrue(isinstance(fake.modified_date, datetime.datetime))
+
+        fake = Fake(
+            rm, id=1,
+            created_date='2015-02-10T17:55:0',
+            modified_date='2015-02-10T17:55:05+0000'
+        )
+        self.assertFalse(isinstance(fake.created_date, datetime.datetime))
+        self.assertTrue(isinstance(fake.modified_date, datetime.datetime))

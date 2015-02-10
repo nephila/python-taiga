@@ -1,3 +1,5 @@
+import dateutil.parser
+import re
 import six
 
 
@@ -86,6 +88,10 @@ class InstanceResource(Resource):
     def __init__(self, requester, **params):
         self.requester = requester
         for key, value in six.iteritems(params):
+            if key in ['created_date', 'modified_date']:
+                if re.compile('\d+-\d+-\d+T\d+:\d+:\d+\+0000').match(value):
+                    d = dateutil.parser.parse(value)
+                    value = d.astimezone(dateutil.tz.tzlocal())
             if six.PY2:
                 value = self._encode_element(value)
             setattr(self, key, value)

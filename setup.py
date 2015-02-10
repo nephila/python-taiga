@@ -20,7 +20,8 @@ setup(
     keywords="taiga kanban wrapper api",
     install_requires=[
         "requests",
-        "six"
+        "six",
+        "python-dateutil"
     ],
     zip_safe=False,
     **extra_kwargs)
