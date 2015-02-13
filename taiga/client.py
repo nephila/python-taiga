@@ -12,6 +12,8 @@ from .models import Severities
 from .models import Priorities
 from .models import IssueStatuses
 from .models import TaskStatuses
+from .models import WikiPages
+from .models import WikiLinks
 from .requestmaker import RequestMaker
 from requests.exceptions import RequestException
 from . import exceptions
@@ -23,6 +25,7 @@ class SearchResult(object):
     tasks = []
     issues = []
     user_stories = []
+    wiki_pages = []
 
 
 class TaigaAPI:
@@ -47,6 +50,8 @@ class TaigaAPI:
         self.task_statuses = TaskStatuses(self.raw_request)
         self.priorities = Priorities(self.raw_request)
         self.user_story_statuses = UserStoryStatuses(self.raw_request)
+        self.wikipages = WikiPages(self.raw_request)
+        self.wikilinks = WikiLinks(self.raw_request)
 
     def search(self, project, text=''):
         result = self.raw_request.get(
@@ -58,6 +63,9 @@ class TaigaAPI:
         search_result.issues = self.issues.parse_list(result['issues'])
         search_result.user_stories = self.user_stories.parse_list(
             result['userstories']
+        )
+        search_result.wikipages = self.wikipages.parse_list(
+            result['wikipages']
         )
         return search_result
 
