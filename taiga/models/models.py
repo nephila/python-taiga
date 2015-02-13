@@ -511,12 +511,28 @@ class Projects(ListResource):
         return self._new_resource(payload=attrs)
 
 
+class WikiAttachment(Attachment):
+
+    endpoint = 'wiki/attachments'
+
+
+class WikiAttachments(Attachments):
+
+    instance = WikiAttachment
+
+
 class WikiPage(InstanceResource):
 
     endpoint = 'wiki'
 
     def __unicode__(self):
         return '{0}'.format(self.slug)
+
+    def attach(self, attached_file, **attrs):
+        return WikiAttachments(self.requester).create(
+            self.project, self.id,
+            attached_file, **attrs
+        )
 
 
 class WikiPages(ListResource):
