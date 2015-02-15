@@ -1,15 +1,11 @@
-from taiga.requestmaker import RequestMaker, RequestMakerException
-from taiga.models.base import InstanceResource, ListResource
+from taiga.requestmaker import RequestMaker
 from taiga.models import UserStory, UserStories, Task
-from taiga import TaigaAPI
-import taiga.exceptions
-import json
-import requests
 import unittest
 from mock import patch
+import six
+from taiga import TaigaAPI
 from .tools import create_mock_json
 from .tools import MockResponse
-import six
 
 if six.PY2:
     import_open = '__builtin__.open'

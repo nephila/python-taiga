@@ -1,6 +1,5 @@
-from taiga.requestmaker import RequestMaker, RequestMakerException
+from taiga.requestmaker import RequestMaker
 import taiga.exceptions
-import json
 import requests
 import unittest
 from mock import patch

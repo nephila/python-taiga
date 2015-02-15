@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from taiga.requestmaker import RequestMaker, RequestMakerException
+from taiga.requestmaker import RequestMaker
 from taiga.models.base import InstanceResource, ListResource, SearchableList
-import taiga.exceptions
-import json
-import requests
 import unittest
 from mock import patch
-from .tools import create_mock_json
-from .tools import MockResponse
 import datetime
-import six
+
 
 class Fake(InstanceResource):
 

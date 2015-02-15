@@ -1,10 +1,6 @@
-from taiga.requestmaker import RequestMaker, RequestMakerException
-from taiga.models.base import InstanceResource, ListResource
-from taiga.models import User, Users, Point, UserStoryStatus, Severity, Project
+from taiga.requestmaker import RequestMaker
+from taiga.models import User, Project
 from taiga import TaigaAPI
-import taiga.exceptions
-import json
-import requests
 import unittest
 from mock import patch
 from .tools import create_mock_json

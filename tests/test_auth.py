@@ -1,6 +1,5 @@
 from taiga import TaigaAPI
 import taiga.exceptions
-import json
 import requests
 import unittest
 from mock import patch

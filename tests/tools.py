@@ -1,4 +1,3 @@
-from mock import Mock
 import json
 
 class MockResponse():
