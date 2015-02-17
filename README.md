@@ -73,7 +73,8 @@ userstory = new_project.add_user_story(
 To add a task to your user story just run
 
 ```python
-userstory.add_task('New Task 2',
+userstory.add_task(
+    'New Task 2',
     new_project.task_statuses[0].id
 )
 ```
@@ -121,7 +122,7 @@ new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 new_project.star()
 ```
 
-An instance can be updated and deleted
+Any instance can be updated and deleted
 
 ```python
 new_project.name = 'New name for my project'
@@ -140,6 +141,8 @@ search_result = api.search(projects[0].id, 'NEW')
 for user_story in search_result.user_stories:
     print (user_story)
 ```
+
+We're working on documentation, you can find a complete example in demo.py.
 
 [travis-url]: https://travis-ci.org/nephila/python-taiga
 [travis-image]: http://img.shields.io/travis/nephila/python-taiga.svg?branch=master
