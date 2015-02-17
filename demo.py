@@ -2,16 +2,18 @@
 
 from taiga import TaigaAPI
 
-api = TaigaAPI()
+api = TaigaAPI(
+    host='http://127.0.0.1:8000'
+)
 
 api.auth(
-    username='yourusername',
-    password='yourpassword'
+    username='admin',
+    password='123123'
 )
 
 new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 
-new_project.name = 'TEST PROJECT 2'
+new_project.name = 'TEST PROJECT 3'
 new_project.update()
 
 jan_feb_milestone = new_project.add_milestone(
@@ -22,11 +24,11 @@ userstory = new_project.add_user_story(
     'New Story', description='Blablablabla',
     milestone=jan_feb_milestone.id
 )
-userstory.attach('Read the README in User Story', 'README.md')
+userstory.attach('README.md')
 
 userstory.add_task('New Task 2',
     new_project.task_statuses[0].id
-).attach('Read the README in Task', 'README.md')
+).attach('README.md')
 
 print (userstory.list_tasks())
 
@@ -37,7 +39,7 @@ newissue = new_project.add_issue(
     new_project.issue_types.get(name='Bug').id,
     new_project.severities.get(name='Minor').id,
     description='Bug #5'
-).attach('Read the README in Issue', 'README.md')
+).attach('README.md')
 
 projects = api.projects.list()
 print (projects)
@@ -52,4 +54,13 @@ projects[0].star()
 
 api.milestones.list()
 
-print api.search(projects[0].id, 'New').user_stories[0].subject
+projects = api.projects.list()
+print (projects)
+
+new_project = projects.get(name='TEST PROJECT 3')
+print (new_project)
+
+users = api.users.list()
+print (users)
+
+print (api.search(projects.get(name='TEST PROJECT 3').id, 'New').user_stories[0].subject)
