@@ -203,3 +203,31 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_user_stories()
         mock_list_userstories.assert_called_with(project=1)
+
+    @patch('taiga.models.WikiPages.create')
+    def test_add_wikipage(self, mock_new_wikipage):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_wikipage('WP 1', 'Content')
+        mock_new_wikipage.assert_called_with(1, 'WP 1', 'Content')
+
+    @patch('taiga.models.WikiPages.list')
+    def test_list_wikipages(self, mock_list_wikipages):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_wikipages()
+        mock_list_wikipages.assert_called_with(project=1)
+
+    @patch('taiga.models.WikiLinks.create')
+    def test_add_wikilink(self, mock_new_wikilink):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_wikilink('WL 1', 'href')
+        mock_new_wikilink.assert_called_with(1, 'WL 1', 'href')
+
+    @patch('taiga.models.WikiLinks.list')
+    def test_list_wikilinks(self, mock_list_wikilinks):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_wikilinks()
+        mock_list_wikilinks.assert_called_with(project=1)
