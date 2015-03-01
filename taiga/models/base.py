@@ -85,6 +85,8 @@ class InstanceResource(Resource):
 
     allowed_params = []
 
+    repr_attribute = 'name'
+
     def __init__(self, requester, **params):
         self.requester = requester
         for key, value in six.iteritems(params):
@@ -142,4 +144,11 @@ class InstanceResource(Resource):
         return cls(requester, **entry)
 
     def __repr__(self):
-        return self.__unicode__()
+        return '{0}({1})'.format(self.__class__.__name__, self.id)
+
+    def __unicode__(self):
+        attr = getattr(self, self.repr_attribute, None)
+        if attr:
+            return '{0}'.format(attr)
+        else:
+            return repr(self)

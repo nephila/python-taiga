@@ -13,6 +13,8 @@ class Fake(InstanceResource):
 
     allowed_params = ['param1', 'param2']
 
+    repr_attribute = 'param1'
+
     def my_method(self):
         response = self.requester.get('/users/{id}/starred', id=self.id)
         return projects.Projects.parse(response.json(), self.requester)
@@ -145,3 +147,12 @@ class TestModelBase(unittest.TestCase):
         )
         self.assertFalse(isinstance(fake.created_date, datetime.datetime))
         self.assertTrue(isinstance(fake.modified_date, datetime.datetime))
+
+    def test_repr(self):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two', param3='three')
+        rep = fake.__unicode__()
+        self.assertEqual(rep, 'one')
+        fake.repr_attribute = 'notexisting'
+        rep = fake.__unicode__()
+        self.assertEqual(rep, '{0}({1})'.format(fake.__class__.__name__, fake.id))

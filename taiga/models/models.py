@@ -6,8 +6,7 @@ class User(InstanceResource):
 
     endpoint = 'users'
 
-    def __unicode__(self):
-        return '{0} ({1})'.format(self.username, self.full_name)
+    repr_attribute = 'full_name'
 
     def starred_projects(self):
         response = self.requester.get(
@@ -37,8 +36,7 @@ class Priority(InstanceResource):
 
     allowed_params = ['name', 'color', 'order', 'project']
 
-    def __unicode__(self):
-        return '{0}'.format(self.name)
+    repr_attribute = 'name'
 
 
 class Priorities(ListResource):
@@ -52,13 +50,12 @@ class Priorities(ListResource):
 
 class Attachment(InstanceResource):
 
+    repr_attribute = 'subject'
+
     allowed_params = [
         'object_id', 'project', 'attached_file',
         'description', 'is_deprecated'
     ]
-
-    def __unicode__(self):
-        return '{0}'.format(self.subject)
 
 
 class Attachments(ListResource):
@@ -85,6 +82,8 @@ class UserStory(InstanceResource):
 
     endpoint = 'userstories'
 
+    repr_attribute = 'subject'
+
     allowed_params = [
         'assigned_to', 'backlog_order', 'blocked_note',
         'client_requirement', 'description', 'is_archived', 'is_blocked',
@@ -108,9 +107,6 @@ class UserStory(InstanceResource):
             attached_file, **attrs
         )
 
-    def __unicode__(self):
-        return '{0}'.format(self.subject)
-
 
 class UserStories(ListResource):
 
@@ -123,14 +119,13 @@ class UserStories(ListResource):
 
 class UserStoryStatus(InstanceResource):
 
+    repr_attribute = 'subject'
+
     endpoint = 'userstory-statuses'
 
     allowed_params = [
         'color', 'is_closed', 'name', 'order', 'project', 'wip_limit'
     ]
-
-    def __unicode__(self):
-        return '{0}'.format(self.subject)
 
 
 class UserStoryStatuses(ListResource):
@@ -146,10 +141,9 @@ class Point(InstanceResource):
 
     endpoint = 'points'
 
-    allowed_params = ['color', 'value', 'name', 'order', 'project']
+    repr_attribute = 'subject'
 
-    def __unicode__(self):
-        return '{0}'.format(self.subject)
+    allowed_params = ['color', 'value', 'name', 'order', 'project']
 
 
 class Points(ListResource):
@@ -173,9 +167,6 @@ class Milestone(InstanceResource):
     parser = {
         'user_stories': UserStories,
     }
-
-    def __unicode__(self):
-        return '{0}'.format(self.name)
 
 
 class Milestones(ListResource):
@@ -203,9 +194,6 @@ class TaskStatus(InstanceResource):
 
     allowed_params = ['name', 'color', 'order', 'project', 'is_closed']
 
-    def __unicode__(self):
-        return '{0}'.format(self.name)
-
 
 class TaskStatuses(ListResource):
 
@@ -230,6 +218,8 @@ class Task(InstanceResource):
 
     endpoint = 'tasks'
 
+    repr_attribute = 'subject'
+
     allowed_params = [
         'assigned_to', 'blocked_note', 'description',
         'is_blocked', 'is_closed', 'milestone', 'project', 'user_story',
@@ -242,9 +232,6 @@ class Task(InstanceResource):
             self.project, self.id,
             attached_file, **attrs
         )
-
-    def __unicode__(self):
-        return '{0}'.format(self.subject)
 
 
 class Tasks(ListResource):
@@ -267,9 +254,6 @@ class IssueType(InstanceResource):
 
     allowed_params = ['name', 'color', 'order', 'project']
 
-    def __unicode__(self):
-        return '{0}'.format(self.name)
-
 
 class IssueTypes(ListResource):
 
@@ -285,9 +269,6 @@ class IssueStatus(InstanceResource):
     endpoint = 'issue-statuses'
 
     allowed_params = ['name', 'color', 'order', 'project', 'is_closed']
-
-    def __unicode__(self):
-        return '{0}'.format(self.name)
 
 
 class IssueStatuses(ListResource):
@@ -312,6 +293,8 @@ class IssueAttachments(Attachments):
 class Issue(InstanceResource):
 
     endpoint = 'issues'
+
+    repr_attribute = 'subject'
 
     allowed_params = [
         'assigned_to', 'blocked_note', 'description',
@@ -339,9 +322,6 @@ class Issue(InstanceResource):
             attached_file, **attrs
         )
 
-    def __unicode__(self):
-        return '{0}'.format(self.subject)
-
 
 class Issues(ListResource):
 
@@ -364,9 +344,6 @@ class Severity(InstanceResource):
     endpoint = 'severities'
 
     allowed_params = ['name', 'color', 'order', 'project']
-
-    def __unicode__(self):
-        return '{0}'.format(self.name)
 
 
 class Severities(ListResource):
@@ -400,9 +377,6 @@ class Project(InstanceResource):
         'points': Points,
         'us_statuses': UserStoryStatuses
     }
-
-    def __unicode__(self):
-        return '{0}'.format(self.name)
 
     def star(self):
         self.requester.post(
@@ -525,8 +499,7 @@ class WikiPage(InstanceResource):
 
     endpoint = 'wiki'
 
-    def __unicode__(self):
-        return '{0}'.format(self.slug)
+    repr_attribute = 'slug'
 
     def attach(self, attached_file, **attrs):
         return WikiAttachments(self.requester).create(
@@ -548,8 +521,7 @@ class WikiLink(InstanceResource):
 
     endpoint = 'wiki-links'
 
-    def __unicode__(self):
-        return '{0}'.format(self.title)
+    repr_attribute = 'title'
 
 
 class WikiLinks(ListResource):
