@@ -151,8 +151,9 @@ class TestModelBase(unittest.TestCase):
     def test_repr(self):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         fake = Fake(rm, id=1, param1='one', param2='two', param3='three')
-        rep = fake.__unicode__()
+        rep = fake._rp()
         self.assertEqual(rep, 'one')
+        self.assertEqual(fake._rp(), str(fake))
         fake.repr_attribute = 'notexisting'
-        rep = fake.__unicode__()
+        rep = fake._rp()
         self.assertEqual(rep, '{0}({1})'.format(fake.__class__.__name__, fake.id))

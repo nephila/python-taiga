@@ -146,7 +146,13 @@ class InstanceResource(Resource):
     def __repr__(self):
         return '{0}({1})'.format(self.__class__.__name__, self.id)
 
+    def __str__(self):
+        return self._rp()
+
     def __unicode__(self):
+        return self._rp().decode('utf-8')
+
+    def _rp(self):
         attr = getattr(self, self.repr_attribute, None)
         if attr:
             return '{0}'.format(attr)
