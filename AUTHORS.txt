@@ -5,3 +5,4 @@ Andrea Stagi <a.stagi@nephila.it>
 Contributors
 ------------
 Marco Federighi <m.federighi@nephila.it>
+Carlo Ascani <c.ascani@nephila.it>
