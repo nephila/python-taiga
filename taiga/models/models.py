@@ -1,5 +1,5 @@
 import datetime
-from .base import InstanceResource, ListResource, SearchableList
+from .base import InstanceResource, ListResource
 
 
 class User(InstanceResource):
@@ -19,15 +19,6 @@ class User(InstanceResource):
 class Users(ListResource):
 
     instance = User
-
-    def list(self, **queryparams):
-        users_list = SearchableList()
-        projects = Projects(self.requester).list()
-        for project in projects:
-            for user in project.users:
-                if user.id not in [user_el.id for user_el in users_list]:
-                    users_list.append(user)
-        return users_list
 
 
 class Priority(InstanceResource):
