@@ -1,6 +1,10 @@
 python-taiga
 ==============
 [![Build Status][travis-image]][travis-url] [![Coveralls Status][coveralls-image]][coveralls-url]
+[![Latest Version](https://pypip.in/version/python-taiga/badge.svg?style=flat)](https://pypi.python.org/pypi/python-taiga/)
+[![Supported Python versions](https://pypip.in/py_versions/python-taiga/badge.svg?style=flat)](https://pypi.python.org/pypi/python-taiga/)
+[![License](https://pypip.in/license/python-taiga/badge.svg?style=flat)](https://pypi.python.org/pypi/python-taiga/)
+[![Downloads](https://pypip.in/download/python-taiga/badge.svg?style=flat)](https://pypi.python.org/pypi/python-taiga/)
 
 A module for using the [Taiga REST API](http://taigaio.github.io/taiga-doc/dist/api.html "Taiga REST API documentation").
 
