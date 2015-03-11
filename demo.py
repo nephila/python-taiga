@@ -11,6 +11,8 @@ api.auth(
     password='123123'
 )
 
+print (api.me())
+
 new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 
 new_project.name = 'TEST PROJECT 3'

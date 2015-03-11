@@ -53,6 +53,9 @@ class TaigaAPI:
         self.wikipages = WikiPages(self.raw_request)
         self.wikilinks = WikiLinks(self.raw_request)
 
+    def me(self):
+        return self.users.get('me')
+
     def search(self, project, text=''):
         result = self.raw_request.get(
             'search', query={'project': project, 'text': text}

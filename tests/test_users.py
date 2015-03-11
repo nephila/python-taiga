@@ -28,3 +28,11 @@ class TestUsers(unittest.TestCase):
         users = api.users.list()
         self.assertEqual(len(users), 1)
         self.assertTrue(isinstance(users[0], User))
+
+    @patch('taiga.models.Users.get')
+    def test_me(self, mock_user_get):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        mock_user_get.return_value = User(rm, full_name='Andrea')
+        api = TaigaAPI(token='f4k3')
+        user = api.me()
+        self.assertEqual(user.full_name, 'Andrea')
