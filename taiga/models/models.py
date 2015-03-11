@@ -492,6 +492,8 @@ class WikiPage(InstanceResource):
 
     repr_attribute = 'slug'
 
+    allowed_params = ['project', 'slug', 'content', 'watchers']
+
     def attach(self, attached_file, **attrs):
         return WikiAttachments(self.requester).create(
             self.project, self.id,
@@ -513,6 +515,8 @@ class WikiLink(InstanceResource):
     endpoint = 'wiki-links'
 
     repr_attribute = 'title'
+
+    allowed_params = ['project', 'title', 'href', 'order']
 
 
 class WikiLinks(ListResource):
