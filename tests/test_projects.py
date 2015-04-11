@@ -33,6 +33,16 @@ class TestProjects(unittest.TestCase):
         self.assertEqual(len(projects[0].users), 1)
         self.assertTrue(isinstance(projects[0].users[0], User))
 
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_stats(self, mock_requestmaker_get):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.stats()
+        mock_requestmaker_get.assert_called_with(
+            '/{endpoint}/{id}/stats',
+            endpoint='projects', id=1
+        )
+
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_star(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')

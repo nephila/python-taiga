@@ -35,3 +35,15 @@ class TestMilestones(unittest.TestCase):
         mock_requestmaker_post.assert_called_with('milestones',
             payload={'project': 1, 'estimated_finish': '2015-02-16',
             'estimated_start': '2015-01-16', 'name': 'Sprint Jan'})
+
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_stats(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(200,
+            create_mock_json('tests/resources/milestone_details_success.json'))
+        api = TaigaAPI(token='f4k3')
+        milestone = api.milestones.get(1)
+        milestone.stats()
+        mock_requestmaker_get.assert_called_with(
+            '/{endpoint}/{id}/stats',
+            endpoint='milestones', id=milestone.id
+        )

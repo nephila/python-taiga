@@ -159,6 +159,13 @@ class Milestone(InstanceResource):
         'user_stories': UserStories,
     }
 
+    def stats(self):
+        response = self.requester.get(
+            '/{endpoint}/{id}/stats',
+            endpoint=self.endpoint, id=self.id
+        )
+        return response.json()
+
 
 class Milestones(ListResource):
 
@@ -368,6 +375,13 @@ class Project(InstanceResource):
         'points': Points,
         'us_statuses': UserStoryStatuses
     }
+
+    def stats(self):
+        response = self.requester.get(
+            '/{endpoint}/{id}/stats',
+            endpoint=self.endpoint, id=self.id
+        )
+        return response.json()
 
     def star(self):
         self.requester.post(
