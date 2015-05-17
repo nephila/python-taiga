@@ -1,5 +1,35 @@
 import datetime
 from .base import InstanceResource, ListResource
+from taiga.exceptions import TaigaException
+
+
+class CustomAttributeResource(InstanceResource):
+
+    def set_attribute(self, id, value, version=1):
+        attributes = self.get_attributes()
+        formatted_id = '{0}'.format(id)
+        if formatted_id in attributes['attributes_values']:
+            attributes['attributes_values'][formatted_id] = value
+        else:
+            raise TaigaException(
+                'Attribute with id {0} doesn\'t exist'.format(formatted_id)
+            )
+        response = self.requester.patch(
+            '/{endpoint}/custom-attributes-values/{id}',
+            endpoint=self.endpoint, id=self.id,
+            payload={
+                'attributes_values': attributes['attributes_values'],
+                'version': version
+            }
+        )
+        return response.json()
+
+    def get_attributes(self):
+        response = self.requester.get(
+            '/{endpoint}/custom-attributes-values/{id}',
+            endpoint=self.endpoint, id=self.id,
+        )
+        return response.json()
 
 
 class User(InstanceResource):
@@ -69,7 +99,7 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
-class UserStory(InstanceResource):
+class UserStory(CustomAttributeResource):
 
     endpoint = 'userstories'
 
@@ -212,7 +242,7 @@ class TaskAttachments(Attachments):
     instance = TaskAttachment
 
 
-class Task(InstanceResource):
+class Task(CustomAttributeResource):
 
     endpoint = 'tasks'
 
@@ -288,7 +318,7 @@ class IssueAttachments(Attachments):
     instance = IssueAttachment
 
 
-class Issue(InstanceResource):
+class Issue(CustomAttributeResource):
 
     endpoint = 'issues'
 
