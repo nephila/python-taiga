@@ -43,6 +43,13 @@ class TestRequestMaker(unittest.TestCase):
         rm.put('/nowhere')
         self.assertTrue(requests_put.called)
 
+    @patch('taiga.requestmaker.requests.patch')
+    def test_call_requests_patch(self, requests_patch):
+        rm = RequestMaker(api_path='/', host='host', token='f4k3')
+        requests_patch.return_value = MockResponse(200, '')
+        rm.patch('/nowhere')
+        self.assertTrue(requests_patch.called)
+
     @patch('taiga.requestmaker.requests.delete')
     def test_call_requests_delete(self, requests_delete):
         rm = RequestMaker(api_path='/', host='host', token='f4k3')
@@ -68,6 +75,12 @@ class TestRequestMaker(unittest.TestCase):
         requests_put.return_value = MockResponse(400, '')
         self.assertRaises(taiga.exceptions.TaigaRestException, rm.put, '/nowhere')
 
+    @patch('taiga.requestmaker.requests.patch')
+    def test_call_requests_patch_raise_exception_on_bad_response(self, requests_patch):
+        rm = RequestMaker(api_path='/', host='host', token='f4k3')
+        requests_patch.return_value = MockResponse(400, '')
+        self.assertRaises(taiga.exceptions.TaigaRestException, rm.patch, '/nowhere')
+
     @patch('taiga.requestmaker.requests.delete')
     def test_call_requests_delete_raise_exception_on_bad_response(self, requests_delete):
         rm = RequestMaker(api_path='/', host='host', token='f4k3')
@@ -91,6 +104,12 @@ class TestRequestMaker(unittest.TestCase):
         rm = RequestMaker(api_path='/', host='host', token='f4k3')
         requests_put.side_effect = requests.RequestException()
         self.assertRaises(taiga.exceptions.TaigaRestException, rm.put, '/nowhere')
+
+    @patch('taiga.requestmaker.requests.patch')
+    def test_call_requests_patch_raise_exception_on_requests_error(self, requests_patch):
+        rm = RequestMaker(api_path='/', host='host', token='f4k3')
+        requests_patch.side_effect = requests.RequestException()
+        self.assertRaises(taiga.exceptions.TaigaRestException, rm.patch, '/nowhere')
 
     @patch('taiga.requestmaker.requests.delete')
     def test_call_requests_delete_raise_exception_on_requests_error(self, requests_delete):
