@@ -560,6 +560,30 @@ class Project(InstanceResource):
     def list_wikilinks(self):
         return WikiLinks(self.requester).list(project=self.id)
 
+    def add_issue_attribute(self, name, **attrs):
+        return IssueAttributes(self.requester).create(
+            self.id, name, **attrs
+        )
+
+    def list_issue_attributes(self):
+        return IssueAttributes(self.requester).list(project=self.id)
+
+    def add_task_attribute(self, name, **attrs):
+        return TaskAttributes(self.requester).create(
+            self.id, name, **attrs
+        )
+
+    def list_task_attributes(self):
+        return TaskAttributes(self.requester).list(project=self.id)
+
+    def add_user_story_attribute(self, name, **attrs):
+        return UserStoryAttributes(self.requester).create(
+            self.id, name, **attrs
+        )
+
+    def list_user_story_attributes(self):
+        return UserStoryAttributes(self.requester).list(project=self.id)
+
 
 class Projects(ListResource):
 
