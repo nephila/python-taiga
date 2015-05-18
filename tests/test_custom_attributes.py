@@ -1,5 +1,5 @@
 from taiga.requestmaker import RequestMaker
-from taiga.models import Issue, Issues
+from taiga.models import Issue, Issues, IssueAttributes, IssueAttribute
 from taiga.exceptions import TaigaException
 import unittest
 from mock import patch
@@ -57,3 +57,11 @@ class TestCustomAttributes(unittest.TestCase):
             '/{endpoint}/custom-attributes-values/{id}',
             endpoint=Issue.endpoint, id=issue.id,
         )
+
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_issue_attribute_creation(self, mock_requestmaker_post):
+        mock_requestmaker_post.return_value = MockResponse(200,
+            create_mock_json('tests/resources/issue_details_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue_attribute = IssueAttributes(rm).create(1, 'new attribute')
+        self.assertTrue(isinstance(issue_attribute, IssueAttribute))

@@ -20,6 +20,12 @@ from .models import Priority
 from .models import Priorities
 from .models import IssueStatus
 from .models import IssueStatuses
+from .models import IssueAttribute
+from .models import IssueAttributes
+from .models import TaskAttribute
+from .models import TaskAttributes
+from .models import UserStoryAttribute
+from .models import UserStoryAttributes
 from .models import TaskStatus
 from .models import TaskStatuses
 from .models import WikiPage
@@ -34,5 +40,7 @@ __all__ = [
     'Point', 'Points', 'UserStoryStatus', 'UserStoryStatuses',
     'Severity', 'Severities', 'Priority', 'Priorities', 'IssueStatus',
     'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
-    'WikiLink', 'WikiLinks'
+    'WikiLink', 'WikiLinks', 'IssueAttribute', 'IssueAttributes',
+    'TaskAttribute', 'TaskAttributes', 'UserStoryAttribute',
+    'UserStoryAttributes'
 ]

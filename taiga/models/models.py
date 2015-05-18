@@ -32,6 +32,26 @@ class CustomAttributeResource(InstanceResource):
         return response.json()
 
 
+class CustomAttribute(InstanceResource):
+
+    repr_attribute = 'name'
+
+    allowed_params = [
+        'name', 'description', 'order', 'project'
+    ]
+
+
+class CustomAttributes(ListResource):
+
+    def create(self, project, name, **attrs):
+        attrs.update(
+            {
+                'project': project, 'name': name
+            }
+        )
+        return self._new_resource(payload=attrs)
+
+
 class User(InstanceResource):
 
     endpoint = 'users'
@@ -365,6 +385,36 @@ class Issues(ListResource):
             }
         )
         return self._new_resource(payload=attrs)
+
+
+class IssueAttribute(CustomAttribute):
+
+    endpoint = 'issue-custom-attributes'
+
+
+class IssueAttributes(CustomAttributes):
+
+    instance = IssueAttribute
+
+
+class TaskAttribute(CustomAttribute):
+
+    endpoint = 'task-custom-attributes'
+
+
+class TaskAttributes(CustomAttributes):
+
+    instance = TaskAttribute
+
+
+class UserStoryAttribute(CustomAttribute):
+
+    endpoint = 'userstory-custom-attributes'
+
+
+class UserStoryAttributes(CustomAttributes):
+
+    instance = UserStoryAttribute
 
 
 class Severity(InstanceResource):
