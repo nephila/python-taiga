@@ -66,3 +66,7 @@ users = api.users.list()
 print (users)
 
 print (api.search(projects.get(name='TEST PROJECT 3').id, 'New').user_stories[0].subject)
+
+print new_project.add_issue_attribute(
+    'Device', description='(iPad, iPod, iPhone, Desktop, etc.)'
+)
