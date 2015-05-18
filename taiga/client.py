@@ -11,6 +11,9 @@ from .models import UserStoryStatuses
 from .models import Severities
 from .models import Priorities
 from .models import IssueStatuses
+from .models import IssueAttributes
+from .models import TaskAttributes
+from .models import UserStoryAttributes
 from .models import TaskStatuses
 from .models import WikiPages
 from .models import WikiLinks
@@ -47,6 +50,9 @@ class TaigaAPI:
         self.severities = Severities(self.raw_request)
         self.points = Points(self.raw_request)
         self.issue_statuses = IssueStatuses(self.raw_request)
+        self.issue_attributes = IssueAttributes(self.raw_request)
+        self.task_attributes = TaskAttributes(self.raw_request)
+        self.user_story_attributes = UserStoryAttributes(self.raw_request)
         self.task_statuses = TaskStatuses(self.raw_request)
         self.priorities = Priorities(self.raw_request)
         self.user_story_statuses = UserStoryStatuses(self.raw_request)

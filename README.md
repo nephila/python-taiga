@@ -96,6 +96,15 @@ newissue = new_project.add_issue(
 )
 ```
 
+### Create a custom attribute
+
+```python
+new_project.add_issue_attribute(
+    'Device', description='(iPad, iPod, iPhone, Desktop, etc.)'
+)
+newissue.set_attribute('1', 'Desktop')
+```
+
 ### List elements
 
 ```python

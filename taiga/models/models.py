@@ -1,5 +1,55 @@
 import datetime
 from .base import InstanceResource, ListResource
+from taiga.exceptions import TaigaException
+
+
+class CustomAttributeResource(InstanceResource):
+
+    def set_attribute(self, id, value, version=1):
+        attributes = self.get_attributes()
+        formatted_id = '{0}'.format(id)
+        if formatted_id in attributes['attributes_values']:
+            attributes['attributes_values'][formatted_id] = value
+        else:
+            raise TaigaException(
+                'Attribute with id {0} doesn\'t exist'.format(formatted_id)
+            )
+        response = self.requester.patch(
+            '/{endpoint}/custom-attributes-values/{id}',
+            endpoint=self.endpoint, id=self.id,
+            payload={
+                'attributes_values': attributes['attributes_values'],
+                'version': version
+            }
+        )
+        return response.json()
+
+    def get_attributes(self):
+        response = self.requester.get(
+            '/{endpoint}/custom-attributes-values/{id}',
+            endpoint=self.endpoint, id=self.id,
+        )
+        return response.json()
+
+
+class CustomAttribute(InstanceResource):
+
+    repr_attribute = 'name'
+
+    allowed_params = [
+        'name', 'description', 'order', 'project'
+    ]
+
+
+class CustomAttributes(ListResource):
+
+    def create(self, project, name, **attrs):
+        attrs.update(
+            {
+                'project': project, 'name': name
+            }
+        )
+        return self._new_resource(payload=attrs)
 
 
 class User(InstanceResource):
@@ -69,7 +119,7 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
-class UserStory(InstanceResource):
+class UserStory(CustomAttributeResource):
 
     endpoint = 'userstories'
 
@@ -212,7 +262,7 @@ class TaskAttachments(Attachments):
     instance = TaskAttachment
 
 
-class Task(InstanceResource):
+class Task(CustomAttributeResource):
 
     endpoint = 'tasks'
 
@@ -288,7 +338,7 @@ class IssueAttachments(Attachments):
     instance = IssueAttachment
 
 
-class Issue(InstanceResource):
+class Issue(CustomAttributeResource):
 
     endpoint = 'issues'
 
@@ -335,6 +385,36 @@ class Issues(ListResource):
             }
         )
         return self._new_resource(payload=attrs)
+
+
+class IssueAttribute(CustomAttribute):
+
+    endpoint = 'issue-custom-attributes'
+
+
+class IssueAttributes(CustomAttributes):
+
+    instance = IssueAttribute
+
+
+class TaskAttribute(CustomAttribute):
+
+    endpoint = 'task-custom-attributes'
+
+
+class TaskAttributes(CustomAttributes):
+
+    instance = TaskAttribute
+
+
+class UserStoryAttribute(CustomAttribute):
+
+    endpoint = 'userstory-custom-attributes'
+
+
+class UserStoryAttributes(CustomAttributes):
+
+    instance = UserStoryAttribute
 
 
 class Severity(InstanceResource):
@@ -479,6 +559,30 @@ class Project(InstanceResource):
 
     def list_wikilinks(self):
         return WikiLinks(self.requester).list(project=self.id)
+
+    def add_issue_attribute(self, name, **attrs):
+        return IssueAttributes(self.requester).create(
+            self.id, name, **attrs
+        )
+
+    def list_issue_attributes(self):
+        return IssueAttributes(self.requester).list(project=self.id)
+
+    def add_task_attribute(self, name, **attrs):
+        return TaskAttributes(self.requester).create(
+            self.id, name, **attrs
+        )
+
+    def list_task_attributes(self):
+        return TaskAttributes(self.requester).list(project=self.id)
+
+    def add_user_story_attribute(self, name, **attrs):
+        return UserStoryAttributes(self.requester).create(
+            self.id, name, **attrs
+        )
+
+    def list_user_story_attributes(self):
+        return UserStoryAttributes(self.requester).list(project=self.id)
 
 
 class Projects(ListResource):

@@ -136,3 +136,28 @@ class RequestMaker(object):
                 full_url, result.status_code,
                 result.text, 'PUT'
             )
+
+    def patch(self, uri, payload=None, query={}, **parameters):
+        try:
+            full_url = self.urljoin(
+                self.host, self.api_path,
+                uri.format(**parameters)
+            )
+            result = requests.patch(
+                full_url,
+                headers=self.headers(),
+                data=json.dumps(payload),
+                params=query
+            )
+        except RequestException:
+            raise exceptions.TaigaRestException(
+                full_url, 400,
+                'Network error!', 'PATCH'
+            )
+        if not self.is_bad_response(result):
+            return result
+        else:
+            raise exceptions.TaigaRestException(
+                full_url, result.status_code,
+                result.text, 'PATCH'
+            )

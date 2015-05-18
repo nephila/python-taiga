@@ -241,3 +241,45 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_wikilinks()
         mock_list_wikilinks.assert_called_with(project=1)
+
+    @patch('taiga.models.IssueAttributes.create')
+    def test_add_issue_attribute(self, mock_new_issue_attr):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_issue_attribute('New Attribute')
+        mock_new_issue_attr.assert_called_with(1, 'New Attribute')
+
+    @patch('taiga.models.IssueAttributes.list')
+    def test_list_issue_attributes(self, mock_list_issues_attr):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_issue_attributes()
+        mock_list_issues_attr.assert_called_with(project=1)
+
+    @patch('taiga.models.TaskAttributes.create')
+    def test_add_task_attribute(self, mock_new_task_attr):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_task_attribute('New Attribute')
+        mock_new_task_attr.assert_called_with(1, 'New Attribute')
+
+    @patch('taiga.models.TaskAttributes.list')
+    def test_list_task_attributes(self, mock_list_issues_attr):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_task_attributes()
+        mock_list_issues_attr.assert_called_with(project=1)
+
+    @patch('taiga.models.UserStoryAttributes.create')
+    def test_add_user_story_attribute(self, mock_new_us_attr):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_user_story_attribute('New Attribute')
+        mock_new_us_attr.assert_called_with(1, 'New Attribute')
+
+    @patch('taiga.models.UserStoryAttributes.list')
+    def test_list_user_story_attributes(self, mock_list_us_attr):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_user_story_attributes()
+        mock_list_us_attr.assert_called_with(project=1)
