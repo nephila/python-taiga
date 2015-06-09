@@ -88,6 +88,7 @@ class Memberships(ListResource):
         attrs.update({'project': project, 'email': email, 'role': role})
         return self._new_resource(payload=attrs)
 
+
 class Priority(InstanceResource):
 
     endpoint = 'priorities'
@@ -501,7 +502,6 @@ class Project(InstanceResource):
 
     def list_memberships(self):
         return Memberships(self.requester).list(project=self.id)
-
 
     def add_user_story(self, subject, **attrs):
         return UserStories(self.requester).create(

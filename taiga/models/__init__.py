@@ -44,5 +44,5 @@ __all__ = [
     'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
     'WikiLink', 'WikiLinks', 'IssueAttribute', 'IssueAttributes',
     'TaskAttribute', 'TaskAttributes', 'UserStoryAttribute',
-    'UserStoryAttributes'
+    'UserStoryAttributes', 'Membership', 'Memberships'
 ]
