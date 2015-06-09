@@ -292,9 +292,9 @@ class TestProjects(unittest.TestCase):
         mock_new_membership.assert_called_with(1, 'test@example.com', 1)
 
     @patch('taiga.models.Memberships.list')
-    def test_list_membership(self, mock_list_membership):
+    def test_list_membership(self, mock_list_memberships):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
-        project.list_membership()
-        mock_list_membership.assert_called_with(project=1)
+        project.list_memberships()
+        mock_list_memberships.assert_called_with(project=1)
 
