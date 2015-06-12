@@ -1,5 +1,7 @@
 from .models import User
 from .models import Users
+from .models import Membership
+from .models import Memberships
 from .models import Project
 from .models import Projects
 from .models import UserStory
@@ -42,5 +44,5 @@ __all__ = [
     'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
     'WikiLink', 'WikiLinks', 'IssueAttribute', 'IssueAttributes',
     'TaskAttribute', 'TaskAttributes', 'UserStoryAttribute',
-    'UserStoryAttributes'
+    'UserStoryAttributes', 'Membership', 'Memberships'
 ]

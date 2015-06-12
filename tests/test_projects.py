@@ -283,3 +283,18 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_user_story_attributes()
         mock_list_us_attr.assert_called_with(project=1)
+
+    @patch('taiga.models.Memberships.create')
+    def test_add_membership(self, mock_new_membership):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_membership('test@example.com', 1)
+        mock_new_membership.assert_called_with(1, 'test@example.com', 1)
+
+    @patch('taiga.models.Memberships.list')
+    def test_list_membership(self, mock_list_memberships):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_memberships()
+        mock_list_memberships.assert_called_with(project=1)
+
