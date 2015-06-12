@@ -7,3 +7,4 @@ Contributors
 Marco Federighi <m.federighi@nephila.it>
 Carlo Ascani <c.ascani@nephila.it>
 Erik Westrup <erik.westrup@gmail.com>
+Jordi Llonch <llonchj@gmail.com>
