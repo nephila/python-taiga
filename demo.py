@@ -44,12 +44,14 @@ newissue = new_project.add_issue(
 ).attach('README.md')
 
 projects = api.projects.list()
+
 print (projects)
 
-for user in projects[0].users:
+for user in new_project.users:
     print (user)
 
 stories = api.user_stories.list()
+
 print (stories)
 
 projects[0].star()
@@ -59,10 +61,12 @@ api.milestones.list()
 projects = api.projects.list()
 print (projects)
 
-new_project = projects.get(name='TEST PROJECT 3')
-print (new_project)
+another_new_project = projects.get(name='TEST PROJECT 3')
+
+print (another_new_project)
 
 users = api.users.list()
+
 print (users)
 
 print (api.search(projects.get(name='TEST PROJECT 3').id, 'New').user_stories[0].subject)
@@ -70,3 +74,12 @@ print (api.search(projects.get(name='TEST PROJECT 3').id, 'New').user_stories[0]
 print new_project.add_issue_attribute(
     'Device', description='(iPad, iPod, iPhone, Desktop, etc.)'
 )
+
+print(new_project.roles)
+
+memberships = new_project.list_memberships()
+new_project.add_role('New role', permissions=["add_issue", "modify_issue"])
+
+new_project.add_membership('stagi.andrea@gmail.com', new_project.roles[0].id)
+for membership in memberships:
+    print (membership.role_name)
