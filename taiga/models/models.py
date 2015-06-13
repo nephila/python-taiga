@@ -451,6 +451,22 @@ class Severities(ListResource):
         return self._new_resource(payload=attrs)
 
 
+class Role(InstanceResource):
+
+    endpoint = 'roles'
+
+    allowed_params = ['name', 'slug', 'order', 'computable']
+
+
+class Roles(ListResource):
+
+    instance = Role
+
+    def create(self, project, name, **attrs):
+        attrs.update({'project': project, 'name': name})
+        return self._new_resource(payload=attrs)
+
+
 class Project(InstanceResource):
 
     endpoint = 'projects'
@@ -470,6 +486,7 @@ class Project(InstanceResource):
         'issue_types': IssueTypes,
         'task_statuses': TaskStatuses,
         'severities': Severities,
+        'roles': Roles,
         'points': Points,
         'us_statuses': UserStoryStatuses
     }
