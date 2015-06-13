@@ -577,6 +577,12 @@ class Project(InstanceResource):
     def list_severities(self):
         return Severities(self.requester).list(project=self.id)
 
+    def add_role(self, name, **attrs):
+        return Roles(self.requester).create(self.id, name, **attrs)
+
+    def list_roles(self):
+        return Roles(self.requester).list(project=self.id)
+
     def add_priority(self, name, **attrs):
         return Priorities(self.requester).create(self.id, name, **attrs)
 
