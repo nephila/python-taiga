@@ -18,6 +18,8 @@ from .models import UserStoryStatus
 from .models import UserStoryStatuses
 from .models import Severity
 from .models import Severities
+from .models import Role
+from .models import Roles
 from .models import Priority
 from .models import Priorities
 from .models import IssueStatus
@@ -44,5 +46,5 @@ __all__ = [
     'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
     'WikiLink', 'WikiLinks', 'IssueAttribute', 'IssueAttributes',
     'TaskAttribute', 'TaskAttributes', 'UserStoryAttribute',
-    'UserStoryAttributes', 'Membership', 'Memberships'
+    'UserStoryAttributes', 'Membership', 'Memberships', 'Role', 'Roles'
 ]

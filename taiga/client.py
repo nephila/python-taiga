@@ -9,6 +9,7 @@ from .models import Milestones
 from .models import Points
 from .models import UserStoryStatuses
 from .models import Severities
+from .models import Roles
 from .models import Priorities
 from .models import IssueStatuses
 from .models import IssueAttributes
@@ -48,6 +49,7 @@ class TaigaAPI:
         self.tasks = Tasks(self.raw_request)
         self.milestones = Milestones(self.raw_request)
         self.severities = Severities(self.raw_request)
+        self.roles = Roles(self.raw_request)
         self.points = Points(self.raw_request)
         self.issue_statuses = IssueStatuses(self.raw_request)
         self.issue_attributes = IssueAttributes(self.raw_request)

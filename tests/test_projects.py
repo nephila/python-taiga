@@ -1,6 +1,7 @@
 from datetime import datetime
 from taiga.requestmaker import RequestMaker
-from taiga.models import User, Point, UserStoryStatus, Severity, Project, Projects
+from taiga.models import User, Point, UserStoryStatus
+from taiga.models import Severity, Role, Project, Projects
 import unittest
 from mock import patch
 from taiga import TaigaAPI
@@ -113,6 +114,20 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_severities()
         mock_list_severities.assert_called_with(project=1)
+
+    @patch('taiga.models.Roles.create')
+    def test_add_role(self, mock_new_role):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_role('Role 1')
+        mock_new_role.assert_called_with(1, 'Role 1')
+
+    @patch('taiga.models.Roles.list')
+    def test_list_roles(self, mock_list_roles):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_roles()
+        mock_list_roles.assert_called_with(project=1)
 
     @patch('taiga.models.models.IssueTypes.create')
     def test_add_issue_type(self, mock_new_issue_type):
