@@ -14,4 +14,3 @@ class TestSeverities(unittest.TestCase):
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'name': 'SV 1'}
         )
-
