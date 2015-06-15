@@ -31,8 +31,6 @@ class TestProjects(unittest.TestCase):
         projects = api.projects.list()
         self.assertEqual(projects[0].description, 'test 1 on real taiga')
         self.assertEqual(len(projects), 1)
-        self.assertEqual(len(projects[0].users), 1)
-        self.assertTrue(isinstance(projects[0].users[0], User))
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_stats(self, mock_requestmaker_get):
