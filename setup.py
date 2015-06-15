@@ -22,7 +22,7 @@ classifiers = [
 
 setup(
     name="python-taiga",
-    version="0.2.0",
+    version="0.3.0",
     packages=find_packages(),
     include_package_data=True,
     description="Taiga python API",
