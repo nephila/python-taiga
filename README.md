@@ -8,6 +8,10 @@ python-taiga
 
 A module for using the [Taiga REST API](http://taigaio.github.io/taiga-doc/dist/api.html "Taiga REST API documentation").
 
+## Install
+
+    pip install python-taiga
+
 ## Getting Started
 
 Getting started with the Taiga API couldn't be easier. Create a
