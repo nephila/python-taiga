@@ -4,6 +4,7 @@ Andrea Stagi <a.stagi@nephila.it>
 
 Contributors
 ------------
+Moritz Lipp <github@mlq.me>
 Marco Federighi <m.federighi@nephila.it>
 Carlo Ascani <c.ascani@nephila.it>
 Erik Westrup <erik.westrup@gmail.com>
