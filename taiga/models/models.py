@@ -316,7 +316,7 @@ class Tasks(ListResource):
 
 class IssueType(InstanceResource):
 
-    endpoint = 'issue-statuses'
+    endpoint = 'issue-types'
 
     allowed_params = ['name', 'color', 'order', 'project']
 
