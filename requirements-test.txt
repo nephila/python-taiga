@@ -1,7 +1,7 @@
 -r requirements.txt
 mock==1.0.1
 coverage==3.7.1
-coveralls
+codecov
 nose
 flake8==2.3.0
 pyflakes==0.8.1
