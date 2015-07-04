@@ -1,6 +1,6 @@
 python-taiga
 ==============
-[![Build Status][travis-image]][travis-url] [![Coveralls Status][coveralls-image]][coveralls-url]
+[![Build Status][travis-image]][travis-url] [![Codecov.io Status][codecovio-image]][codecovio-url]
 [![Latest Version](https://img.shields.io/pypi/v/python-taiga.svg)](https://pypi.python.org/pypi/python-taiga/)
 [![Supported Python versions](https://img.shields.io/badge/python-2.7%2C%202.8%2C%203.3%2C%203.4-blue.svg)](https://pypi.python.org/pypi/python-taiga/)
 [![License](https://img.shields.io/github/license/nephila/python-taiga.svg)](https://pypi.python.org/pypi/python-taiga/)
@@ -164,5 +164,5 @@ We're working on documentation, you can find a complete example in demo.py.
 [travis-url]: https://travis-ci.org/nephila/python-taiga
 [travis-image]: http://img.shields.io/travis/nephila/python-taiga.svg?branch=master
 
-[coveralls-url]: https://coveralls.io/r/nephila/python-taiga
-[coveralls-image]: http://img.shields.io/coveralls/nephila/python-taiga/master.svg
+[codecovio-url]: http://codecov.io/github/nephila/python-taiga?branch=master
+[codecovio-image]: https://img.shields.io/codecov/c/github/nephila/python-taiga.svg
