@@ -704,6 +704,7 @@ class History(InstanceResource):
         self.user_story = HistoryUserStory(self.requester)
         self.wiki = HistoryWiki(self.requester)
 
+
 class HistoryEntity:
 
     endpoint = 'history'
@@ -719,14 +720,14 @@ class HistoryEntity:
         return response.json()
 
     def delete_comment(self, resource_id, ent_id):
-        response = self.requester.post(
+        self.requester.post(
             '/{endpoint}/{entity}/{id}/delete_comment?id={ent_id}',
             endpoint=self.endpoint, entity=self.entity,
             id=resource_id, ent_id=ent_id
         )
 
     def undelete_comment(self, resource_id, ent_id):
-        response = self.requester.post(
+        self.requester.post(
             '/{endpoint}/{entity}/{id}/undelete_comment?id={ent_id}',
             endpoint=self.endpoint, entity=self.entity,
             id=resource_id, ent_id=ent_id
