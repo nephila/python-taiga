@@ -705,7 +705,7 @@ class History(InstanceResource):
         self.wiki = HistoryWiki(self.requester)
 
 
-class HistoryEntity:
+class HistoryEntity(object):
 
     endpoint = 'history'
 
