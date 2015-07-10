@@ -36,6 +36,7 @@ from .models import WikiPage
 from .models import WikiPages
 from .models import WikiLink
 from .models import WikiLinks
+from .models import History
 
 
 __all__ = [
@@ -44,7 +45,7 @@ __all__ = [
     'Point', 'Points', 'UserStoryStatus', 'UserStoryStatuses',
     'Severity', 'Severities', 'Priority', 'Priorities', 'IssueStatus',
     'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
-    'WikiLink', 'WikiLinks', 'IssueAttribute', 'IssueAttributes',
+    'WikiLink', 'WikiLinks', 'History', 'IssueAttribute', 'IssueAttributes',
     'TaskAttribute', 'TaskAttributes', 'UserStoryAttribute',
     'UserStoryAttributes', 'Membership', 'Memberships', 'Role', 'Roles'
 ]

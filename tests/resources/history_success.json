@@ -1,0 +1,48 @@
+[
+    {
+        "diff": {
+            "team_requirement": [
+                false,
+                true
+            ],
+            "finish_date": [
+                "None",
+                "2014-11-17 16:19:04.411139+00:00"
+            ],
+            "is_closed": [
+                false,
+                true
+            ]
+        },
+        "snapshot": null,
+        "values": {},
+        "values_diff": {
+            "team_requirement": [
+                false,
+                true
+            ],
+            "finish_date": [
+                "None",
+                "2014-11-17 16:19:04.411139+00:00"
+            ],
+            "is_closed": [
+                false,
+                true
+            ]
+        },
+        "user": {
+            "pk": 2,
+            "name": "admin"
+        },
+        "delete_comment_user": null,
+        "id": "9660411e-6fea-11e4-a5b3-b499ba565108",
+        "created_at": "2014-11-19T12:50:06+0000",
+        "type": 1,
+        "key": "wiki.userstory:1",
+        "comment": "this is a comment",
+        "comment_html": "<p>this is a comment</p>",
+        "delete_comment_date": null,
+        "is_hidden": false,
+        "is_snapshot": false
+    }
+]
