@@ -127,7 +127,7 @@ tasks = api.tasks.list(project=1)
 You can attach files to issues, user stories and tasks
 
 ```python
-newissue.attach('Read the README in Issue', 'README.md')
+newissue.attach('README.md', description='Read the README in Issue')
 ```
 
 ### Play with instances
