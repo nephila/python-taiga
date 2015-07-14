@@ -71,6 +71,18 @@ class TestProjects(unittest.TestCase):
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
 
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_import_project(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        roles = [{'name': 'Role 1'}]
+        sv = Projects(rm).import_('PR 1 1', 'PR 1 desc 1', roles)
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}', payload={'description': 'PR 1 desc 1',
+                                    'name': 'PR 1 1',
+                                    'roles': [{'name': 'Role 1'}]},
+            endpoint='importer'
+        )
+
     @patch('taiga.models.IssueStatuses.create')
     def test_add_issue_status(self, mock_new_issue_status):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
@@ -192,6 +204,15 @@ class TestProjects(unittest.TestCase):
         project.add_milestone('Milestone 1', time1, time2)
         mock_new_milestone.assert_called_with(1, 'Milestone 1', time1, time2)
 
+    @patch('taiga.models.Milestones.import_')
+    def test_import_milestone(self, mock_import_milestone):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        time1 = datetime.now()
+        time2 = datetime.now()
+        project.import_milestone('Milestone 1', time1, time2)
+        mock_import_milestone.assert_called_with(1, 'Milestone 1', time1, time2)
+
     @patch('taiga.models.Milestones.list')
     def test_list_milestones(self, mock_list_milestones):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
@@ -205,6 +226,13 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.add_issue('Issue 1', 1, 2, 3, 4)
         mock_new_issue.assert_called_with(1, 'Issue 1', 1, 2, 3, 4)
+
+    @patch('taiga.models.Issues.import_')
+    def test_import_issue(self, mock_import_issue):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.import_issue('Issue 1', 1, 2, 3, 4)
+        mock_import_issue.assert_called_with(1, 'Issue 1', 1, 2, 3, 4)
 
     @patch('taiga.models.Issues.list')
     def test_list_issues(self, mock_list_issues):
@@ -220,6 +248,13 @@ class TestProjects(unittest.TestCase):
         project.add_user_story('US 1')
         mock_new_userstory.assert_called_with(1, 'US 1')
 
+    @patch('taiga.models.UserStories.import_')
+    def test_import_userstory(self, mock_import_userstory):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.import_user_story('US 1', 'Closed')
+        mock_import_userstory.assert_called_with(1, 'US 1', 'Closed')
+
     @patch('taiga.models.UserStories.list')
     def test_list_userstories(self, mock_list_userstories):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
@@ -234,6 +269,13 @@ class TestProjects(unittest.TestCase):
         project.add_wikipage('WP 1', 'Content')
         mock_new_wikipage.assert_called_with(1, 'WP 1', 'Content')
 
+    @patch('taiga.models.WikiPages.import_')
+    def test_import_wikipage(self, mock_import_wikipage):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.import_wikipage('Slug 1', 'Content')
+        mock_import_wikipage.assert_called_with(1, 'Slug 1', 'Content')
+
     @patch('taiga.models.WikiPages.list')
     def test_list_wikipages(self, mock_list_wikipages):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
@@ -247,6 +289,13 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.add_wikilink('WL 1', 'href')
         mock_new_wikilink.assert_called_with(1, 'WL 1', 'href')
+
+    @patch('taiga.models.WikiLinks.import_')
+    def test_import_wikilink(self, mock_import_wikilink):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.import_wikilink('WL 1', 'href')
+        mock_import_wikilink.assert_called_with(1, 'WL 1', 'href')
 
     @patch('taiga.models.WikiLinks.list')
     def test_list_wikilinks(self, mock_list_wikilinks):
@@ -282,6 +331,13 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_task_attributes()
         mock_list_issues_attr.assert_called_with(project=1)
+
+    @patch('taiga.models.Tasks.import_')
+    def test_import_task(self, mock_import_task):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.import_task('Task 1', 'New')
+        mock_import_task.assert_called_with(1, 'Task 1', 'New')
 
     @patch('taiga.models.UserStoryAttributes.create')
     def test_add_user_story_attribute(self, mock_new_us_attr):

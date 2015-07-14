@@ -71,3 +71,12 @@ class TestUserStories(unittest.TestCase):
             payload={'project': 1, 'subject': 'UserStory 1'}
         )
 
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_import_user_story(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        user_story = UserStories(rm).import_(1, 'UserStory 1', 'New')
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/{type}', payload={'status': 'New', 'project': 1,
+                                                'subject': 'UserStory 1'},
+            endpoint='importer', type='us', id=1
+        )
