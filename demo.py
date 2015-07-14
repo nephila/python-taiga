@@ -54,6 +54,8 @@ stories = api.user_stories.list()
 
 print (stories)
 
+print (api.history.user_story.get(stories[0].id))
+
 projects[0].star()
 
 api.milestones.list()
