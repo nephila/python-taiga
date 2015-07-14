@@ -18,6 +18,7 @@ from .models import UserStoryAttributes
 from .models import TaskStatuses
 from .models import WikiPages
 from .models import WikiLinks
+from .models import History
 from .requestmaker import RequestMaker
 from requests.exceptions import RequestException
 from . import exceptions
@@ -60,6 +61,7 @@ class TaigaAPI:
         self.user_story_statuses = UserStoryStatuses(self.raw_request)
         self.wikipages = WikiPages(self.raw_request)
         self.wikilinks = WikiLinks(self.raw_request)
+        self.history = History(self.raw_request)
 
     def me(self):
         return self.users.get('me')

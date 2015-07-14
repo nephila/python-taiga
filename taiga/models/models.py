@@ -693,3 +693,70 @@ class WikiLinks(ListResource):
     def create(self, project, title, href, **attrs):
         attrs.update({'project': project, 'title': title, 'href': href})
         return self._new_resource(payload=attrs)
+
+
+class History(InstanceResource):
+
+    def __init__(self, *args, **kwargs):
+        super(History, self).__init__(*args, **kwargs)
+        self.issue = HistoryIssue(self.requester)
+        self.task = HistoryTask(self.requester)
+        self.user_story = HistoryUserStory(self.requester)
+        self.wiki = HistoryWiki(self.requester)
+
+
+class HistoryEntity(object):
+
+    endpoint = 'history'
+
+    def __init__(self, requester):
+        self.requester = requester
+
+    def get(self, resource_id):
+        response = self.requester.get(
+            '/{endpoint}/{entity}/{id}',
+            endpoint=self.endpoint, entity=self.entity, id=resource_id
+        )
+        return response.json()
+
+    def delete_comment(self, resource_id, ent_id):
+        self.requester.post(
+            '/{endpoint}/{entity}/{id}/delete_comment?id={ent_id}',
+            endpoint=self.endpoint, entity=self.entity,
+            id=resource_id, ent_id=ent_id
+        )
+
+    def undelete_comment(self, resource_id, ent_id):
+        self.requester.post(
+            '/{endpoint}/{entity}/{id}/undelete_comment?id={ent_id}',
+            endpoint=self.endpoint, entity=self.entity,
+            id=resource_id, ent_id=ent_id
+        )
+
+
+class HistoryIssue(HistoryEntity):
+
+    def __init__(self, *args, **kwargs):
+        super(type(self), self).__init__(*args, **kwargs)
+        self.entity = 'issue'
+
+
+class HistoryTask(HistoryEntity):
+
+    def __init__(self, *args, **kwargs):
+        super(type(self), self).__init__(*args, **kwargs)
+        self.entity = 'task'
+
+
+class HistoryUserStory(HistoryEntity):
+
+    def __init__(self, *args, **kwargs):
+        super(type(self), self).__init__(*args, **kwargs)
+        self.entity = 'userstory'
+
+
+class HistoryWiki(HistoryEntity):
+
+    def __init__(self, *args, **kwargs):
+        super(type(self), self).__init__(*args, **kwargs)
+        self.entity = 'wiki'
