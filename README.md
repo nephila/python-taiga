@@ -159,6 +159,14 @@ for user_story in search_result.user_stories:
     print (user_story)
 ```
 
+### History
+
+You can access the history of issues, tasks, userstories and wiki pages:
+
+```python
+history = api.history.user_story.get(user_story.id)
+```
+
 We're working on documentation, you can find a complete example in demo.py.
 
 [travis-url]: https://travis-ci.org/nephila/python-taiga
