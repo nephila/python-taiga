@@ -20,6 +20,17 @@ class TestWikiPages(unittest.TestCase):
             payload={'project': 1, 'slug': 'WikiPage-Slug', 'content': 'Some content'}
         )
 
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_import_wikipage(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        wikipage = WikiPages(rm).import_(1, 'WikiPage-Slug', 'Some content')
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/{type}', endpoint='importer', payload={'project': 1,
+                                                                     'content': 'Some content',
+                                                                     'slug': 'WikiPage-Slug'},
+            id=1, type='wiki_page'
+        )
+
     @patch(import_open)
     @patch('taiga.models.base.ListResource._new_resource')
     def test_file_attach(self, mock_new_resource, mock_open):

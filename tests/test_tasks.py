@@ -1,5 +1,5 @@
 from taiga.requestmaker import RequestMaker
-from taiga.models import Task
+from taiga.models import Task, Tasks
 import unittest
 from mock import patch
 import six
@@ -22,4 +22,15 @@ class TestTasks(unittest.TestCase):
         mock_new_resource.assert_called_with(
             files={'attached_file': fd},
             payload={'project': 1, 'object_id': 1}
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_import_task(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        task = Tasks(rm).import_(1, 'Subject', 'New')
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/{type}', endpoint='importer', payload={'project': 1,
+                                                                     'subject': 'Subject',
+                                                                     'status': 'New'},
+            id=1, type='task'
         )

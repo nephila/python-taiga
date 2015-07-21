@@ -41,6 +41,20 @@ class TestIssues(unittest.TestCase):
         issue = Issues(rm).create(1, 2, 3, 4, 5, 6)
         self.assertTrue(isinstance(issue, Issue))
 
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_issue_import(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue = Issues(rm).import_(1, 'subject', 'Normal', 'Closed', 'Normal', 'Wishlist')
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/{type}', type='issue', payload={'type': 'Normal',
+                                                              'project': 1,
+                                                              'subject': 'subject',
+                                                              'priority': 'Normal',
+                                                              'status': 'Closed',
+                                                              'severity': 'Wishlist'},
+            endpoint='importer', id=1
+        )
+
     @patch(import_open)
     @patch('taiga.models.base.ListResource._new_resource')
     def test_file_attach(self, mock_new_resource, mock_open):

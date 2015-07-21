@@ -175,6 +175,19 @@ class UserStories(ListResource):
         attrs.update({'project': project, 'subject': subject})
         return self._new_resource(payload=attrs)
 
+    def import_(self, project, subject, status, **attrs):
+        attrs.update(
+            {
+                'project': project,
+                'subject': subject,
+                'status': status
+            }
+        )
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="us", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
+
 
 class UserStoryStatus(InstanceResource):
 
@@ -253,6 +266,23 @@ class Milestones(ListResource):
         })
         return self._new_resource(payload=attrs)
 
+    def import_(self, project, name, estimated_start,
+                estimated_finish, **attrs):
+        if isinstance(estimated_start, datetime.datetime):
+            estimated_start = estimated_start.strftime('%Y-%m-%d')
+        if isinstance(estimated_finish, datetime.datetime):
+            estimated_finish = estimated_finish.strftime('%Y-%m-%d')
+        attrs.update({
+            'project': project,
+            'name': name,
+            'estimated_start': estimated_start,
+            'estimated_finish': estimated_finish
+        })
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="milestone", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
+
 
 class TaskStatus(InstanceResource):
 
@@ -312,6 +342,19 @@ class Tasks(ListResource):
             }
         )
         return self._new_resource(payload=attrs)
+
+    def import_(self, project, subject, status, **attrs):
+        attrs.update(
+            {
+                'project': project,
+                'subject': subject,
+                'status': status
+            }
+        )
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="task", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
 
 
 class IssueType(InstanceResource):
@@ -403,6 +446,20 @@ class Issues(ListResource):
             }
         )
         return self._new_resource(payload=attrs)
+
+    def import_(self, project, subject, priority, status,
+                issue_type, severity, **attrs):
+        attrs.update(
+            {
+                'project': project, 'subject': subject,
+                'priority': priority, 'status': status,
+                'type': issue_type, 'severity': severity
+            }
+        )
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="issue", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
 
 
 class IssueAttribute(CustomAttribute):
@@ -525,6 +582,11 @@ class Project(InstanceResource):
             self.id, subject, **attrs
         )
 
+    def import_user_story(self, subject, status, **attrs):
+        return UserStories(self.requester).import_(
+            self.id, subject, status, **attrs
+        )
+
     def list_user_stories(self):
         return UserStories(self.requester).list(project=self.id)
 
@@ -535,11 +597,29 @@ class Project(InstanceResource):
             issue_type, severity, **attrs
         )
 
+    def import_issue(self, subject, priority, status,
+                     issue_type, severity, **attrs):
+        return Issues(self.requester).import_(
+            self.id, subject, priority, status,
+            issue_type, severity, **attrs
+        )
+
     def list_issues(self):
         return Issues(self.requester).list(project=self.id)
 
     def add_milestone(self, name, estimated_start, estimated_finish, **attrs):
         return Milestones(self.requester).create(
+            self.id, name, estimated_start,
+            estimated_finish, **attrs
+        )
+
+    def import_milestone(
+            self,
+            name,
+            estimated_start,
+            estimated_finish,
+            **attrs):
+        return Milestones(self.requester).import_(
             self.id, name, estimated_start,
             estimated_finish, **attrs
         )
@@ -558,6 +638,11 @@ class Project(InstanceResource):
 
     def list_task_statuses(self):
         return TaskStatuses(self.requester).list(project=self.id)
+
+    def import_task(self, subject, status, **attrs):
+        return Tasks(self.requester).import_(
+            self.id, subject, status
+        )
 
     def add_user_story_status(self, name, **attrs):
         return UserStoryStatuses(self.requester).create(self.id, name, **attrs)
@@ -600,11 +685,19 @@ class Project(InstanceResource):
             self.id, slug, content, **attrs
         )
 
+    def import_wikipage(self, slug, content, **attrs):
+        return WikiPages(self.requester).import_(
+            self.id, slug, content, **attrs
+        )
+
     def list_wikipages(self):
         return WikiPages(self.requester).list(project=self.id)
 
     def add_wikilink(self, title, href, **attrs):
         return WikiLinks(self.requester).create(self.id, title, href, **attrs)
+
+    def import_wikilink(self, title, href, **attrs):
+        return WikiLinks(self.requester).import_(self.id, title, href, **attrs)
 
     def list_wikilinks(self):
         return WikiLinks(self.requester).list(project=self.id)
@@ -642,6 +735,18 @@ class Projects(ListResource):
         attrs.update({'name': name, 'description': description})
         return self._new_resource(payload=attrs)
 
+    def import_(self, name, description, roles, **attrs):
+        attrs.update(
+            {
+                'name': name,
+                'description': description,
+                'roles': roles
+            }
+        )
+        response = self.requester.post('/{endpoint}', endpoint="importer",
+                                       payload=attrs)
+        return self.instance.parse(self.requester, response.json())
+
 
 class WikiAttachment(Attachment):
 
@@ -676,6 +781,13 @@ class WikiPages(ListResource):
         attrs.update({'project': project, 'slug': slug, 'content': content})
         return self._new_resource(payload=attrs)
 
+    def import_(self, project, slug, content, **attrs):
+        attrs.update({'project': project, 'slug': slug, 'content': content})
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="wiki_page", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
+
 
 class WikiLink(InstanceResource):
 
@@ -693,6 +805,13 @@ class WikiLinks(ListResource):
     def create(self, project, title, href, **attrs):
         attrs.update({'project': project, 'title': title, 'href': href})
         return self._new_resource(payload=attrs)
+
+    def import_(self, project, title, href, **attrs):
+        attrs.update({'project': project, 'title': title, 'href': href})
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="wiki_link", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
 
 
 class History(InstanceResource):

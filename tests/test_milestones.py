@@ -1,5 +1,6 @@
 import datetime
-from taiga.models import UserStory
+from taiga.requestmaker import RequestMaker
+from taiga.models import UserStory, Milestones
 from taiga import TaigaAPI
 import unittest
 from mock import patch
@@ -35,6 +36,20 @@ class TestMilestones(unittest.TestCase):
         mock_requestmaker_post.assert_called_with('milestones',
             payload={'project': 1, 'estimated_finish': '2015-02-16',
             'estimated_start': '2015-01-16', 'name': 'Sprint Jan'})
+
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_milestone_import(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        start_time = datetime.datetime(2015, 1, 16, 0, 0)
+        finish_time = datetime.datetime(2015, 2, 16, 0, 0)
+        milestone = Milestones(rm).import_(1, 'Sprint Jan', start_time, finish_time)
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/{type}', endpoint='importer', payload={'project': 1,
+                                                                     'name': 'Sprint Jan',
+                                                                     'estimated_start': '2015-01-16',
+                                                                     'estimated_finish': '2015-02-16'},
+            id=1, type='milestone'
+        )
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_stats(self, mock_requestmaker_get):
