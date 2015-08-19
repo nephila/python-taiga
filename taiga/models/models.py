@@ -1,6 +1,5 @@
 import datetime
 from .base import InstanceResource, ListResource
-from taiga.exceptions import TaigaException
 
 
 class CustomAttributeResource(InstanceResource):
