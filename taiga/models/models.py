@@ -8,12 +8,7 @@ class CustomAttributeResource(InstanceResource):
     def set_attribute(self, id, value, version=1):
         attributes = self.get_attributes()
         formatted_id = '{0}'.format(id)
-        if formatted_id in attributes['attributes_values']:
-            attributes['attributes_values'][formatted_id] = value
-        else:
-            raise TaigaException(
-                'Attribute with id {0} doesn\'t exist'.format(formatted_id)
-            )
+        attributes['attributes_values'][formatted_id] = value
         response = self.requester.patch(
             '/{endpoint}/custom-attributes-values/{id}',
             endpoint=self.endpoint, id=self.id,
@@ -148,13 +143,13 @@ class UserStory(CustomAttributeResource):
         'client_requirement', 'description', 'is_archived', 'is_blocked',
         'is_closed', 'kanban_order', 'milestone', 'points', 'project',
         'sprint_order', 'status', 'subject', 'tags', 'team_requirement',
-        'watchers'
+        'watchers', 'version'
     ]
 
     def add_task(self, subject, status, **attrs):
         return Tasks(self.requester).create(
             self.project, subject, status,
-            user_story=self.id
+            user_story=self.id, **attrs
         )
 
     def list_tasks(self):
@@ -320,7 +315,7 @@ class Task(CustomAttributeResource):
         'assigned_to', 'blocked_note', 'description',
         'is_blocked', 'is_closed', 'milestone', 'project', 'user_story',
         'status', 'subject', 'tags', 'us_order', 'taskboard_order',
-        'is_iocaine', 'external_reference', 'watchers'
+        'is_iocaine', 'external_reference', 'watchers', 'version'
     ]
 
     def attach(self, attached_file, **attrs):
