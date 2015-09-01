@@ -35,17 +35,6 @@ class TestCustomAttributes(unittest.TestCase):
         )
 
     @patch('taiga.requestmaker.RequestMaker.get')
-    @patch('taiga.requestmaker.RequestMaker.patch')
-    def test_edit_wrong_issue_custom_attribute(self, mock_requestmaker_patch, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/issue_customattr_success.json'))
-        mock_requestmaker_patch.return_value = MockResponse(200,
-            create_mock_json('tests/resources/issue_customattr_success.json'))
-        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
-        issue = Issue(rm, id=1, project=1)
-        self.assertRaises(TaigaException, issue.set_attribute, 2, 13)
-
-    @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_issue_custom_attributes(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(200,
             create_mock_json('tests/resources/issue_customattr_success.json'))
