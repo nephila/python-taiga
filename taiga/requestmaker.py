@@ -10,10 +10,11 @@ class RequestMakerException(Exception):
 
 class RequestMaker(object):
 
-    def __init__(self, api_path, host, token):
+    def __init__(self, api_path, host, token, token_type='Bearer'):
         self.api_path = api_path
         self.host = host
         self.token = token
+        self.token_type = token_type
 
     def is_bad_response(self, response):
         return 400 <= response.status_code <= 500
@@ -21,7 +22,7 @@ class RequestMaker(object):
     def headers(self):
         headers = {
             'Content-type': 'application/json',
-            'Authorization': 'Bearer {0}'.format(self.token),
+            'Authorization': '{0} {1}'.format(self.token_type, self.token),
             'x-disable-pagination': True
         }
         return headers
@@ -56,7 +57,7 @@ class RequestMaker(object):
     def post(self, uri, payload=None, query={}, files={}, **parameters):
         if files:
             headers = {
-                'Authorization': 'Bearer {0}'.format(self.token),
+                'Authorization': '{0} {1}'.format(self.token_type, self.token),
                 'x-disable-pagination': True
             }
             data = payload

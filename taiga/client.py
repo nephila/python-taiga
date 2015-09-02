@@ -35,11 +35,14 @@ class SearchResult(object):
 
 class TaigaAPI:
 
-    def __init__(self, host='https://api.taiga.io', token=None):
+    def __init__(self, host='https://api.taiga.io', token=None,
+                 token_type='Bearer'):
         self.host = host
         self.token = token
+        self.token_type = token_type
         if token:
-            self.raw_request = RequestMaker('/api/v1', self.host, self.token)
+            self.raw_request = RequestMaker('/api/v1', self.host, self.token,
+                                            self.token_type)
             self._init_resources()
 
     def _init_resources(self):
@@ -111,5 +114,6 @@ class TaigaAPI:
                 'GET'
             )
         self.token = response.json()['auth_token']
-        self.raw_request = RequestMaker('/api/v1', self.host, self.token)
+        self.raw_request = RequestMaker('/api/v1', self.host, self.token,
+                                        'Bearer')
         self._init_resources()
