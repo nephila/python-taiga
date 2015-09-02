@@ -117,3 +117,56 @@ class TaigaAPI:
         self.raw_request = RequestMaker('/api/v1', self.host, self.token,
                                         'Bearer')
         self._init_resources()
+
+    def auth_app(self, app_id, app_secret, auth_code, state=''):
+        headers = {
+            'Content-type': 'application/json'
+        }
+        payload = {
+            'application': app_id,
+            'auth_code': auth_code,
+            'state': state
+        }
+        try:
+            full_url = self.host + '/api/v1/application-tokens/validate'
+            response = requests.post(
+                full_url,
+                data=json.dumps(payload),
+                headers=headers
+            )
+        except RequestException:
+            raise exceptions.TaigaRestException(
+                full_url, 400,
+                'NETWORK ERROR', 'POST'
+            )
+        if response.status_code != 200:
+            raise exceptions.TaigaRestException(
+                full_url,
+                response.status_code,
+                response.text,
+                'POST'
+            )
+        cyphered_token = response.json().get('cyphered_token', '')
+        if cyphered_token:
+            from jwkest.jwk import SYMKey
+            from jwkest.jwe import JWE
+
+            sym_key = SYMKey(key=app_secret, alg='A128KW')
+            (data, success) = JWE().decrypt(cyphered_token, keys=[sym_key])
+            if success:
+                self.token = json.loads(data.decode('utf-8')).get('token',
+                                                                  None)
+            else:
+                self.token = None
+        else:
+            self.token = None
+
+        if self.token is None:
+            raise exceptions.TaigaRestException(
+                full_url, 400,
+                'INVALID TOKEN', 'POST'
+            )
+
+        self.raw_request = RequestMaker('/api/v1', self.host, self.token,
+                                        'Application')
+        self._init_resources()
