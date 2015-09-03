@@ -5,3 +5,4 @@ codecov
 nose
 flake8==2.3.0
 pyflakes==0.8.1
+pyjwkest==1.0.3
