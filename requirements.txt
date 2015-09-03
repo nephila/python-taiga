@@ -1,3 +1,4 @@
 requests==2.5.1
 six==1.9.0
 python-dateutil==2.4.0
+pyjwkest==1.0.3

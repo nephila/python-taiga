@@ -34,7 +34,8 @@ setup(
     install_requires=[
         "requests",
         "six",
-        "python-dateutil"
+        "python-dateutil",
+        "pyjwkest"
     ],
     classifiers=classifiers,
     zip_safe=False,
