@@ -101,14 +101,14 @@ class TaigaAPI:
         except RequestException:
             raise exceptions.TaigaRestException(
                 full_url, 400,
-                'NETWORK ERROR', 'GET'
+                'NETWORK ERROR', 'POST'
             )
         if response.status_code != 200:
             raise exceptions.TaigaRestException(
                 full_url,
                 response.status_code,
                 response.text,
-                'GET'
+                'POST'
             )
         self.token = response.json()['auth_token']
         self.raw_request = RequestMaker('/api/v1', self.host, self.token)
