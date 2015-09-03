@@ -6,7 +6,8 @@ Contributors
 ------------
 Moritz Lipp <github@mlq.me>
 Marco Federighi <m.federighi@nephila.it>
-Carlo Ascani <c.ascani@nephila.it>
 Erik Westrup <erik.westrup@gmail.com>
 Jordi Llonch <llonchj@gmail.com>
 Alejandro Guirao <lekumberri@gmail.com>
+Jesús Espino <jespinog@gmail.com>
+Dennis Markgraf <info@dennismarkgraf.com>
