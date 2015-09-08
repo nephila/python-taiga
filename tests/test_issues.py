@@ -13,6 +13,15 @@ else:
 
 class TestIssues(unittest.TestCase):
 
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_list_attachments(self, mock_requestmaker_get):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        Issue(rm, id=1).list_attachments()
+        mock_requestmaker_get.assert_called_with(
+            'issues/attachments',
+            query={"object_id": 1},
+        )
+
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_upvote(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')

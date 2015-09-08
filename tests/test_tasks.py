@@ -11,6 +11,15 @@ else:
 
 class TestTasks(unittest.TestCase):
 
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_list_attachments(self, mock_requestmaker_get):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        Task(rm, id=1).list_attachments()
+        mock_requestmaker_get.assert_called_with(
+            'tasks/attachments',
+            query={"object_id": 1},
+        )
+
     @patch(import_open)
     @patch('taiga.models.base.ListResource._new_resource')
     def test_file_attach(self, mock_new_resource, mock_open):

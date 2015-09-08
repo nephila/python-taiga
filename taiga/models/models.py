@@ -154,6 +154,9 @@ class UserStory(CustomAttributeResource):
     def list_tasks(self):
         return Tasks(self.requester).list(user_story=self.id)
 
+    def list_attachments(self):
+        return UserStoryAttachments(self.requester).list(object_id=self.id)
+
     def attach(self, attached_file, **attrs):
         return UserStoryAttachments(self.requester).create(
             self.project, self.id,
@@ -317,6 +320,9 @@ class Task(CustomAttributeResource):
         'is_iocaine', 'external_reference', 'watchers', 'version'
     ]
 
+    def list_attachments(self):
+        return TaskAttachments(self.requester).list(object_id=self.id)
+
     def attach(self, attached_file, **attrs):
         return TaskAttachments(self.requester).create(
             self.project, self.id,
@@ -404,6 +410,9 @@ class Issue(CustomAttributeResource):
         'is_blocked', 'is_closed', 'milestone', 'project', 'status',
         'severity', 'priority', 'type', 'subject', 'tags', 'watchers'
     ]
+
+    def list_attachments(self):
+        return IssueAttachments(self.requester).list(object_id=self.id)
 
     def upvote(self):
         self.requester.post(

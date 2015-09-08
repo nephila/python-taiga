@@ -3,8 +3,11 @@ import requests
 from .models import Users
 from .models import Projects
 from .models import UserStories
+from .models import UserStoryAttachments
 from .models import Tasks
+from .models import TaskAttachments
 from .models import Issues
+from .models import IssueAttachments
 from .models import Milestones
 from .models import Points
 from .models import UserStoryStatuses
@@ -48,9 +51,12 @@ class TaigaAPI:
     def _init_resources(self):
         self.projects = Projects(self.raw_request)
         self.user_stories = UserStories(self.raw_request)
+        self.user_story_attachments = UserStoryAttachments(self.raw_request)
         self.users = Users(self.raw_request)
         self.issues = Issues(self.raw_request)
+        self.issue_attachments = IssueAttachments(self.raw_request)
         self.tasks = Tasks(self.raw_request)
+        self.task_attachments = TaskAttachments(self.raw_request)
         self.milestones = Milestones(self.raw_request)
         self.severities = Severities(self.raw_request)
         self.roles = Roles(self.raw_request)

@@ -6,10 +6,16 @@ from .models import Project
 from .models import Projects
 from .models import UserStory
 from .models import UserStories
+from .models import UserStoryAttachment
+from .models import UserStoryAttachments
 from .models import Task
 from .models import Tasks
+from .models import TaskAttachment
+from .models import TaskAttachments
 from .models import Issue
 from .models import Issues
+from .models import IssueAttachment
+from .models import IssueAttachments
 from .models import Milestone
 from .models import Milestones
 from .models import Point
@@ -41,11 +47,13 @@ from .models import History
 
 __all__ = [
     'User', 'Users', 'Project', 'Projects', 'UserStory', 'UserStories',
-    'Task', 'Tasks', 'Issue', 'Issues', 'Milestone', 'Milestones',
-    'Point', 'Points', 'UserStoryStatus', 'UserStoryStatuses',
-    'Severity', 'Severities', 'Priority', 'Priorities', 'IssueStatus',
-    'IssueStatuses', 'TaskStatus', 'TaskStatuses', 'WikiPage', 'WikiPages',
-    'WikiLink', 'WikiLinks', 'History', 'IssueAttribute', 'IssueAttributes',
-    'TaskAttribute', 'TaskAttributes', 'UserStoryAttribute',
-    'UserStoryAttributes', 'Membership', 'Memberships', 'Role', 'Roles'
+    'UserStoryAttachment', 'UserStoryAttachments', 'Task', 'Tasks',
+    'TaskAttachment', 'TaskAttachments', 'Issue', 'Issues', 'IssueAttachment',
+    'IssueAttachments', 'Milestone', 'Milestones', 'Point', 'Points',
+    'UserStoryStatus', 'UserStoryStatuses', 'Severity', 'Severities',
+    'Priority', 'Priorities', 'IssueStatus', 'IssueStatuses', 'TaskStatus',
+    'TaskStatuses', 'WikiPage', 'WikiPages', 'WikiLink', 'WikiLinks',
+    'History', 'IssueAttribute', 'IssueAttributes', 'TaskAttribute',
+    'TaskAttributes', 'UserStoryAttribute', 'UserStoryAttributes',
+    'Membership', 'Memberships', 'Role', 'Roles'
 ]
