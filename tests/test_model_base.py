@@ -5,6 +5,7 @@ from taiga.models.base import InstanceResource, ListResource, SearchableList
 import unittest
 from mock import patch
 import datetime
+from .tools import MockResponse
 
 
 class Fake(InstanceResource):
@@ -60,6 +61,18 @@ class TestModelBase(unittest.TestCase):
             '/{endpoint}/{id}', endpoint='fakes',
             id=1, payload=dict_res
         )
+
+    @patch('taiga.requestmaker.RequestMaker.put')
+    def test_call_model_base_update_with_version(self, mock_requestmaker_put):
+        mock_requestmaker_put.return_value = MockResponse(200, "{\"version\": 2}")
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two')
+        fake.update()
+        mock_requestmaker_put.assert_called_once_with(
+            '/{endpoint}/{id}', endpoint='fakes',
+            id=1, payload=fake.to_dict()
+        )
+        self.assertEqual(fake.version, 2)
 
     @patch('taiga.requestmaker.RequestMaker.delete')
     def test_call_model_base_delete(self, mock_requestmaker_delete):
