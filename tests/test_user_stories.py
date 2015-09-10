@@ -15,6 +15,15 @@ else:
 class TestUserStories(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
+    def test_list_attachments(self, mock_requestmaker_get):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        UserStory(rm, id=1).list_attachments()
+        mock_requestmaker_get.assert_called_with(
+            'userstories/attachments',
+            query={"object_id": 1},
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.get')
     def test_single_userstory_parsing(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(200,
             create_mock_json('tests/resources/userstory_details_success.json'))
