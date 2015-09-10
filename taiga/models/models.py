@@ -52,13 +52,6 @@ class User(InstanceResource):
 
     repr_attribute = 'full_name'
 
-    def starred_projects(self):
-        response = self.requester.get(
-            '/{endpoint}/{id}/starred', endpoint=self.endpoint,
-            id=self.id
-        )
-        return Projects.parse(self.requester, response.json())
-
 
 class Users(ListResource):
 
@@ -549,19 +542,25 @@ class Project(InstanceResource):
         )
         return response.json()
 
-    def star(self):
+    def like(self):
         self.requester.post(
-            '/{endpoint}/{id}/star',
+            '/{endpoint}/{id}/like',
             endpoint=self.endpoint, id=self.id
         )
         return self
 
-    def unstar(self):
+    def unlike(self):
         self.requester.post(
-            '/{endpoint}/{id}/unstar',
+            '/{endpoint}/{id}/unlike',
             endpoint=self.endpoint, id=self.id
         )
         return self
+
+    def star(self):
+        return self.like()
+
+    def unstar(self):
+        return self.unlike()
 
     def add_membership(self, email, role, **attrs):
         return Memberships(self.requester).create(

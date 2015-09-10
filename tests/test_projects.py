@@ -48,7 +48,7 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         self.assertEqual(project.star().id, 1)
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/star',
+            '/{endpoint}/{id}/like',
             endpoint='projects', id=1
         )
 
@@ -58,7 +58,7 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         self.assertEqual(project.unstar().id, 1)
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/unstar',
+            '/{endpoint}/{id}/unlike',
             endpoint='projects', id=1
         )
 
