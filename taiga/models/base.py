@@ -112,11 +112,17 @@ class InstanceResource(Resource):
         else:
             return element
 
-    def update(self):
-        self.requester.put(
+    def update(self, **args):
+        self_dict = self.to_dict()
+        if args:
+            self_dict = dict(list(self_dict.items()) + list(args.items()))
+        response = self.requester.put(
             '/{endpoint}/{id}', endpoint=self.endpoint,
-            id=self.id, payload=self.to_dict()
+            id=self.id, payload=self_dict
         )
+        obj_json = response.json()
+        if 'version' in obj_json:
+            self.__dict__['version'] = obj_json['version']
         return self
 
     def delete(self):
