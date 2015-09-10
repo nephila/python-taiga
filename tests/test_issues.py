@@ -76,3 +76,12 @@ class TestIssues(unittest.TestCase):
             files={'attached_file': fd},
             payload={'project': 1, 'object_id': 1}
         )
+
+    @patch('taiga.models.base.InstanceResource.update')
+    def test_add_comment(self, mock_update):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue = Issue(rm, id=1)
+        issue.add_comment('hola')
+        mock_update.assert_called_with(
+            comment='hola'
+        )

@@ -43,3 +43,12 @@ class TestTasks(unittest.TestCase):
                                                                      'status': 'New'},
             id=1, type='task'
         )
+
+    @patch('taiga.models.base.InstanceResource.update')
+    def test_add_comment(self, mock_update):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        task = Task(rm, id=1)
+        task.add_comment('hola')
+        mock_update.assert_called_with(
+            comment='hola'
+        )

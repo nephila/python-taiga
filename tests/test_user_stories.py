@@ -89,3 +89,12 @@ class TestUserStories(unittest.TestCase):
                                                 'subject': 'UserStory 1'},
             endpoint='importer', type='us', id=1
         )
+
+    @patch('taiga.models.base.InstanceResource.update')
+    def test_add_comment(self, mock_update):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        user_story = UserStory(rm, id=1)
+        user_story.add_comment('hola')
+        mock_update.assert_called_with(
+            comment='hola'
+        )
