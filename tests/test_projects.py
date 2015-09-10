@@ -43,12 +43,32 @@ class TestProjects(unittest.TestCase):
         )
 
     @patch('taiga.requestmaker.RequestMaker.post')
+    def test_like(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        self.assertEqual(project.like().id, 1)
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/like',
+            endpoint='projects', id=1
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.post')
+    def test_unlike(self, mock_requestmaker_post):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        self.assertEqual(project.unlike().id, 1)
+        mock_requestmaker_post.assert_called_with(
+            '/{endpoint}/{id}/unlike',
+            endpoint='projects', id=1
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.post')
     def test_star(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
         self.assertEqual(project.star().id, 1)
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/like',
+            '/{endpoint}/{id}/star',
             endpoint='projects', id=1
         )
 
@@ -58,7 +78,7 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         self.assertEqual(project.unstar().id, 1)
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/unlike',
+            '/{endpoint}/{id}/unstar',
             endpoint='projects', id=1
         )
 
