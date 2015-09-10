@@ -49,6 +49,18 @@ class TestModelBase(unittest.TestCase):
         mock_requestmaker_put.assert_called_once_with('/{endpoint}/{id}', endpoint='fakes',
             id=1, payload=fake.to_dict())
 
+    @patch('taiga.requestmaker.RequestMaker.put')
+    def test_call_model_base_update_with_params(self, mock_requestmaker_put):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two')
+        fake.update(comment='comment')
+        dict_res = fake.to_dict()
+        dict_res['comment'] = 'comment'
+        mock_requestmaker_put.assert_called_once_with(
+            '/{endpoint}/{id}', endpoint='fakes',
+            id=1, payload=dict_res
+        )
+
     @patch('taiga.requestmaker.RequestMaker.delete')
     def test_call_model_base_delete(self, mock_requestmaker_delete):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
