@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from taiga import TaigaAPI
+from taiga.exceptions import TaigaException
 
 api = TaigaAPI(
     host='http://127.0.0.1:8000'
@@ -47,16 +48,16 @@ projects = api.projects.list()
 
 print (projects)
 
-for user in new_project.users:
-    print (user)
-
 stories = api.user_stories.list()
 
 print (stories)
 
 print (api.history.user_story.get(stories[0].id))
 
-projects[0].star()
+try:
+    projects[0].star()
+except TaigaException:
+    projects[0].like()
 
 api.milestones.list()
 
