@@ -2,6 +2,12 @@ import datetime
 from .base import InstanceResource, ListResource
 
 
+class CommentableReosource(InstanceResource):
+
+    def add_comment(self, comment):
+        return self.update(comment=comment)
+
+
 class CustomAttributeResource(InstanceResource):
 
     def set_attribute(self, id, value, version=1):
@@ -131,18 +137,18 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
-class UserStory(CustomAttributeResource):
+class UserStory(CustomAttributeResource, CommentableReosource):
 
     endpoint = 'userstories'
 
     repr_attribute = 'subject'
 
     allowed_params = [
-        'assigned_to', 'backlog_order', 'blocked_note',
+        'assigned_to', 'backlog_order', 'blocked_note', 'version',
         'client_requirement', 'description', 'is_archived', 'is_blocked',
         'is_closed', 'kanban_order', 'milestone', 'points', 'project',
         'sprint_order', 'status', 'subject', 'tags', 'team_requirement',
-        'watchers', 'version'
+        'watchers'
     ]
 
     def add_task(self, subject, status, **attrs):
@@ -307,17 +313,17 @@ class TaskAttachments(Attachments):
     instance = TaskAttachment
 
 
-class Task(CustomAttributeResource):
+class Task(CustomAttributeResource, CommentableReosource):
 
     endpoint = 'tasks'
 
     repr_attribute = 'subject'
 
     allowed_params = [
-        'assigned_to', 'blocked_note', 'description',
+        'assigned_to', 'blocked_note', 'description', 'version',
         'is_blocked', 'is_closed', 'milestone', 'project', 'user_story',
         'status', 'subject', 'tags', 'us_order', 'taskboard_order',
-        'is_iocaine', 'external_reference', 'watchers', 'version'
+        'is_iocaine', 'external_reference', 'watchers'
     ]
 
     def list_attachments(self):
@@ -399,16 +405,16 @@ class IssueAttachments(Attachments):
     instance = IssueAttachment
 
 
-class Issue(CustomAttributeResource):
+class Issue(CustomAttributeResource, CommentableReosource):
 
     endpoint = 'issues'
 
     repr_attribute = 'subject'
 
     allowed_params = [
-        'assigned_to', 'blocked_note', 'description',
+        'assigned_to', 'blocked_note', 'description', 'version',
         'is_blocked', 'is_closed', 'milestone', 'project', 'status',
-        'severity', 'priority', 'type', 'subject', 'tags', 'watchers'
+        'severity', 'priority', 'type', 'subject', 'tags', 'watchers',
     ]
 
     def list_attachments(self):
