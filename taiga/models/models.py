@@ -546,7 +546,7 @@ class Project(InstanceResource):
     ]
 
     parser = {
-        'users': Users,
+        'members': Users,
         'priorities': Priorities,
         'issue_statuses': IssueStatuses,
         'issue_types': IssueTypes,

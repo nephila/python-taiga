@@ -19,6 +19,11 @@ new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 new_project.name = 'TEST PROJECT 3'
 new_project.update()
 
+print (new_project.members)
+
+for member in new_project.members:
+    print (member)
+
 jan_feb_milestone = new_project.add_milestone(
     'New milestone jan feb', '2015-01-26', '2015-02-26'
 )
