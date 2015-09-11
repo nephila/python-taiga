@@ -11,14 +11,16 @@ class TestUsers(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_starred_projects(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/starred_projects.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/starred_projects.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         user = User(rm, id=1)
         projects = user.starred_projects()
         self.assertEqual(len(projects), 2)
         self.assertTrue(isinstance(projects[0], Project))
         self.assertTrue(isinstance(projects[1], Project))
+
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_all_users(self, mock_requestmaker_get):

@@ -564,6 +564,20 @@ class Project(InstanceResource):
         )
         return response.json()
 
+    def like(self):
+        self.requester.post(
+            '/{endpoint}/{id}/like',
+            endpoint=self.endpoint, id=self.id
+        )
+        return self
+
+    def unlike(self):
+        self.requester.post(
+            '/{endpoint}/{id}/unlike',
+            endpoint=self.endpoint, id=self.id
+        )
+        return self
+
     def star(self):
         self.requester.post(
             '/{endpoint}/{id}/star',
