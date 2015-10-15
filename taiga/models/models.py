@@ -770,6 +770,14 @@ class Projects(ListResource):
                                        payload=attrs)
         return self.instance.parse(self.requester, response.json())
 
+    def get_by_slug(self, slug):
+        response = self.requester.get(
+            '/{endpoint}/by_slug?slug={slug}',
+            endpoint=self.instance.endpoint,
+            slug=slug
+        )
+        return self.instance.parse(self.requester, response.json())
+
 
 class WikiAttachment(Attachment):
 

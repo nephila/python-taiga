@@ -34,6 +34,19 @@ class TestProjects(unittest.TestCase):
         self.assertEqual(len(projects), 1)
 
     @patch('taiga.requestmaker.RequestMaker.get')
+    def test_get_project_by_slug(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(200,
+            create_mock_json('tests/resources/project_details_success.json'))
+        api = TaigaAPI(token='f4k3')
+        project = api.projects.get_by_slug('my_slug')
+        self.assertTrue(isinstance(project, Project))
+        self.assertEqual(project.name, 'Project Example 0')
+        mock_requestmaker_get.assert_called_with(
+            '/{endpoint}/by_slug?slug={slug}',
+            endpoint='projects', slug='my_slug'
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.get')
     def test_stats(self, mock_requestmaker_get):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
@@ -387,4 +400,3 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_memberships()
         mock_list_memberships.assert_called_with(project=1)
-
