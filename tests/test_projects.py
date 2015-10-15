@@ -49,7 +49,7 @@ class TestProjects(unittest.TestCase):
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_userstories_by_ref(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/userstories_list_success.json'))
+            create_mock_json('tests/resources/userstory_details_success.json'))
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
         api = TaigaAPI(token='f4k3')

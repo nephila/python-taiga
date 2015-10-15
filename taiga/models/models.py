@@ -567,8 +567,13 @@ class Project(InstanceResource):
         return UserStory.parse(self.requester, response.json())
 
     def get_userstory_by_ref(self, ref):
-        user_stories = self.list_user_stories()
-        return next(story for story in user_stories if story.ref == ref)
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            endpoint=UserStory.endpoint,
+            us_ref=ref,
+            project_id=self.id
+        )
+        return UserStory.parse(self.requester, response.json())
 
     def get_issue_by_ref(self, ref):
         issues = self.list_issues()
