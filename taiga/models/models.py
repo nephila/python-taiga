@@ -557,6 +557,15 @@ class Project(InstanceResource):
         'us_statuses': UserStoryStatuses
     }
 
+    def get_task_by_ref(self, ref):
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={task_ref}&project={project_id}',
+            endpoint=Task.endpoint,
+            task_ref=ref,
+            project_id=self.id
+        )
+        return UserStory.parse(self.requester, response.json())
+
     def get_userstory_by_ref(self, ref):
         user_stories = self.list_user_stories()
         return next(story for story in user_stories if story.ref == ref)

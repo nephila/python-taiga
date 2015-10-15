@@ -57,6 +57,16 @@ class TestProjects(unittest.TestCase):
         self.assertEqual(us.description, "Description of the story")
 
     @patch('taiga.requestmaker.RequestMaker.get')
+    def test_get_tasks_by_ref(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(200,
+            create_mock_json('tests/resources/task_details_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        api = TaigaAPI(token='f4k3')
+        task = project.get_task_by_ref(1)
+        self.assertEqual(task.description, "Implement API CALL")
+
+    @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_issues_by_ref(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(200,
             create_mock_json('tests/resources/issues_list_success.json'))
