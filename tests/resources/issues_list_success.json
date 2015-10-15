@@ -1,0 +1,43 @@
+[
+    {
+        "assigned_to": 19,
+        "blocked_note": "",
+        "blocked_note_html": "",
+        "comment": "",
+        "created_date": "2014-07-29T07:15:50+0000",
+        "description": "Implement API CALL",
+        "description_html": "<p>Implement API CALL</p>",
+        "finish_date": "2014-09-16T17:17:16+0000",
+        "id": 1149,
+        "is_blocked": false,
+        "is_closed": true,
+        "milestone": 98,
+        "modified_date": "2014-10-10T12:07:13+0000",
+        "finished_date": null,
+        "owner": 19,
+        "project": 31,
+        "ref": 31,
+        "status": 83,
+        "severity": 2,
+        "priority": 3,
+        "type": 1,
+        "subject": "Customer personal data",
+        "tags": [
+            "service catalog",
+            "customer"
+        ],
+        "version": 8,
+        "watchers": [],
+        "generated_user_stories": [
+        ],
+        "votes": null,
+        "neighbors": {
+            "next": {
+                "id": 16,
+                "ref": 126,
+                "subject": "Support for bulk actions"
+            },
+            "previous": {}
+        }
+    }
+]

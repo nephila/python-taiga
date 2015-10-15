@@ -557,6 +557,14 @@ class Project(InstanceResource):
         'us_statuses': UserStoryStatuses
     }
 
+    def get_userstory_by_ref(self, ref):
+        user_stories = self.list_user_stories()
+        return next(story for story in user_stories if story.ref == ref)
+
+    def get_issue_by_ref(self, ref):
+        issues = self.list_issues()
+        return next(issue for issue in issues if issue.ref == ref)
+
     def stats(self):
         response = self.requester.get(
             '/{endpoint}/{id}/stats',
