@@ -11,3 +11,4 @@ Jordi Llonch <llonchj@gmail.com>
 Alejandro Guirao <lekumberri@gmail.com>
 Jesús Espino <jespinog@gmail.com>
 Dennis Markgraf <info@dennismarkgraf.com>
+Paolo Romolini <p.romolini@nephila.it>
