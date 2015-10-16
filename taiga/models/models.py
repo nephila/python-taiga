@@ -1,5 +1,4 @@
 import datetime
-from .. import exceptions
 from .base import InstanceResource, ListResource
 
 
@@ -577,14 +576,13 @@ class Project(InstanceResource):
         return UserStory.parse(self.requester, response.json())
 
     def get_issue_by_ref(self, ref):
-        issues = self.list_issues()
-        try:
-            return next(issue for issue in issues if issue.ref == ref)
-        except StopIteration:
-            raise exceptions.TaigaRestException(
-                'Get Issue by ref workaround :)', 404,
-                'Issue not found!', 'GET'
-            )
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            endpoint=Issue.endpoint,
+            us_ref=ref,
+            project_id=self.id
+        )
+        return Issue.parse(self.requester, response.json())
 
     def stats(self):
         response = self.requester.get(
