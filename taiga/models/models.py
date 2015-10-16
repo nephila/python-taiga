@@ -557,6 +557,33 @@ class Project(InstanceResource):
         'us_statuses': UserStoryStatuses
     }
 
+    def get_task_by_ref(self, ref):
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={task_ref}&project={project_id}',
+            endpoint=Task.endpoint,
+            task_ref=ref,
+            project_id=self.id
+        )
+        return Task.parse(self.requester, response.json())
+
+    def get_userstory_by_ref(self, ref):
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            endpoint=UserStory.endpoint,
+            us_ref=ref,
+            project_id=self.id
+        )
+        return UserStory.parse(self.requester, response.json())
+
+    def get_issue_by_ref(self, ref):
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            endpoint=Issue.endpoint,
+            us_ref=ref,
+            project_id=self.id
+        )
+        return Issue.parse(self.requester, response.json())
+
     def stats(self):
         response = self.requester.get(
             '/{endpoint}/{id}/stats',
@@ -768,6 +795,14 @@ class Projects(ListResource):
         )
         response = self.requester.post('/{endpoint}', endpoint="importer",
                                        payload=attrs)
+        return self.instance.parse(self.requester, response.json())
+
+    def get_by_slug(self, slug):
+        response = self.requester.get(
+            '/{endpoint}/by_slug?slug={slug}',
+            endpoint=self.instance.endpoint,
+            slug=slug
+        )
         return self.instance.parse(self.requester, response.json())
 
 
