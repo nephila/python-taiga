@@ -564,7 +564,7 @@ class Project(InstanceResource):
             task_ref=ref,
             project_id=self.id
         )
-        return UserStory.parse(self.requester, response.json())
+        return Task.parse(self.requester, response.json())
 
     def get_userstory_by_ref(self, ref):
         response = self.requester.get(
