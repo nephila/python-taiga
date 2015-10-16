@@ -25,6 +25,7 @@ from .models import History
 from .requestmaker import RequestMaker
 from requests.exceptions import RequestException
 from . import exceptions
+from . import utils
 
 
 class SearchResult(object):
@@ -101,7 +102,7 @@ class TaigaAPI:
             'password': password
         }
         try:
-            full_url = self.host + '/api/v1/auth'
+            full_url = utils.urljoin(self.host, '/api/v1/auth')
             response = requests.post(
                 full_url,
                 data=json.dumps(payload),
@@ -134,7 +135,10 @@ class TaigaAPI:
             'state': state
         }
         try:
-            full_url = self.host + '/api/v1/application-tokens/validate'
+            full_url = utils.urljoin(
+                self.host,
+                '/api/v1/application-tokens/validate'
+            )
             response = requests.post(
                 full_url,
                 data=json.dumps(payload),
