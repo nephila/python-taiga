@@ -1,6 +1,6 @@
 import json
 import requests
-from . import exceptions
+from . import exceptions, utils
 from requests.exceptions import RequestException
 
 
@@ -28,7 +28,7 @@ class RequestMaker(object):
         return headers
 
     def urljoin(self, *parts):
-        return '/'.join(part.strip('/') for part in parts)
+        return utils.urljoin(*parts)
 
     def get(self, uri, query={}, **parameters):
         try:
