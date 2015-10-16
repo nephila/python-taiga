@@ -51,6 +51,17 @@ api = TaigaAPI(
 )
 ```
 
+### Get projects, user stories, task and issues
+
+You can get projects, user stories, tasks and issues using the primary key or using slug/ref
+
+```python
+new_project = api.projects.get_by_slug('nephila')
+print (new_project.get_issue_by_ref(1036))
+print (new_project.get_userstory_by_ref(1111))
+print (new_project.get_task_by_ref(1112))
+```
+
 ### Create a project
 
 ```python
