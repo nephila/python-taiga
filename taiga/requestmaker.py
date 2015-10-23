@@ -1,7 +1,40 @@
 import json
 import requests
+import time
 from . import exceptions, utils
 from requests.exceptions import RequestException
+
+
+class RequestCacheException(Exception):
+    pass
+
+
+class RequestCacheMissingException(RequestCacheException):
+    pass
+
+
+class RequestCacheInvalidException(RequestCacheException):
+    pass
+
+
+class RequestCache(object):
+
+    def __init__(self, valid_time=60):
+        self._valid_time = valid_time
+        self._cache = {}
+
+    def put(self, key, value):
+        self._cache[key] = {
+            'time': time.time(),
+            'value': value
+        }
+
+    def get(self, key):
+        if key not in self._cache:
+            raise RequestCacheMissingException()
+        if time.time() > self._cache[key]['time'] + self._valid_time:
+            raise RequestCacheInvalidException()
+        return self._cache[key]['value']
 
 
 class RequestMakerException(Exception):
@@ -15,6 +48,7 @@ class RequestMaker(object):
         self.host = host
         self.token = token
         self.token_type = token_type
+        self._cache = RequestCache()
 
     def is_bad_response(self, response):
         return 400 <= response.status_code <= 500
@@ -30,17 +64,29 @@ class RequestMaker(object):
     def urljoin(self, *parts):
         return utils.urljoin(*parts)
 
-    def get(self, uri, query={}, **parameters):
+    def get(self, uri, query={}, cache=False, **parameters):
         try:
             full_url = self.urljoin(
                 self.host, self.api_path,
                 uri.format(**parameters)
             )
-            result = requests.get(
-                full_url,
-                headers=self.headers(),
-                params=query
-            )
+
+            result = None
+
+            if cache:
+                try:
+                    result = self._cache.get(full_url)
+                except RequestCacheException:
+                    pass
+
+            if not result:
+                result = requests.get(
+                    full_url,
+                    headers=self.headers(),
+                    params=query
+                )
+            if cache:
+                self._cache.put(full_url, result)
         except RequestException:
             raise exceptions.TaigaRestException(
                 full_url, 400,
