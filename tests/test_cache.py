@@ -16,6 +16,16 @@ class TestRequestCache(unittest.TestCase):
             cache.get, 'http://hola'
         )
 
+    def test_cache_remove(self):
+        cache = RequestCache()
+        cache.put('http://ciao', 'value')
+        self.assertEqual(cache.get('http://ciao'), 'value')
+        cache.remove('http://ciao')
+        self.assertRaises(
+            RequestCacheMissingException,
+            cache.get, 'http://ciao'
+        )
+
     @patch('time.time')
     def test_cache_valid_time(self, mock_time):
         mock_time.return_value = 0

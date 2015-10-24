@@ -29,10 +29,15 @@ class RequestCache(object):
             'value': value
         }
 
+    def remove(self, key):
+        if key in self._cache:
+            del self._cache[key]
+
     def get(self, key):
         if key not in self._cache:
             raise RequestCacheMissingException()
         if time.time() > self._cache[key]['time'] + self._valid_time:
+            self.remove(key)
             raise RequestCacheInvalidException()
         return self._cache[key]['value']
 
