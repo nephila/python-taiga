@@ -44,7 +44,7 @@ class TestCustomAttributes(unittest.TestCase):
         self.assertTrue('attributes_values' in my_attributes)
         mock_requestmaker_get.assert_called_with(
             '/{endpoint}/custom-attributes-values/{id}',
-            endpoint=Issue.endpoint, id=issue.id,
+            endpoint=Issue.endpoint, id=issue.id, cache=False
         )
 
     @patch('taiga.requestmaker.RequestMaker.post')

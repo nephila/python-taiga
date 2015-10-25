@@ -11,7 +11,7 @@ class CommentableReosource(InstanceResource):
 class CustomAttributeResource(InstanceResource):
 
     def set_attribute(self, id, value, version=1):
-        attributes = self.get_attributes()
+        attributes = self._get_attributes(cache=True)
         formatted_id = '{0}'.format(id)
         attributes['attributes_values'][formatted_id] = value
         response = self.requester.patch(
@@ -24,12 +24,15 @@ class CustomAttributeResource(InstanceResource):
         )
         return response.json()
 
-    def get_attributes(self):
+    def _get_attributes(self, cache=False):
         response = self.requester.get(
             '/{endpoint}/custom-attributes-values/{id}',
-            endpoint=self.endpoint, id=self.id,
+            endpoint=self.endpoint, id=self.id, cache=cache
         )
         return response.json()
+
+    def get_attributes(self):
+        return self._get_attributes()
 
 
 class CustomAttribute(InstanceResource):
