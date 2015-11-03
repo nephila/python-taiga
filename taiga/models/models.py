@@ -566,7 +566,7 @@ class Project(InstanceResource):
     :param is_wiki_activated: determines if the project is private or not
     :param is_private: determines if the project is private or not
     :param videoconferences: appear-in or talky
-    :param videoconferences_salt: for videoconference chat url generation
+    :param videoconferences_salt: salt videoconference chat url generation
     :param total_milestones: missing
     :param total_story_points: missing
 
@@ -622,6 +622,9 @@ class Project(InstanceResource):
         return Issue.parse(self.requester, response.json())
 
     def stats(self):
+        """
+        Get the stats of the project
+        """
         response = self.requester.get(
             '/{endpoint}/{id}/stats',
             endpoint=self.endpoint, id=self.id
@@ -629,6 +632,9 @@ class Project(InstanceResource):
         return response.json()
 
     def like(self):
+        """
+        Like the project
+        """
         self.requester.post(
             '/{endpoint}/{id}/like',
             endpoint=self.endpoint, id=self.id
@@ -636,6 +642,9 @@ class Project(InstanceResource):
         return self
 
     def unlike(self):
+        """
+        Unlike the project
+        """
         self.requester.post(
             '/{endpoint}/{id}/unlike',
             endpoint=self.endpoint, id=self.id
@@ -672,7 +681,7 @@ class Project(InstanceResource):
 
     def add_user_story(self, subject, **attrs):
         """
-        Adds a UserStory and returns a :class:`UserStory` resource.
+        Adds a :class:`UserStory` and returns a :class:`UserStory` resource.
 
         :param subject: subject of the :class:`UserStory`
         :param attrs: other :class:`UserStory` attributes
@@ -682,6 +691,13 @@ class Project(InstanceResource):
         )
 
     def import_user_story(self, subject, status, **attrs):
+        """
+        Import an user story and returns a :class:`UserStory` resource.
+
+        :param subject: subject of the :class:`UserStory`
+        :param status: status of the :class:`UserStory`
+        :param attrs: optional :class:`UserStory` attributes
+        """
         return UserStories(self.requester).import_(
             self.id, subject, status, **attrs
         )
@@ -702,7 +718,7 @@ class Project(InstanceResource):
         :param priority: status of the :class:`Issue`
         :param issue_type: type of the :class:`Issue`
         :param severity: severity of the :class:`Issue`
-        :param attrs: other :class:`Issue` attributes
+        :param attrs: optional :class:`Issue` attributes
         """
         return Issues(self.requester).create(
             self.id, subject, priority, status,
@@ -723,6 +739,14 @@ class Project(InstanceResource):
         return Issues(self.requester).list(project=self.id)
 
     def add_milestone(self, name, estimated_start, estimated_finish, **attrs):
+        """
+        Add a :class:`Milestone` object to the project.
+
+        :param name: name of the :class:`Milestone`
+        :param estimated_start: estimated start time of the :class:`Milestone`
+        :param estimated_finish: estimated finish time of the :class:`Milestone`
+        :param attrs: optional attributes for :class:`Milestone`
+        """
         return Milestones(self.requester).create(
             self.id, name, estimated_start,
             estimated_finish, **attrs
