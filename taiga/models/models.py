@@ -3,14 +3,30 @@ from .base import InstanceResource, ListResource
 
 
 class CommentableReosource(InstanceResource):
-
+    """
+    CommentableReosource base class
+    """
     def add_comment(self, comment):
+        """
+        Add a comment to the current element
+
+        :param comment: the comment you want to insert
+        """
         return self.update(comment=comment)
 
 
 class CustomAttributeResource(InstanceResource):
-
+    """
+    CustomAttributeResource base class
+    """
     def set_attribute(self, id, value, version=1):
+        """
+        Set attribute to a specific value
+
+        :param id: id of the attribute
+        :param value: value of the attribute
+        :param version: version of the attribute (default = 1)
+        """
         attributes = self._get_attributes(cache=True)
         formatted_id = '{0}'.format(id)
         attributes['attributes_values'][formatted_id] = value
@@ -32,11 +48,22 @@ class CustomAttributeResource(InstanceResource):
         return response.json()
 
     def get_attributes(self):
+        """
+        Get attributes of the current object
+        """
         return self._get_attributes()
 
 
 class CustomAttribute(InstanceResource):
+    """
+    CustomAttribute base class
 
+    :param requester: :class:`Requester` instance
+    :param name: :class:`Project` id
+    :param description: id of the current object
+    :param order: ...
+    :param project: ...
+    """
     repr_attribute = 'name'
 
     allowed_params = [
@@ -45,8 +72,16 @@ class CustomAttribute(InstanceResource):
 
 
 class CustomAttributes(ListResource):
-
+    """
+    CustomAttributes factory base class
+    """
     def create(self, project, name, **attrs):
+        """
+        Create a new :class:`CustomAttribute`.
+
+        :param project: :class:`Project` id
+        :param name: name of the custom attribute
+        """
         attrs.update(
             {
                 'project': project, 'name': name
@@ -113,6 +148,13 @@ class Priorities(ListResource):
 class Attachment(InstanceResource):
     """
     Attachment base class
+
+    :param requester: :class:`Requester` instance
+    :param project: :class:`Project` id
+    :param object_id: id of the current object
+    :param attached_file: ...
+    :param description: ...
+    :param is_deprecated: ...
     """
     repr_attribute = 'subject'
 
@@ -505,63 +547,109 @@ class Issues(ListResource):
 
 
 class IssueAttribute(CustomAttribute):
-
+    """
+    IssueAttribute model
+    """
     endpoint = 'issue-custom-attributes'
 
 
 class IssueAttributes(CustomAttributes):
-
+    """
+    IssueAttributes factory
+    """
     instance = IssueAttribute
 
 
 class TaskAttribute(CustomAttribute):
-
+    """
+    TaskAttribute model
+    """
     endpoint = 'task-custom-attributes'
 
 
 class TaskAttributes(CustomAttributes):
-
+    """
+    TaskAttributes factory
+    """
     instance = TaskAttribute
 
 
 class UserStoryAttribute(CustomAttribute):
-
+    """
+    UserStoryAttribute model
+    """
     endpoint = 'userstory-custom-attributes'
 
 
 class UserStoryAttributes(CustomAttributes):
-
+    """
+    UserStoryAttributes factory
+    """
     instance = UserStoryAttribute
 
 
 class Severity(InstanceResource):
+    """
+    Severity model
 
+    :param requester: :class:`Requester` instance
+    :param name: name of the :class:`Severity`
+    :param order: order of the :class:`Severity`
+    :param project: :class:`Project` id
+    """
     endpoint = 'severities'
 
     allowed_params = ['name', 'color', 'order', 'project']
 
 
 class Severities(ListResource):
-
+    """
+    Severities factory
+    """
     instance = Severity
 
     def create(self, project, name, **attrs):
+        """
+        Create a new :class:`Severity`
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`Severity`
+        :param attrs: optional attributes for :class:`Role`
+        """
         attrs.update({'project': project, 'name': name})
         return self._new_resource(payload=attrs)
 
 
 class Role(InstanceResource):
+    """
+    Role model
 
+    :param requester: :class:`Requester` instance
+    :param name: name of the :class:`Role`
+    :param slug: slug of the :class:`Role`
+    :param order: order of the :class:`Role`
+    :param computable: choose if :class:`Role` is computable or not
+
+    """
     endpoint = 'roles'
 
     allowed_params = ['name', 'slug', 'order', 'computable']
 
 
 class Roles(ListResource):
-
+    """
+    Roles factory
+    """
     instance = Role
 
     def create(self, project, name, **attrs):
+        """
+        Create a new :class:`Role`
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`Role`
+        :param attrs: optional attributes for :class:`Role`
+        """
         attrs.update({'project': project, 'name': name})
         return self._new_resource(payload=attrs)
 
