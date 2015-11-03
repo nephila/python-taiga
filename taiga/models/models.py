@@ -595,6 +595,11 @@ class Project(InstanceResource):
     }
 
     def get_task_by_ref(self, ref):
+        """
+        Get a :class:`Task` by ref.
+
+        :param ref: :class:`Task` reference
+        """
         response = self.requester.get(
             '/{endpoint}/by_ref?ref={task_ref}&project={project_id}',
             endpoint=Task.endpoint,
@@ -604,6 +609,11 @@ class Project(InstanceResource):
         return Task.parse(self.requester, response.json())
 
     def get_userstory_by_ref(self, ref):
+        """
+        Get a :class:`UserStory` by ref.
+
+        :param ref: :class:`UserStory` reference
+        """
         response = self.requester.get(
             '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
             endpoint=UserStory.endpoint,
@@ -613,6 +623,11 @@ class Project(InstanceResource):
         return UserStory.parse(self.requester, response.json())
 
     def get_issue_by_ref(self, ref):
+        """
+        Get a :class:`Issue` by ref.
+
+        :param ref: :class:`Issue` reference
+        """
         response = self.requester.get(
             '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
             endpoint=Issue.endpoint,
@@ -672,11 +687,22 @@ class Project(InstanceResource):
         return self
 
     def add_membership(self, email, role, **attrs):
+        """
+        Add a Membership to the project and returns a :class:`Membership` resource.
+
+        :param email: email for :class:`Membership`
+        :param role: role for :class:`Membership`
+        :param attrs: role for :class:`Membership`
+        :param attrs: optional :class:`Membership` attributes
+        """
         return Memberships(self.requester).create(
             self.id, email, role, **attrs
         )
 
     def list_memberships(self):
+        """
+        Get the list of :class:`Membership` resources for the project.
+        """
         return Memberships(self.requester).list(project=self.id)
 
     def add_user_story(self, subject, **attrs):
@@ -727,6 +753,16 @@ class Project(InstanceResource):
 
     def import_issue(self, subject, priority, status,
                      issue_type, severity, **attrs):
+        """
+        Import and issue and returns a :class:`Issue` resource.
+
+        :param subject: subject of :class:`Issue`
+        :param priority: priority of :class:`Issue`
+        :param status: status of :class:`Issue`
+        :param issue_type: issue type of :class:`Issue`
+        :param severity: severity of :class:`Issue`
+        :param attrs: optional :class:`Issue` attributes
+        """
         return Issues(self.requester).import_(
             self.id, subject, priority, status,
             issue_type, severity, **attrs
@@ -740,7 +776,7 @@ class Project(InstanceResource):
 
     def add_milestone(self, name, estimated_start, estimated_finish, **attrs):
         """
-        Add a :class:`Milestone` object to the project.
+        Add a Milestone to the project and returns a :class:`Milestone` object.
 
         :param name: name of the :class:`Milestone`
         :param estimated_start: estimated start time of the :class:`Milestone`
@@ -752,117 +788,263 @@ class Project(InstanceResource):
             estimated_finish, **attrs
         )
 
-    def import_milestone(
-            self,
-            name,
-            estimated_start,
-            estimated_finish,
-            **attrs):
+    def import_milestone(self, name, estimated_start, estimated_finish, **attrs):
+        """
+        Import a Milestone and returns a :class:`Milestone` object.
+
+        :param name: name of the :class:`Milestone`
+        :param estimated_start: estimated start time of the :class:`Milestone`
+        :param estimated_finish: estimated finish time of the :class:`Milestone`
+        :param attrs: optional attributes for :class:`Milestone`
+        """
         return Milestones(self.requester).import_(
             self.id, name, estimated_start,
             estimated_finish, **attrs
         )
 
     def list_milestones(self):
+        """
+        Get the list of :class:`Milestone` resources for the project.
+        """
         return Milestones(self.requester).list(project=self.id)
 
     def add_point(self, name, value, **attrs):
+        """
+        Add a Point to the project and returns a :class:`Point` object.
+
+        :param name: name of the :class:`Point`
+        :param value: value of the :class:`Point`
+        :param attrs: optional attributes for :class:`Point`
+        """
         return Points(self.requester).create(self.id, name, value, **attrs)
 
     def list_points(self):
+        """
+        Get the list of :class:`Point` resources for the project.
+        """
         return Points(self.requester).list(project=self.id)
 
     def add_task_status(self, name, **attrs):
+        """
+        Add a Task status to the project and returns a :class:`TaskStatus` object.
+
+        :param name: name of the :class:`TaskStatus`
+        :param attrs: optional attributes for :class:`TaskStatus`
+        """
         return TaskStatuses(self.requester).create(self.id, name, **attrs)
 
     def list_task_statuses(self):
+        """
+        Get the list of :class:`Task` resources for the project.
+        """
         return TaskStatuses(self.requester).list(project=self.id)
 
     def import_task(self, subject, status, **attrs):
+        """
+        Import a Task and return a :class:`Task` object.
+
+        :param subject: subject of the :class:`Task`
+        :param status: status of the :class:`Task`
+        :param attrs: optional attributes for :class:`Task`
+        """
         return Tasks(self.requester).import_(
             self.id, subject, status
         )
 
     def add_user_story_status(self, name, **attrs):
+        """
+        Add a UserStory status to the project and returns a :class:`UserStoryStatus` object.
+
+        :param name: name of the :class:`UserStoryStatus`
+        :param attrs: optional attributes for :class:`UserStoryStatus`
+        """
         return UserStoryStatuses(self.requester).create(self.id, name, **attrs)
 
     def list_user_story_statuses(self):
+        """
+        Get the list of :class:`UserStoryStatus` resources for the project.
+        """
         return UserStoryStatuses(self.requester).list(project=self.id)
 
     def add_issue_type(self, name, **attrs):
+        """
+        Add a Issue type to the project and returns a :class:`IssueType` object.
+
+        :param name: name of the :class:`IssueType`
+        :param attrs: optional attributes for :class:`IssueType`
+        """
         return IssueTypes(self.requester).create(self.id, name, **attrs)
 
     def list_issue_types(self):
+        """
+        Get the list of :class:`IssueType` resources for the project.
+        """
         return IssueTypes(self.requester).list(project=self.id)
 
     def add_severity(self, name, **attrs):
+        """
+        Add a Severity to the project and returns a :class:`Severity` object.
+
+        :param name: name of the :class:`Severity`
+        :param attrs: optional attributes for :class:`Severity`
+        """
         return Severities(self.requester).create(self.id, name, **attrs)
 
     def list_severities(self):
+        """
+        Get the list of :class:`Severity` resources for the project.
+        """
         return Severities(self.requester).list(project=self.id)
 
     def add_role(self, name, **attrs):
+        """
+        Add a Role to the project and returns a :class:`Role` object.
+
+        :param name: name of the :class:`Role`
+        :param attrs: optional attributes for :class:`Role`
+        """
         return Roles(self.requester).create(self.id, name, **attrs)
 
     def list_roles(self):
+        """
+        Get the list of :class:`Role` resources for the project.
+        """
         return Roles(self.requester).list(project=self.id)
 
     def add_priority(self, name, **attrs):
+        """
+        Add a Priority to the project and returns a :class:`Priority` object.
+
+        :param name: name of the :class:`Priority`
+        :param attrs: optional attributes for :class:`Priority`
+        """
         return Priorities(self.requester).create(self.id, name, **attrs)
 
     def list_priorities(self):
+        """
+        Get the list of :class:`Priority` resources for the project.
+        """
         return Priorities(self.requester).list(project=self.id)
 
     def add_issue_status(self, name, **attrs):
+        """
+        Add a Issue status to the project and returns a :class:`IssueStatus` object.
+
+        :param name: name of the :class:`IssueStatus`
+        :param attrs: optional attributes for :class:`IssueStatus`
+        """
         return IssueStatuses(self.requester).create(self.id, name, **attrs)
 
     def list_issue_statuses(self):
+        """
+        Get the list of :class:`IssueStatus` resources for the project.
+        """
         return IssueStatuses(self.requester).list(project=self.id)
 
     def add_wikipage(self, slug, content, **attrs):
+        """
+        Add a Wiki page to the project and returns a :class:`WikiPage` object.
+
+        :param name: name of the :class:`WikiPage`
+        :param attrs: optional attributes for :class:`WikiPage`
+        """
         return WikiPages(self.requester).create(
             self.id, slug, content, **attrs
         )
 
     def import_wikipage(self, slug, content, **attrs):
+        """
+        Import a Wiki page and return a :class:`WikiPage` object.
+
+        :param slug: slug of the :class:`WikiPage`
+        :param content: content of the :class:`WikiPage`
+        :param attrs: optional attributes for :class:`Task`
+        """
         return WikiPages(self.requester).import_(
             self.id, slug, content, **attrs
         )
 
     def list_wikipages(self):
+        """
+        Get the list of :class:`WikiPage` resources for the project.
+        """
         return WikiPages(self.requester).list(project=self.id)
 
     def add_wikilink(self, title, href, **attrs):
+        """
+        Add a Wiki link to the project and returns a :class:`WikiLink` object.
+
+        :param title: title of the :class:`WikiLink`
+        :param href: href of the :class:`WikiLink`
+        :param attrs: optional attributes for :class:`WikiLink`
+        """
         return WikiLinks(self.requester).create(self.id, title, href, **attrs)
 
     def import_wikilink(self, title, href, **attrs):
+        """
+        Import a Wiki link and return a :class:`WikiLink` object.
+
+        :param title: title of the :class:`WikiLink`
+        :param href: href of the :class:`WikiLink`
+        :param attrs: optional attributes for :class:`WikiLink`
+        """
         return WikiLinks(self.requester).import_(self.id, title, href, **attrs)
 
     def list_wikilinks(self):
+        """
+        Get the list of :class:`WikiLink` resources for the project.
+        """
         return WikiLinks(self.requester).list(project=self.id)
 
     def add_issue_attribute(self, name, **attrs):
+        """
+        Add a new Issue attribute and return a :class:`IssueAttribute` object.
+
+        :param name: name of the :class:`IssueAttribute`
+        :param attrs: optional attributes for :class:`IssueAttribute`
+        """
         return IssueAttributes(self.requester).create(
             self.id, name, **attrs
         )
 
     def list_issue_attributes(self):
+        """
+        Get the list of :class:`IssueAttribute` resources for the project.
+        """
         return IssueAttributes(self.requester).list(project=self.id)
 
     def add_task_attribute(self, name, **attrs):
+        """
+        Add a new Task attribute and return a :class:`TaskAttribute` object.
+
+        :param name: name of the :class:`TaskAttribute`
+        :param attrs: optional attributes for :class:`TaskAttribute`
+        """
         return TaskAttributes(self.requester).create(
             self.id, name, **attrs
         )
 
     def list_task_attributes(self):
+        """
+        Get the list of :class:`TaskAttribute` resources for the project.
+        """
         return TaskAttributes(self.requester).list(project=self.id)
 
     def add_user_story_attribute(self, name, **attrs):
+        """
+        Add a new User Story attribute and return a :class:`UserStoryAttribute` object.
+
+        :param name: name of the :class:`UserStoryAttribute`
+        :param attrs: optional attributes for :class:`UserStoryAttribute`
+        """
         return UserStoryAttributes(self.requester).create(
             self.id, name, **attrs
         )
 
     def list_user_story_attributes(self):
+        """
+        Get the list of :class:`UserStoryAttribute` resources for the project.
+        """
         return UserStoryAttributes(self.requester).list(project=self.id)
 
 
@@ -871,6 +1053,13 @@ class Projects(ListResource):
     instance = Project
 
     def create(self, name, description, **attrs):
+        """
+        Create a new :class:`Project`
+
+        :param name: name of the :class:`Project`
+        :param description: description of the :class:`Project`
+        :param attrs: optional attributes for :class:`Project`
+        """
         attrs.update({'name': name, 'description': description})
         return self._new_resource(payload=attrs)
 
@@ -887,6 +1076,11 @@ class Projects(ListResource):
         return self.instance.parse(self.requester, response.json())
 
     def get_by_slug(self, slug):
+        """
+        Get a :class:`Project` by slug
+
+        :param slug: the slug of the :class:`Project`
+        """
         response = self.requester.get(
             '/{endpoint}/by_slug?slug={slug}',
             endpoint=self.instance.endpoint,
