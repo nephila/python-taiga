@@ -162,24 +162,13 @@ class Priorities(ListResource):
 
 class Attachment(InstanceResource):
     """
-<<<<<<< Updated upstream
     Attachment base class
-
-    :param requester: :class:`Requester` instance
-    :param project: :class:`Project` id
-    :param object_id: id of the current object
-    :param attached_file: ...
-    :param description: ...
-    :param is_deprecated: ...
-=======
-    Attachment model
 
     :param object_id: object_id of the :class:`Attachment`
     :param project: project of the :class:`Attachment`
     :param attached_file: attached_file of the :class:`Attachment`
     :param description: description of the :class:`Attachment`
     :param is_deprecated: is_deprecated of the :class:`Attachment`
->>>>>>> Stashed changes
     """
     repr_attribute = 'subject'
 
@@ -949,7 +938,6 @@ class Project(InstanceResource):
         return Issues(self.requester).list(project=self.id)
 
     def add_milestone(self, name, estimated_start, estimated_finish, **attrs):
-<<<<<<< Updated upstream
         """
         Add a Milestone to the project and returns a :class:`Milestone` object.
 
@@ -958,8 +946,6 @@ class Project(InstanceResource):
         :param estimated_finish: estimated finish time of the :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
-=======
->>>>>>> Stashed changes
         return Milestones(self.requester).create(
             self.id, name, estimated_start,
             estimated_finish, **attrs
