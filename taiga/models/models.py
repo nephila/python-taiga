@@ -91,7 +91,9 @@ class CustomAttributes(ListResource):
 
 
 class User(InstanceResource):
-
+    """
+    User model
+    """
     endpoint = 'users'
 
     repr_attribute = 'full_name'
@@ -110,7 +112,13 @@ class Users(ListResource):
 
 
 class Membership(InstanceResource):
+    """
+    Membership model
 
+    :param email: email of the :class:`Membership`
+    :param role: role of the :class:`Membership`
+    :param project: project of the :class:`Membership`
+    """
     endpoint = 'memberships'
 
     allowed_params = ['email', 'role', 'project']
@@ -128,7 +136,14 @@ class Memberships(ListResource):
 
 
 class Priority(InstanceResource):
+    """
+    Priority model
 
+    :param name: name of the :class:`Priority`
+    :param color: color of the class:`Priority`
+    :param order: order of the class:`Priority`
+    :param project: project of the class:`Priority`
+    """
     endpoint = 'priorities'
 
     allowed_params = ['name', 'color', 'order', 'project']
@@ -147,6 +162,7 @@ class Priorities(ListResource):
 
 class Attachment(InstanceResource):
     """
+<<<<<<< Updated upstream
     Attachment base class
 
     :param requester: :class:`Requester` instance
@@ -155,6 +171,15 @@ class Attachment(InstanceResource):
     :param attached_file: ...
     :param description: ...
     :param is_deprecated: ...
+=======
+    Attachment model
+
+    :param object_id: object_id of the :class:`Attachment`
+    :param project: project of the :class:`Attachment`
+    :param attached_file: attached_file of the :class:`Attachment`
+    :param description: description of the :class:`Attachment`
+    :param is_deprecated: is_deprecated of the :class:`Attachment`
+>>>>>>> Stashed changes
     """
     repr_attribute = 'subject'
 
@@ -196,7 +221,28 @@ class UserStoryAttachments(Attachments):
 
 
 class UserStory(CustomAttributeResource, CommentableReosource):
+    """
+    User Story model
 
+    :param assigned_to: assigned to of the :class:`UserStory`
+    :param backlog_order: backlog order of the :class:`UserStory`
+    :param blocked_note: blocked note of the :class:`UserStory`
+    :param version: version of the :class:`UserStory`
+    :param client_requirement: client requirement of the :class:`UserStory`
+    :param description: description of the :class:`UserStory`
+    :param is_archived: is archived of the :class:`UserStory`
+    :param is_blocked: is blocked of the :class:`UserStory`
+    :param kanban_order: kanban order of the :class:`UserStory`
+    :param milestone: milestone of the :class:`UserStory`
+    :param points: points of the :class:`UserStory`
+    :param project: project of the :class:`UserStory`
+    :param sprint_order: sprint order of the :class:`UserStory`
+    :param status: status of the :class:`UserStory`
+    :param subject: subject of the :class:`UserStory`
+    :param tags: tags of the :class:`UserStory`
+    :param team_requirement: team requirement of the :class:`UserStory`
+    :param watchers: watchers of the :class:`UserStory`
+    """
     endpoint = 'userstories'
 
     repr_attribute = 'subject'
@@ -251,6 +297,16 @@ class UserStories(ListResource):
 
 
 class UserStoryStatus(InstanceResource):
+    """
+    Taiga User Story Status model
+
+    :param color: the color of the :class:`UserStoryStatus`
+    :param is_closed: closed property of the :class:`UserStoryStatus`
+    :param name: The name of the :class:`UserStoryStatus`
+    :param order: order of the :class:`UserStoryStatus`
+    :param project: the Taiga project of the :class:`UserStoryStatus`
+    :param wip_limit: wip limit of the :class:`UserStoryStatus`
+    """
 
     repr_attribute = 'subject'
 
@@ -271,6 +327,15 @@ class UserStoryStatuses(ListResource):
 
 
 class Point(InstanceResource):
+    """
+    Taiga Point model
+
+    :param color: the color of the :class:`Point`
+    :param value: value of the :class:`Point`
+    :param name: name of the :class:`Point`
+    :param order: the order of the :class:`Point`
+    :param project: the Taiga project of the :class:`Point`
+    """
 
     endpoint = 'points'
 
@@ -289,7 +354,15 @@ class Points(ListResource):
 
 
 class Milestone(InstanceResource):
+    """
+    Milestone model
 
+    :param name: the name of the :class:`Milestone`
+    :param project: the Taiga project  of the :class:`Milestone`
+    :param estimated_start: the estimated start of the :class:`Milestone`
+    :param estimated_finish: the estimated finish  of the :class:`Milestone`
+    :param disponibility: the disponibility  of the :class:`Milestone`
+    """
     endpoint = 'milestones'
 
     allowed_params = [
@@ -667,7 +740,7 @@ class Project(InstanceResource):
     :param is_wiki_activated: determines if the project is private or not
     :param is_private: determines if the project is private or not
     :param videoconferences: appear-in or talky
-    :param videoconferences_salt: salt videoconference chat url generation
+    :param videoconferences_salt: for videoconference chat url generation
     :param total_milestones: missing
     :param total_story_points: missing
 
@@ -845,7 +918,7 @@ class Project(InstanceResource):
         :param priority: status of the :class:`Issue`
         :param issue_type: type of the :class:`Issue`
         :param severity: severity of the :class:`Issue`
-        :param attrs: optional :class:`Issue` attributes
+        :param attrs: other :class:`Issue` attributes
         """
         return Issues(self.requester).create(
             self.id, subject, priority, status,
@@ -876,6 +949,7 @@ class Project(InstanceResource):
         return Issues(self.requester).list(project=self.id)
 
     def add_milestone(self, name, estimated_start, estimated_finish, **attrs):
+<<<<<<< Updated upstream
         """
         Add a Milestone to the project and returns a :class:`Milestone` object.
 
@@ -884,6 +958,8 @@ class Project(InstanceResource):
         :param estimated_finish: estimated finish time of the :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
+=======
+>>>>>>> Stashed changes
         return Milestones(self.requester).create(
             self.id, name, estimated_start,
             estimated_finish, **attrs
