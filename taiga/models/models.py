@@ -408,7 +408,15 @@ class Milestones(ListResource):
 
 
 class TaskStatus(InstanceResource):
+    """
+    Task Status model
 
+    :param name: the name of the :class:`TaskStatus`
+    :param color: the color of the :class:`TaskStatus`
+    :param order: the order of the :class:`TaskStatus`
+    :param project: the project  of the :class:`TaskStatus`
+    :param is_closed: the is closed property of the :class:`TaskStatus`
+    """
     endpoint = 'task-statuses'
 
     allowed_params = ['name', 'color', 'order', 'project', 'is_closed']
@@ -434,6 +442,26 @@ class TaskAttachments(Attachments):
 
 
 class Task(CustomAttributeResource, CommentableReosource):
+    """
+    Task model
+
+    :param assigned_to: assigned to property of the :class:`TaskStatus`
+    :param blocked_note: blocked note of the :class:`TaskStatus`
+    :param description: description of of the :class:`TaskStatus`
+    :param version: version of the :class:`TaskStatus`
+    :param is_blocked: is blocked property of the :class:`TaskStatus`
+    :param milestone: milestone property of the :class:`TaskStatus`
+    :param project: the project of the :class:`TaskStatus`
+    :param user_story: the user story of the :class:`TaskStatus`
+    :param status: status of the :class:`TaskStatus`
+    :param subject: subject of the :class:`TaskStatus`
+    :param tags: tags of the :class:`TaskStatus`
+    :param us_order: the use order of the :class:`TaskStatus`
+    :param taskboard_order: the taskboard order of the :class:`TaskStatus`
+    :param is_iocaine: the is iocaine of the :class:`TaskStatus`
+    :param external_reference: external reference of the :class:`TaskStatus`
+    :param watchers: watchers of the :class:`TaskStatus`
+    """
 
     endpoint = 'tasks'
 
@@ -484,7 +512,14 @@ class Tasks(ListResource):
 
 
 class IssueType(InstanceResource):
+    """
+    Issue Type model
 
+    :param name: name of the :class:`IssueType`
+    :param color: color of the :class:`IssueType`
+    :param order: order of the :class:`IssueType`
+    :param project: the taiga project of the :class:`IssueType`
+    """
     endpoint = 'issue-types'
 
     allowed_params = ['name', 'color', 'order', 'project']
@@ -500,6 +535,15 @@ class IssueTypes(ListResource):
 
 
 class IssueStatus(InstanceResource):
+    """
+    Issue Status model
+
+    :param name: name of the :class:`IssueStatus`
+    :param color: color of the :class:`IssueStatus`
+    :param order: order of the :class:`IssueStatus`
+    :param project: the taiga project of the :class:`IssueStatus`
+    :param is_closed: is closed property of the :class:`IssueStatus`
+    """
 
     endpoint = 'issue-statuses'
 
@@ -851,7 +895,8 @@ class Project(InstanceResource):
 
     def add_membership(self, email, role, **attrs):
         """
-        Add a Membership to the project and returns a :class:`Membership` resource.
+        Add a Membership to the project and returns a
+        :class:`Membership` resource.
 
         :param email: email for :class:`Membership`
         :param role: role for :class:`Membership`
@@ -942,8 +987,10 @@ class Project(InstanceResource):
         Add a Milestone to the project and returns a :class:`Milestone` object.
 
         :param name: name of the :class:`Milestone`
-        :param estimated_start: estimated start time of the :class:`Milestone`
-        :param estimated_finish: estimated finish time of the :class:`Milestone`
+        :param estimated_start: estimated start time of the
+        :class:`Milestone`
+        :param estimated_finish: estimated finish time of the
+         :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
         return Milestones(self.requester).create(
@@ -951,13 +998,16 @@ class Project(InstanceResource):
             estimated_finish, **attrs
         )
 
-    def import_milestone(self, name, estimated_start, estimated_finish, **attrs):
+    def import_milestone(self, name, estimated_start, estimated_finish,
+                         **attrs):
         """
         Import a Milestone and returns a :class:`Milestone` object.
 
         :param name: name of the :class:`Milestone`
-        :param estimated_start: estimated start time of the :class:`Milestone`
-        :param estimated_finish: estimated finish time of the :class:`Milestone`
+        :param estimated_start: estimated start time of the
+        :class:`Milestone`
+        :param estimated_finish: estimated finish time of the
+        :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
         return Milestones(self.requester).import_(
@@ -989,7 +1039,8 @@ class Project(InstanceResource):
 
     def add_task_status(self, name, **attrs):
         """
-        Add a Task status to the project and returns a :class:`TaskStatus` object.
+        Add a Task status to the project and returns a
+        :class:`TaskStatus` object.
 
         :param name: name of the :class:`TaskStatus`
         :param attrs: optional attributes for :class:`TaskStatus`
@@ -1016,7 +1067,8 @@ class Project(InstanceResource):
 
     def add_user_story_status(self, name, **attrs):
         """
-        Add a UserStory status to the project and returns a :class:`UserStoryStatus` object.
+        Add a UserStory status to the project and returns a
+        :class:`UserStoryStatus` object.
 
         :param name: name of the :class:`UserStoryStatus`
         :param attrs: optional attributes for :class:`UserStoryStatus`
@@ -1031,7 +1083,8 @@ class Project(InstanceResource):
 
     def add_issue_type(self, name, **attrs):
         """
-        Add a Issue type to the project and returns a :class:`IssueType` object.
+        Add a Issue type to the project and returns a
+        :class:`IssueType` object.
 
         :param name: name of the :class:`IssueType`
         :param attrs: optional attributes for :class:`IssueType`
@@ -1091,7 +1144,8 @@ class Project(InstanceResource):
 
     def add_issue_status(self, name, **attrs):
         """
-        Add a Issue status to the project and returns a :class:`IssueStatus` object.
+        Add a Issue status to the project and returns a
+        :class:`IssueStatus` object.
 
         :param name: name of the :class:`IssueStatus`
         :param attrs: optional attributes for :class:`IssueStatus`
@@ -1195,7 +1249,8 @@ class Project(InstanceResource):
 
     def add_user_story_attribute(self, name, **attrs):
         """
-        Add a new User Story attribute and return a :class:`UserStoryAttribute` object.
+        Add a new User Story attribute and return a
+        :class:`UserStoryAttribute` object.
 
         :param name: name of the :class:`UserStoryAttribute`
         :param attrs: optional attributes for :class:`UserStoryAttribute`
