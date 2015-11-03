@@ -2,9 +2,9 @@ import datetime
 from .base import InstanceResource, ListResource
 
 
-class CommentableReosource(InstanceResource):
+class CommentableResource(InstanceResource):
     """
-    CommentableReosource base class
+    CommentableResource base class
     """
     def add_comment(self, comment):
         """
@@ -237,7 +237,7 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
-class UserStory(CustomAttributeResource, CommentableReosource):
+class UserStory(CustomAttributeResource, CommentableResource):
     """
     User Story model
 
@@ -460,8 +460,8 @@ class Milestones(ListResource):
 
         :param project: :class:`Project` id
         :param name: name of the :class:`Milestone`
-        :param estimated_start: estimated start time of the :class:`Milestone`
-        :param estimated_finish: estimated finish time of the :class:`Milestone`
+        :param estimated_start: est. start time of the :class:`Milestone`
+        :param estimated_finish: est. finish time of the :class:`Milestone`
         :param attrs: optional attributes of the :class:`Milestone`
         """
         if isinstance(estimated_start, datetime.datetime):
@@ -539,7 +539,7 @@ class TaskAttachments(Attachments):
     instance = TaskAttachment
 
 
-class Task(CustomAttributeResource, CommentableReosource):
+class Task(CustomAttributeResource, CommentableResource):
     """
     Task model
 
@@ -694,7 +694,7 @@ class IssueAttachments(Attachments):
     instance = IssueAttachment
 
 
-class Issue(CustomAttributeResource, CommentableReosource):
+class Issue(CustomAttributeResource, CommentableResource):
     """Issue model
 
     :param requester: :class:`Requester` instance
