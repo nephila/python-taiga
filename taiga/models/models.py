@@ -111,7 +111,9 @@ class Priorities(ListResource):
 
 
 class Attachment(InstanceResource):
-
+    """
+    Attachment base class
+    """
     repr_attribute = 'subject'
 
     allowed_params = [
@@ -121,8 +123,19 @@ class Attachment(InstanceResource):
 
 
 class Attachments(ListResource):
-
+    """
+    Attachments factory base class
+    """
     def create(self, project, object_id, attached_file, **attrs):
+        """
+        Create a new :class:`Attachment`.
+
+        :param project: :class:`Project` id
+        :param object_id: id of the current object
+        :param ref: :class:`Task` reference
+        :param attached_file: file path that you want to upload
+        :param attrs: optional attributes for the :class:`Attachment`
+        """
         attrs.update({'project': project, 'object_id': object_id})
         return self._new_resource(
             files={'attached_file': open(attached_file, 'rb')},
@@ -1049,6 +1062,9 @@ class Project(InstanceResource):
 
 
 class Projects(ListResource):
+    """
+    Projects factory
+    """
 
     instance = Project
 
@@ -1090,17 +1106,28 @@ class Projects(ListResource):
 
 
 class WikiAttachment(Attachment):
-
+    """
+    WikiAttachment model
+    """
     endpoint = 'wiki/attachments'
 
 
 class WikiAttachments(Attachments):
-
+    """
+    WikiAttachments factory
+    """
     instance = WikiAttachment
 
 
 class WikiPage(InstanceResource):
+    """
+    WikiPage model
 
+    :param project: ...
+    :param slug: ...
+    :param content: ...
+    :param watchers: ...
+    """
     endpoint = 'wiki'
 
     repr_attribute = 'slug'
@@ -1108,6 +1135,12 @@ class WikiPage(InstanceResource):
     allowed_params = ['project', 'slug', 'content', 'watchers']
 
     def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`WikiPage`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
         return WikiAttachments(self.requester).create(
             self.project, self.id,
             attached_file, **attrs
@@ -1115,10 +1148,20 @@ class WikiPage(InstanceResource):
 
 
 class WikiPages(ListResource):
-
+    """
+    WikiPages factory
+    """
     instance = WikiPage
 
     def create(self, project, slug, content, **attrs):
+        """
+        create a new :class:`WikiPage`
+
+        :param project: ...
+        :param slug: ...
+        :param content: ...
+        :param attrs: optional attributes for the :class:`WikiPage`
+        """
         attrs.update({'project': project, 'slug': slug, 'content': content})
         return self._new_resource(payload=attrs)
 
@@ -1131,7 +1174,14 @@ class WikiPages(ListResource):
 
 
 class WikiLink(InstanceResource):
+    """
+    WikiLink model
 
+    :param project: ...
+    :param title: ...
+    :param href: ...
+    :param order: ...
+    """
     endpoint = 'wiki-links'
 
     repr_attribute = 'title'
@@ -1140,10 +1190,20 @@ class WikiLink(InstanceResource):
 
 
 class WikiLinks(ListResource):
-
+    """
+    WikiLinks factory
+    """
     instance = WikiLink
 
     def create(self, project, title, href, **attrs):
+        """
+        Create a new :class:`WikiLink`
+
+        :param project: ...
+        :param title: ...
+        :param href: ...
+        :param attrs: optional attributes for the :class:`WikiLink`
+        """
         attrs.update({'project': project, 'title': title, 'href': href})
         return self._new_resource(payload=attrs)
 
@@ -1156,7 +1216,9 @@ class WikiLinks(ListResource):
 
 
 class History(InstanceResource):
-
+    """
+    History model
+    """
     def __init__(self, *args, **kwargs):
         super(History, self).__init__(*args, **kwargs)
         self.issue = HistoryIssue(self.requester)
@@ -1166,13 +1228,20 @@ class History(InstanceResource):
 
 
 class HistoryEntity(object):
-
+    """
+    HistoryEntity model
+    """
     endpoint = 'history'
 
     def __init__(self, requester):
         self.requester = requester
 
     def get(self, resource_id):
+        """
+        Get a history element
+
+        :param resource_id: ...
+        """
         response = self.requester.get(
             '/{endpoint}/{entity}/{id}',
             endpoint=self.endpoint, entity=self.entity, id=resource_id
@@ -1180,6 +1249,12 @@ class HistoryEntity(object):
         return response.json()
 
     def delete_comment(self, resource_id, ent_id):
+        """
+        Delete a comment
+
+        :param resource_id: ...
+        :param ent_id: ...
+        """
         self.requester.post(
             '/{endpoint}/{entity}/{id}/delete_comment?id={ent_id}',
             endpoint=self.endpoint, entity=self.entity,
@@ -1187,6 +1262,12 @@ class HistoryEntity(object):
         )
 
     def undelete_comment(self, resource_id, ent_id):
+        """
+        Undelete a comment
+
+        :param resource_id: ...
+        :param ent_id: ...
+        """
         self.requester.post(
             '/{endpoint}/{entity}/{id}/undelete_comment?id={ent_id}',
             endpoint=self.endpoint, entity=self.entity,
@@ -1195,28 +1276,36 @@ class HistoryEntity(object):
 
 
 class HistoryIssue(HistoryEntity):
-
+    """
+    HistoryIssue model
+    """
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
         self.entity = 'issue'
 
 
 class HistoryTask(HistoryEntity):
-
+    """
+    HistoryTask model
+    """
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
         self.entity = 'task'
 
 
 class HistoryUserStory(HistoryEntity):
-
+    """
+    HistoryUserStory model
+    """
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
         self.entity = 'userstory'
 
 
 class HistoryWiki(HistoryEntity):
-
+    """
+    HistoryWiki model
+    """
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
         self.entity = 'wiki'

@@ -78,6 +78,11 @@ class ListResource(Resource):
 
 
 class InstanceResource(Resource):
+    """InstanceResource model
+
+    :param requester: :class:`Requester` instance
+    :param params: :various parameters
+    """
 
     endpoint = ''
 
@@ -113,6 +118,9 @@ class InstanceResource(Resource):
             return element
 
     def update(self, **args):
+        """
+        Update the current :class:`InstanceResource`
+        """
         self_dict = self.to_dict()
         if args:
             self_dict = dict(list(self_dict.items()) + list(args.items()))
@@ -126,6 +134,9 @@ class InstanceResource(Resource):
         return self
 
     def delete(self):
+        """
+        Delete the current :class:`InstanceResource`
+        """
         self.requester.delete(
             '/{endpoint}/{id}', endpoint=self.endpoint,
             id=self.id
@@ -133,6 +144,9 @@ class InstanceResource(Resource):
         return self
 
     def to_dict(self):
+        """
+        Get a dictionary representation of :class:`InstanceResource`
+        """
         self_dict = {}
         for key, value in six.iteritems(self.__dict__):
             if self.allowed_params and key in self.allowed_params:
@@ -141,7 +155,9 @@ class InstanceResource(Resource):
 
     @classmethod
     def parse(cls, requester, entry):
-        """Parse a JSON object into a model instance."""
+        """
+        Turns a JSON object into a model instance.
+        """
         if not type(entry) is dict:
             return entry
         for key_to_parse, cls_to_parse in six.iteritems(cls.parser):
