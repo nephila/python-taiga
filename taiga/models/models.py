@@ -99,6 +99,9 @@ class User(InstanceResource):
     repr_attribute = 'full_name'
 
     def starred_projects(self):
+        """
+        Get a list of starred :class:`Project`.
+        """
         response = self.requester.get(
             '/{endpoint}/{id}/starred', endpoint=self.endpoint,
             id=self.id
@@ -107,7 +110,9 @@ class User(InstanceResource):
 
 
 class Users(ListResource):
-
+    """
+    Users factory class
+    """
     instance = User
 
 
@@ -127,10 +132,20 @@ class Membership(InstanceResource):
 
 
 class Memberships(ListResource):
-
+    """
+    Memberships factory class
+    """
     instance = Membership
 
     def create(self, project, email, role, **attrs):
+        """
+        Create a new :class:`Membership`.
+
+        :param project: :class:`Project` id
+        :param email: email of the :class:`Membership`
+        :param role: role of the :class:`Membership`
+        :param attrs: optional attributes of the :class:`Membership`
+        """
         attrs.update({'project': project, 'email': email, 'role': role})
         return self._new_resource(payload=attrs)
 
@@ -152,10 +167,19 @@ class Priority(InstanceResource):
 
 
 class Priorities(ListResource):
-
+    """
+    Priorities factory class
+    """
     instance = Priority
 
     def create(self, project, name, **attrs):
+        """
+        Create a new :class:`Priority`.
+
+        :param project: :class:`Project` id
+        :param name: email of the :class:`Priority`
+        :param attrs: optional attributes of the :class:`Priority`
+        """
         attrs.update({'project': project, 'name': name})
         return self._new_resource(payload=attrs)
 
@@ -200,12 +224,16 @@ class Attachments(ListResource):
 
 
 class UserStoryAttachment(Attachment):
-
+    """
+    UserStoryAttachment class
+    """
     endpoint = 'userstories/attachments'
 
 
 class UserStoryAttachments(Attachments):
-
+    """
+    UserStoryAttachments factory class
+    """
     instance = UserStoryAttachment
 
 
@@ -245,18 +273,37 @@ class UserStory(CustomAttributeResource, CommentableReosource):
     ]
 
     def add_task(self, subject, status, **attrs):
+        """
+        Add a :class:`Task` to the current :class:`UserStory` and return it.
+        :param subject: subject of the :class:`Task`
+        :param status: status of the :class:`Task`
+        :param attrs: optional attributes for :class:`Task`
+
+        """
         return Tasks(self.requester).create(
             self.project, subject, status,
             user_story=self.id, **attrs
         )
 
     def list_tasks(self):
+        """
+        Get a list of :class:`Task` in the current :class:`UserStory`.
+        """
         return Tasks(self.requester).list(user_story=self.id)
 
     def list_attachments(self):
+        """
+        Get a list of :class:`UserStoryAttachment`.
+        """
         return UserStoryAttachments(self.requester).list(object_id=self.id)
 
     def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`UserStory`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
         return UserStoryAttachments(self.requester).create(
             self.project, self.id,
             attached_file, **attrs
@@ -264,10 +311,19 @@ class UserStory(CustomAttributeResource, CommentableReosource):
 
 
 class UserStories(ListResource):
-
+    """
+    UserStories factory class
+    """
     instance = UserStory
 
     def create(self, project, subject, **attrs):
+        """
+        Create a new :class:`UserStory`.
+
+        :param project: :class:`Project` id
+        :param subject: subject of the :class:`UserStory`
+        :param attrs: optional attributes of the :class:`UserStory`
+        """
         attrs.update({'project': project, 'subject': subject})
         return self._new_resource(payload=attrs)
 
@@ -311,6 +367,13 @@ class UserStoryStatuses(ListResource):
     instance = UserStoryStatus
 
     def create(self, project, name, **attrs):
+        """
+        Create a new :class:`UserStoryStatus`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`UserStoryStatus`
+        :param attrs: optional attributes of the :class:`UserStoryStatus`
+        """
         attrs.update({'project': project, 'name': name})
         return self._new_resource(payload=attrs)
 
@@ -334,10 +397,20 @@ class Point(InstanceResource):
 
 
 class Points(ListResource):
-
+    """
+    Points factory
+    """
     instance = Point
 
     def create(self, project, name, value, **attrs):
+        """
+        Create a new :class:`UserStoryStatus`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`Point`
+        :param value: value of the :class:`Point`
+        :param attrs: optional attributes of the :class:`Point`
+        """
         attrs.update({'project': project, 'name': name, 'value': value})
         return self._new_resource(payload=attrs)
 
@@ -364,6 +437,9 @@ class Milestone(InstanceResource):
     }
 
     def stats(self):
+        """
+        Get the stats for the current :class:`Milestone`
+        """
         response = self.requester.get(
             '/{endpoint}/{id}/stats',
             endpoint=self.endpoint, id=self.id
@@ -372,11 +448,22 @@ class Milestone(InstanceResource):
 
 
 class Milestones(ListResource):
-
+    """
+    Milestones factory
+    """
     instance = Milestone
 
     def create(self, project, name, estimated_start,
                estimated_finish, **attrs):
+        """
+        Create a new :class:`Milestone`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`Milestone`
+        :param estimated_start: estimated start time of the :class:`Milestone`
+        :param estimated_finish: estimated finish time of the :class:`Milestone`
+        :param attrs: optional attributes of the :class:`Milestone`
+        """
         if isinstance(estimated_start, datetime.datetime):
             estimated_start = estimated_start.strftime('%Y-%m-%d')
         if isinstance(estimated_finish, datetime.datetime):
@@ -427,17 +514,28 @@ class TaskStatuses(ListResource):
     instance = TaskStatus
 
     def create(self, project, name, **attrs):
+        """
+        Create a new :class:`TaskStatus`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`TaskStatus`
+        :param attrs: optional attributes of the :class:`TaskStatus`
+        """
         attrs.update({'project': project, 'name': name})
         return self._new_resource(payload=attrs)
 
 
 class TaskAttachment(Attachment):
-
+    """
+    TaskAttachment model
+    """
     endpoint = 'tasks/attachments'
 
 
 class TaskAttachments(Attachments):
-
+    """
+    TaskAttachments factory
+    """
     instance = TaskAttachment
 
 
@@ -475,9 +573,18 @@ class Task(CustomAttributeResource, CommentableReosource):
     ]
 
     def list_attachments(self):
+        """
+        Get a list of :class:`TaskAttachment`.
+        """
         return TaskAttachments(self.requester).list(object_id=self.id)
 
     def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`Task`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
         return TaskAttachments(self.requester).create(
             self.project, self.id,
             attached_file, **attrs
@@ -485,10 +592,20 @@ class Task(CustomAttributeResource, CommentableReosource):
 
 
 class Tasks(ListResource):
-
+    """
+    Tasks factory
+    """
     instance = Task
 
     def create(self, project, subject, status, **attrs):
+        """
+        Create a new :class:`Task`.
+
+        :param project: :class:`Project` id
+        :param subject: subject of the :class:`Task`
+        :param status: status of the :class:`Task`
+        :param attrs: optional attributes of the :class:`Task`
+        """
         attrs.update(
             {
                 'project': project, 'subject': subject,
@@ -513,7 +630,7 @@ class Tasks(ListResource):
 
 class IssueType(InstanceResource):
     """
-    Issue Type model
+    IssueType model
 
     :param name: name of the :class:`IssueType`
     :param color: color of the :class:`IssueType`
@@ -526,7 +643,9 @@ class IssueType(InstanceResource):
 
 
 class IssueTypes(ListResource):
-
+    """
+    IssueTypes factory
+    """
     instance = IssueType
 
     def create(self, project, name, **attrs):
@@ -551,7 +670,9 @@ class IssueStatus(InstanceResource):
 
 
 class IssueStatuses(ListResource):
-
+    """
+    IssueStatuses factory
+    """
     instance = IssueStatus
 
     def create(self, project, name, **attrs):
@@ -560,12 +681,16 @@ class IssueStatuses(ListResource):
 
 
 class IssueAttachment(Attachment):
-
+    """
+    IssueAttachment model
+    """
     endpoint = 'issues/attachments'
 
 
 class IssueAttachments(Attachments):
-
+    """
+    IssueAttachments factory
+    """
     instance = IssueAttachment
 
 
@@ -599,9 +724,15 @@ class Issue(CustomAttributeResource, CommentableReosource):
     ]
 
     def list_attachments(self):
+        """
+        Get a list of :class:`IssueAttachment`.
+        """
         return IssueAttachments(self.requester).list(object_id=self.id)
 
     def upvote(self):
+        """
+        Upvote :class:`Issue`.
+        """
         self.requester.post(
             '/{endpoint}/{id}/upvote',
             endpoint=self.endpoint, id=self.id
@@ -609,6 +740,9 @@ class Issue(CustomAttributeResource, CommentableReosource):
         return self
 
     def downvote(self):
+        """
+        Downvote :class:`Issue`.
+        """
         self.requester.post(
             '/{endpoint}/{id}/downvote',
             endpoint=self.endpoint, id=self.id
@@ -616,6 +750,12 @@ class Issue(CustomAttributeResource, CommentableReosource):
         return self
 
     def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`Issue`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
         return IssueAttachments(self.requester).create(
             self.project, self.id,
             attached_file, **attrs
@@ -628,6 +768,17 @@ class Issues(ListResource):
 
     def create(self, project, subject, priority, status,
                issue_type, severity, **attrs):
+        """
+        Create a new :class:`Task`.
+
+        :param project: :class:`Project` id
+        :param subject: subject of the :class:`Issue`
+        :param priority: priority of the :class:`Issue`
+        :param status: status of the :class:`Issue`
+        :param issue_type: Issue type of the :class:`Issue`
+        :param severity: severity of the :class:`Issue`
+        :param attrs: optional attributes of the :class:`Task`
+        """
         attrs.update(
             {
                 'project': project, 'subject': subject,
