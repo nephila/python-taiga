@@ -9,10 +9,12 @@ Welcome to python-taiga's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-.. automodule:: taiga.models
+.. automodule:: taiga.models.models
    :members:
+   :show-inheritance:
+   :inherited-members:
 
 Indices and tables
 ==================
