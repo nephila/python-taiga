@@ -59,10 +59,10 @@ class CustomAttribute(InstanceResource):
     CustomAttribute base class
 
     :param requester: :class:`Requester` instance
-    :param name: :class:`Project` id
+    :param name: name of the custom attribute
     :param description: id of the current object
-    :param order: ...
-    :param project: ...
+    :param order: order of the custom attribute
+    :param project: :class:`Project` id
     """
     repr_attribute = 'name'
 
@@ -1479,10 +1479,10 @@ class WikiPage(InstanceResource):
     """
     WikiPage model
 
-    :param project: ...
-    :param slug: ...
-    :param content: ...
-    :param watchers: ...
+    :param project: :class:`Project` id
+    :param slug: slug of the wiki page
+    :param content: content of the wiki page
+    :param watchers: list of watchers id
     """
     endpoint = 'wiki'
 
@@ -1513,9 +1513,9 @@ class WikiPages(ListResource):
         """
         create a new :class:`WikiPage`
 
-        :param project: ...
-        :param slug: ...
-        :param content: ...
+        :param project: :class:`Project` id
+        :param slug: slug of the wiki page
+        :param content: content of the wiki page
         :param attrs: optional attributes for the :class:`WikiPage`
         """
         attrs.update({'project': project, 'slug': slug, 'content': content})
@@ -1533,10 +1533,10 @@ class WikiLink(InstanceResource):
     """
     WikiLink model
 
-    :param project: ...
-    :param title: ...
-    :param href: ...
-    :param order: ...
+    :param project: :class:`Project` id
+    :param title: title of the wiki link
+    :param href: href for the wiki link
+    :param order: order of the wiki link
     """
     endpoint = 'wiki-links'
 
@@ -1555,9 +1555,9 @@ class WikiLinks(ListResource):
         """
         Create a new :class:`WikiLink`
 
-        :param project: ...
-        :param title: ...
-        :param href: ...
+        :param project: :class:`Project` id
+        :param title: title of the wiki link
+        :param href: href for the wiki link
         :param attrs: optional attributes for the :class:`WikiLink`
         """
         attrs.update({'project': project, 'title': title, 'href': href})
