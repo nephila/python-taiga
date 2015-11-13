@@ -197,7 +197,6 @@ You can access the history of issues, tasks, userstories and wiki pages:
 
     history = api.history.user_story.get(user_story.id)
 
-
 TaigaAPI documentation
 ======================
 
@@ -230,4 +229,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

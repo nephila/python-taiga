@@ -81,7 +81,7 @@ class TaigaAPI:
 
     def me(self):
         """
-        Get user instance representing me
+        Get a :class:`taiga.models.models.User` representing me
         """
         return self.users.get('me')
 
