@@ -11,6 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
+.. automodule:: taiga.client
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
 .. automodule:: taiga.models.models
    :members:
    :show-inheritance:

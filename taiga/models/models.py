@@ -49,7 +49,7 @@ class CustomAttributeResource(InstanceResource):
 
     def get_attributes(self):
         """
-        Get attributes of the current object
+        Get all the attributes of the current object
         """
         return self._get_attributes()
 
@@ -81,6 +81,7 @@ class CustomAttributes(ListResource):
 
         :param project: :class:`Project` id
         :param name: name of the custom attribute
+        :param attrs: optional attributes of the custom attributes
         """
         attrs.update(
             {
@@ -177,8 +178,8 @@ class Priorities(ListResource):
         Create a new :class:`Priority`.
 
         :param project: :class:`Project` id
-        :param name: email of the :class:`Priority`
-        :param attrs: optional attributes of the :class:`Priority`
+        :param name: email of the priority
+        :param attrs: optional attributes of the priority
         """
         attrs.update({'project': project, 'name': name})
         return self._new_resource(payload=attrs)
