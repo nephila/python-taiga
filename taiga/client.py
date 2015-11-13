@@ -38,7 +38,13 @@ class SearchResult(object):
 
 
 class TaigaAPI:
+    """
+    TaigaAPI class
 
+    :param host: the host of your Taiga.io instance
+    :param token: the token you may provide
+    :param token_type: the token type
+    """
     def __init__(self, host='https://api.taiga.io', token=None,
                  token_type='Bearer'):
         self.host = host
@@ -74,9 +80,18 @@ class TaigaAPI:
         self.history = History(self.raw_request)
 
     def me(self):
+        """
+        Get a :class:`taiga.models.models.User` representing me
+        """
         return self.users.get('me')
 
     def search(self, project, text=''):
+        """
+        Search in your Taiga.io instance
+
+        :param project: the project id
+        :param text: the query of your search
+        """
         result = self.raw_request.get(
             'search', query={'project': project, 'text': text}
         )
@@ -93,6 +108,12 @@ class TaigaAPI:
         return search_result
 
     def auth(self, username, password):
+        """
+        Authenticate you
+
+        :param username: your username
+        :param password: your password
+        """
         headers = {
             'Content-type': 'application/json'
         }
@@ -126,6 +147,13 @@ class TaigaAPI:
         self._init_resources()
 
     def auth_app(self, app_id, app_secret, auth_code, state=''):
+        """
+        Authenticate an app
+
+        :param app_id: the app id
+        :param app_secret: the app secret
+        :param auth_code: the app auth code
+        """
         headers = {
             'Content-type': 'application/json'
         }
