@@ -1005,6 +1005,16 @@ class Project(InstanceResource):
         )
         return response.json()
 
+    def issues_stats(self):
+        """
+        Get stats for issues of the project
+        """
+        response = self.requester.get(
+            '/{endpoint}/{id}/issues_stats',
+            endpoint=self.endpoint, id=self.id
+        )
+        return response.json()
+
     def like(self):
         """
         Like the project
