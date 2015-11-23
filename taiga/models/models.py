@@ -1224,7 +1224,7 @@ class Project(InstanceResource):
         :param attrs: optional attributes for :class:`Task`
         """
         return Tasks(self.requester).import_(
-            self.id, subject, status
+            self.id, subject, status, **attrs
         )
 
     def add_user_story_status(self, name, **attrs):
