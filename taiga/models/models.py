@@ -199,7 +199,8 @@ class Attachment(InstanceResource):
 
     allowed_params = [
         'object_id', 'project', 'attached_file',
-        'description', 'is_deprecated'
+        'description', 'is_deprecated', 'size',
+        'name', 'url'
     ]
 
 
