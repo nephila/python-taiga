@@ -1,5 +1,6 @@
 from taiga.requestmaker import RequestMaker
 from taiga.models import UserStory, UserStories, Task
+from taiga.exceptions import TaigaException
 import unittest
 from mock import patch
 import six
@@ -70,6 +71,27 @@ class TestUserStories(unittest.TestCase):
             files={'attached_file': fd},
             payload={'project': 1, 'object_id': 1}
         )
+
+    @patch('taiga.models.base.ListResource._new_resource')
+    def test_open_file_attach(self, mock_new_resource):
+        fd = open('tests/resources/tasks_list_success.json')
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        userstory = UserStory(rm, id=1, project=1)
+        userstory.attach(fd)
+        mock_new_resource.assert_called_with(
+            files={'attached_file': fd},
+            payload={'project': 1, 'object_id': 1}
+        )
+
+    def test_not_existing_file_attach(self):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        userstory = UserStory(rm, id=1, project=1)
+        self.assertRaises(TaigaException, userstory.attach, 'not-existing-file')
+
+    def test_not_valid_type_file_attach(self):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        userstory = UserStory(rm, id=1, project=1)
+        self.assertRaises(TaigaException, userstory.attach, 4)
 
     @patch('taiga.models.base.ListResource._new_resource')
     def test_create_user_story(self, mock_new_resource):

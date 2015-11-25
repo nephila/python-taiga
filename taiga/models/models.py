@@ -1,5 +1,12 @@
 import datetime
+import six
+
+if six.PY3:
+    from io import IOBase as file
+
+
 from .base import InstanceResource, ListResource
+from .. import exceptions
 
 
 class CommentableResource(InstanceResource):
@@ -219,8 +226,23 @@ class Attachments(ListResource):
         :param attrs: optional attributes for the :class:`Attachment`
         """
         attrs.update({'project': project, 'object_id': object_id})
+
+        if isinstance(attached_file, file):
+            attachment = attached_file
+        elif isinstance(attached_file, str):
+            try:
+                attachment = open(attached_file, 'rb')
+            except IOError:
+                raise exceptions.TaigaException(
+                    "Attachment must be a IOBase or a path to an existing file"
+                )
+        else:
+            raise exceptions.TaigaException(
+                "Attachment must be a IOBase or a path to an existing file"
+            )
+
         return self._new_resource(
-            files={'attached_file': open(attached_file, 'rb')},
+            files={'attached_file': attachment},
             payload=attrs
         )
 
