@@ -16,6 +16,7 @@ from .models import Roles
 from .models import Priorities
 from .models import IssueStatuses
 from .models import IssueAttributes
+from .models import IssueTypes
 from .models import TaskAttributes
 from .models import UserStoryAttributes
 from .models import TaskStatuses
@@ -69,6 +70,7 @@ class TaigaAPI:
         self.roles = Roles(self.raw_request)
         self.points = Points(self.raw_request)
         self.issue_statuses = IssueStatuses(self.raw_request)
+        self.issue_types = IssueTypes(self.raw_request)
         self.issue_attributes = IssueAttributes(self.raw_request)
         self.task_attributes = TaskAttributes(self.raw_request)
         self.user_story_attributes = UserStoryAttributes(self.raw_request)
