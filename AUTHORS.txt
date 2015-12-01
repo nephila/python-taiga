@@ -14,3 +14,4 @@ Dennis Markgraf <info@dennismarkgraf.com>
 Paolo Romolini <p.romolini@nephila.it>
 Paolo Romolini <p.romolini@nephila.it>
 David Barragán Merino <david.barragan@kaleidos.net>
+Iacopo Spalletti <i.spalletti@nephila.it>
