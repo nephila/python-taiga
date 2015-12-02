@@ -1,5 +1,6 @@
 from taiga.requestmaker import RequestMaker
 from taiga.models import Issue, Issues
+from taiga.exceptions import TaigaException
 import unittest
 from mock import patch
 from .tools import create_mock_json
@@ -76,6 +77,27 @@ class TestIssues(unittest.TestCase):
             files={'attached_file': fd},
             payload={'project': 1, 'object_id': 1}
         )
+
+    @patch('taiga.models.base.ListResource._new_resource')
+    def test_open_file_attach(self, mock_new_resource):
+        fd = open('tests/resources/tasks_list_success.json')
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue = Issue(rm, id=1, project=1)
+        issue.attach(fd)
+        mock_new_resource.assert_called_with(
+            files={'attached_file': fd},
+            payload={'project': 1, 'object_id': 1}
+        )
+
+    def test_not_existing_file_attach(self):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue = Issue(rm, id=1, project=1)
+        self.assertRaises(TaigaException, issue.attach, 'not-existing-file')
+
+    def test_not_valid_type_file_attach(self):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        issue = Issue(rm, id=1, project=1)
+        self.assertRaises(TaigaException, issue.attach, 4)
 
     @patch('taiga.models.base.InstanceResource.update')
     def test_add_comment(self, mock_update):
