@@ -29,7 +29,6 @@
                 "owner":21921,
                 "status":null,
                 "is_closed":false,
-                "is_archived":false,
                 "backlog_order":10000,
                 "sprint_order":10000,
                 "kanban_order":10000,
