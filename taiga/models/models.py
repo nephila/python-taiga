@@ -271,7 +271,6 @@ class UserStory(CustomAttributeResource, CommentableResource):
     :param version: version of the :class:`UserStory`
     :param client_requirement: client requirement of the :class:`UserStory`
     :param description: description of the :class:`UserStory`
-    :param is_archived: is archived of the :class:`UserStory`
     :param is_blocked: is blocked of the :class:`UserStory`
     :param kanban_order: kanban order of the :class:`UserStory`
     :param milestone: milestone of the :class:`UserStory`
@@ -290,10 +289,9 @@ class UserStory(CustomAttributeResource, CommentableResource):
 
     allowed_params = [
         'assigned_to', 'backlog_order', 'blocked_note', 'version',
-        'client_requirement', 'description', 'is_archived', 'is_blocked',
-        'is_closed', 'kanban_order', 'milestone', 'points', 'project',
-        'sprint_order', 'status', 'subject', 'tags', 'team_requirement',
-        'watchers'
+        'client_requirement', 'description', 'is_blocked', 'is_closed',
+        'kanban_order', 'milestone', 'points', 'project', 'sprint_order',
+        'status', 'subject', 'tags', 'team_requirement', 'watchers'
     ]
 
     def add_task(self, subject, status, **attrs):
