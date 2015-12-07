@@ -1,5 +1,5 @@
 python-taiga
-==============
+============
 [![Build Status][travis-image]][travis-url] [![Codecov.io Status][codecovio-image]][codecovio-url]
 [![Latest Version](https://img.shields.io/pypi/v/python-taiga.svg)](https://pypi.python.org/pypi/python-taiga/)
 [![Supported Python versions](https://img.shields.io/badge/python-2.6%2C%202.7%2C%203.3%2C%203.4-blue.svg)](https://pypi.python.org/pypi/python-taiga/)
@@ -11,6 +11,14 @@ A module for using the [Taiga REST API](http://taigaio.github.io/taiga-doc/dist/
 ## Install
 
     pip install python-taiga
+
+## Contribute to python-taiga
+
+- If you want to contribute to python-taiga with small fixes or updates please open a PR on Github
+
+- If you want to start working on a big feature please let's discuss it together, opening a new issue
+
+- If you want to contribute to python-taiga's documentation use the `generate_docs.sh` script to build the official documentation and send a PR (We use sphinx http://sphinx-doc.org/)
 
 ## Getting Started
 
