@@ -10,5 +10,8 @@ sphinx-build -b html docs/ docs/build
 mv docs/build/_static docs/build/static
 
 sed -i '' 's/_static/static/g' docs/build/index.html
+sed -i '' 's/_static/static/g' docs/build/genindex.html
+sed -i '' 's/_static/static/g' docs/build/py-modindex.html
+sed -i '' 's/_static/static/g' docs/build/search.html
 
 pip uninstall python-taiga --yes
