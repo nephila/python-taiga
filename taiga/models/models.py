@@ -34,7 +34,7 @@ class CustomAttributeResource(InstanceResource):
         :param value: value of the attribute
         :param version: version of the attribute (default = 1)
         """
-        attributes = self._get_attributes(cache=True)
+        attributes = self._get_attributes(cache=False)
         formatted_id = '{0}'.format(id)
         attributes['attributes_values'][formatted_id] = value
         response = self.requester.patch(
