@@ -6,7 +6,7 @@ python-taiga
 [![License](https://img.shields.io/github/license/nephila/python-taiga.svg)](https://pypi.python.org/pypi/python-taiga/)
 [![Downloads](https://img.shields.io/pypi/dm/python-taiga.svg)](https://pypi.python.org/pypi/python-taiga/)
 
-A module for using the [Taiga REST API](http://taigaio.github.io/taiga-doc/dist/api.html "Taiga REST API documentation").
+A module for using the [Taiga REST API](http://taigaio.github.io/taiga-doc/dist/api.html "Taiga REST API documentation"). Documentation: http://python-taiga.github.io/
 
 ## Install
 
