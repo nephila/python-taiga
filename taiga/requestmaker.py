@@ -55,6 +55,10 @@ class RequestMaker(object):
         self.token_type = token_type
         self._cache = RequestCache()
 
+    @property
+    def cache(self):
+        return self._cache
+
     def is_bad_response(self, response):
         return 400 <= response.status_code <= 500
 
@@ -68,6 +72,13 @@ class RequestMaker(object):
 
     def urljoin(self, *parts):
         return utils.urljoin(*parts)
+
+    def get_full_url(self, uri, query={}, **parameters):
+        full_url = self.urljoin(
+            self.host, self.api_path,
+            uri.format(**parameters)
+        )
+        return full_url
 
     def get(self, uri, query={}, cache=False, **parameters):
         try:

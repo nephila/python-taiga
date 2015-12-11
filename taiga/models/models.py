@@ -34,7 +34,7 @@ class CustomAttributeResource(InstanceResource):
         :param value: value of the attribute
         :param version: version of the attribute (default = 1)
         """
-        attributes = self._get_attributes(cache=False)
+        attributes = self._get_attributes(cache=True)
         formatted_id = '{0}'.format(id)
         attributes['attributes_values'][formatted_id] = value
         response = self.requester.patch(
@@ -45,6 +45,11 @@ class CustomAttributeResource(InstanceResource):
                 'version': version
             }
         )
+        cache_key = self.requester.get_full_url(
+            '/{endpoint}/custom-attributes-values/{id}',
+            endpoint=self.endpoint, id=self.id
+        )
+        self.requester.cache.put(cache_key, response)
         return response.json()
 
     def _get_attributes(self, cache=False):
