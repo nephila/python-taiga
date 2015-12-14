@@ -3,6 +3,7 @@
 from setuptools import setup, find_packages
 import sys
 
+
 extra_kwargs = {}
 if sys.version_info >= (3,):
     extra_kwargs['setup_requires'] = ['setuptools']
@@ -22,7 +23,7 @@ classifiers = [
 
 setup(
     name="python-taiga",
-    version="0.8.2",
+    version="0.8.3",
     packages=find_packages(),
     include_package_data=True,
     description="Taiga python API",
