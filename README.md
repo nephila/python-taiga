@@ -186,7 +186,7 @@ You can access the history of issues, tasks, userstories and wiki pages:
 history = api.history.user_story.get(user_story.id)
 ```
 
-We're working on documentation, you can find a complete example in demo.py.
+You can find a complete example in demo.py.
 
 [travis-url]: https://travis-ci.org/nephila/python-taiga
 [travis-image]: http://img.shields.io/travis/nephila/python-taiga.svg?branch=master
