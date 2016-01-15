@@ -234,7 +234,7 @@ class Attachments(ListResource):
 
         if isinstance(attached_file, file):
             attachment = attached_file
-        elif isinstance(attached_file, str):
+        elif isinstance(attached_file, six.string_types):
             try:
                 attachment = open(attached_file, 'rb')
             except IOError:
