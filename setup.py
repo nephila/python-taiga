@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import sys
+import os, sys
 
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 extra_kwargs = {}
 if sys.version_info >= (3,):
@@ -27,6 +30,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     description="Taiga python API",
+    long_description=read('README.rst'),
     license="MIT",
     author="Nephila",
     author_email="info@nephila.it",
