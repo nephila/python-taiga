@@ -74,6 +74,38 @@ class TestModelBase(unittest.TestCase):
         )
         self.assertEqual(fake.version, 2)
 
+    @patch('taiga.requestmaker.RequestMaker.patch')
+    def test_call_model_base_patch(self, mock_requestmaker_patch):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two')
+        fake.patch(['param1'])
+        mock_requestmaker_patch.assert_called_once_with('/{endpoint}/{id}', endpoint='fakes',
+            id=1, payload={"param1": "one"})
+
+    @patch('taiga.requestmaker.RequestMaker.patch')
+    def test_call_model_base_patch_with_params(self, mock_requestmaker_patch):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two')
+        fake.patch(['param1'], comment='comment')
+        dict_res = fake.to_dict()
+        dict_res['comment'] = 'comment'
+        mock_requestmaker_patch.assert_called_once_with(
+            '/{endpoint}/{id}', endpoint='fakes',
+            id=1, payload={"param1": "one", "comment": "comment"}
+        )
+
+    @patch('taiga.requestmaker.RequestMaker.patch')
+    def test_call_model_base_patch_with_version(self, mock_requestmaker_patch):
+        mock_requestmaker_patch.return_value = MockResponse(200, "{\"version\": 2}")
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fake = Fake(rm, id=1, param1='one', param2='two')
+        fake.patch(['param1'], version=1)
+        mock_requestmaker_patch.assert_called_once_with(
+            '/{endpoint}/{id}', endpoint='fakes',
+            id=1, payload={"param1": "one", "version": 1}
+        )
+        self.assertEqual(fake.version, 2)
+
     @patch('taiga.requestmaker.RequestMaker.delete')
     def test_call_model_base_delete(self, mock_requestmaker_delete):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')

@@ -133,6 +133,24 @@ class InstanceResource(Resource):
             self.__dict__['version'] = obj_json['version']
         return self
 
+    def patch(self, fields, **args):
+        """
+        Patch the current :class:`InstanceResource`
+        """
+        self_dict = dict([(key, value) for (key, value) in
+                          self.to_dict().items()
+                          if key in fields])
+        if args:
+            self_dict = dict(list(self_dict.items()) + list(args.items()))
+        response = self.requester.patch(
+            '/{endpoint}/{id}', endpoint=self.endpoint,
+            id=self.id, payload=self_dict
+        )
+        obj_json = response.json()
+        if 'version' in obj_json:
+            self.__dict__['version'] = obj_json['version']
+        return self
+
     def delete(self):
         """
         Delete the current :class:`InstanceResource`
