@@ -1066,7 +1066,7 @@ class Project(InstanceResource):
         """
         Stars the project
 
-        .. deprecated:: 0.8.6
+        .. deprecated:: 0.8.5
 
             Update Taiga and use like instead
         """
@@ -1084,7 +1084,7 @@ class Project(InstanceResource):
         """
         Unstars the project
 
-        .. deprecated:: 0.8.6
+        .. deprecated:: 0.8.5
 
             Update Taiga and use unlike instead
         """
