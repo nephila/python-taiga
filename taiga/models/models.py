@@ -1070,7 +1070,10 @@ class Project(InstanceResource):
 
             Update Taiga and use like instead
         """
-        warnings.warn("Deprecated! Update Taiga and use .like() instead", DeprecationWarning)
+        warnings.warn(
+            "Deprecated! Update Taiga and use .like() instead",
+            DeprecationWarning
+        )
         self.requester.post(
             '/{endpoint}/{id}/star',
             endpoint=self.endpoint, id=self.id
@@ -1085,7 +1088,10 @@ class Project(InstanceResource):
 
             Update Taiga and use unlike instead
         """
-        warnings.warn("Deprecated! Update Taiga and use .unlike() instead", DeprecationWarning)
+        warnings.warn(
+            "Deprecated! Update Taiga and use .unlike() instead",
+            DeprecationWarning
+        )
         self.requester.post(
             '/{endpoint}/{id}/unstar',
             endpoint=self.endpoint, id=self.id
