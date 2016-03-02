@@ -1,5 +1,6 @@
 import datetime
 import six
+import warnings
 
 if six.PY3:
     from io import IOBase as file
@@ -1064,7 +1065,12 @@ class Project(InstanceResource):
     def star(self):
         """
         Stars the project
+
+        .. deprecated:: 0.8.6
+
+            Update Taiga and use like instead
         """
+        warnings.warn("Deprecated! Update Taiga and use .like() instead", DeprecationWarning)
         self.requester.post(
             '/{endpoint}/{id}/star',
             endpoint=self.endpoint, id=self.id
@@ -1074,7 +1080,12 @@ class Project(InstanceResource):
     def unstar(self):
         """
         Unstars the project
+
+        .. deprecated:: 0.8.6
+
+            Update Taiga and use unlike instead
         """
+        warnings.warn("Deprecated! Update Taiga and use .unlike() instead", DeprecationWarning)
         self.requester.post(
             '/{endpoint}/{id}/unstar',
             endpoint=self.endpoint, id=self.id
