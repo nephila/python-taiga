@@ -66,7 +66,7 @@ class RequestMaker(object):
         headers = {
             'Content-type': 'application/json',
             'Authorization': '{0} {1}'.format(self.token_type, self.token),
-            'x-disable-pagination': True
+            'x-disable-pagination': 'True'
         }
         return headers
 
