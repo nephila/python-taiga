@@ -2,7 +2,15 @@ import json
 import requests
 import time
 from . import exceptions, utils
+from distutils.version import LooseVersion
 from requests.exceptions import RequestException
+
+
+def _disable_pagination():
+    if LooseVersion(requests.__version__) >= LooseVersion('2.11.0'):
+        return 'True'
+    else:
+        return True
 
 
 class RequestCacheException(Exception):
@@ -66,7 +74,7 @@ class RequestMaker(object):
         headers = {
             'Content-type': 'application/json',
             'Authorization': '{0} {1}'.format(self.token_type, self.token),
-            'x-disable-pagination': 'True'
+            'x-disable-pagination': _disable_pagination()
         }
         return headers
 
@@ -120,7 +128,7 @@ class RequestMaker(object):
         if files:
             headers = {
                 'Authorization': '{0} {1}'.format(self.token_type, self.token),
-                'x-disable-pagination': 'True'
+                'x-disable-pagination': _disable_pagination()
             }
             data = payload
         else:
