@@ -120,7 +120,7 @@ class RequestMaker(object):
         if files:
             headers = {
                 'Authorization': '{0} {1}'.format(self.token_type, self.token),
-                'x-disable-pagination': True
+                'x-disable-pagination': 'True'
             }
             data = payload
         else:
