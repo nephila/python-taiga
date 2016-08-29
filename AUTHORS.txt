@@ -14,3 +14,5 @@ Dennis Markgraf <info@dennismarkgraf.com>
 Paolo Romolini <p.romolini@nephila.it>
 David Barragán Merino <david.barragan@kaleidos.net>
 Iacopo Spalletti <i.spalletti@nephila.it>
+Mustafa Furkan Kaptan <kaptanmf@gmail.com>
+Christoph Meißner <post@christophmeissner.de>
