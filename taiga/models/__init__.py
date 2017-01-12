@@ -45,6 +45,8 @@ from .models import WikiPages
 from .models import WikiLink
 from .models import WikiLinks
 from .models import History
+from .models import Webhook
+from .models import Webhooks
 
 
 __all__ = [
@@ -57,5 +59,6 @@ __all__ = [
     'TaskStatuses', 'WikiPage', 'WikiPages', 'WikiLink', 'WikiLinks',
     'History', 'IssueAttribute', 'IssueAttributes', 'TaskAttribute',
     'TaskAttributes', 'UserStoryAttribute', 'UserStoryAttributes',
-    'Membership', 'Memberships', 'Role', 'Roles', 'IssueType', 'IssueTypes'
+    'Membership', 'Memberships', 'Role', 'Roles', 'IssueType', 'IssueTypes',
+    'Webhook', 'Webhooks'
 ]
