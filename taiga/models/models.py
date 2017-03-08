@@ -294,6 +294,8 @@ class UserStory(CustomAttributeResource, CommentableResource):
     endpoint = 'userstories'
 
     repr_attribute = 'subject'
+    element_type = 'User Story'
+    element_shortcut = 'us'
 
     allowed_params = [
         'assigned_to', 'assigned_users', 'backlog_order', 'blocked_note', 'version',
@@ -596,6 +598,8 @@ class Task(CustomAttributeResource, CommentableResource):
     endpoint = 'tasks'
 
     repr_attribute = 'subject'
+    element_type = 'Task'
+    element_shortcut = 'task'
 
     allowed_params = [
         'assigned_to', 'blocked_note', 'description', 'version',
@@ -748,6 +752,8 @@ class Issue(CustomAttributeResource, CommentableResource):
     endpoint = 'issues'
 
     repr_attribute = 'subject'
+    element_type = 'Issue'
+    element_shortcut = 'issue'
 
     allowed_params = [
         'assigned_to', 'blocked_note', 'description', 'version',
@@ -983,6 +989,23 @@ class Project(InstanceResource):
         'points': Points,
         'us_statuses': UserStoryStatuses
     }
+
+    def get_item_by_ref(self, ref):
+        response = self.requester.get(
+            '/resolver?project={project_id}&ref={task_ref}',
+            task_ref=ref,
+            project_id=self.slug
+        )
+        response_json = response.json()
+
+        if response_json and 'task' in response_json:
+            return self.get_task_by_ref(ref)
+        elif response_json and 'us' in response_json:
+            return self.get_userstory_by_ref(ref)
+        elif response_json and 'issue' in response_json:
+            return self.get_issue_by_ref(ref)
+        else:
+            return None
 
     def get_task_by_ref(self, ref):
         """
