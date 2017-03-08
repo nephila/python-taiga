@@ -266,6 +266,17 @@ class UserStoryAttachments(Attachments):
     """
     instance = UserStoryAttachment
 
+class Epic(CustomAttributeResource, CommentableResource):
+    """
+    Epic model
+    """
+    endpoint = 'epics'
+
+    repr_attribute = 'subject'
+    element_type = 'Epic'
+    element_shortcut = 'epic'
+
+
 
 class UserStory(CustomAttributeResource, CommentableResource):
     """
@@ -292,6 +303,8 @@ class UserStory(CustomAttributeResource, CommentableResource):
     endpoint = 'userstories'
 
     repr_attribute = 'subject'
+    element_type = 'User Story'
+    element_shortcut = 'us'
 
     allowed_params = [
         'assigned_to', 'backlog_order', 'blocked_note', 'version',
@@ -592,6 +605,8 @@ class Task(CustomAttributeResource, CommentableResource):
     endpoint = 'tasks'
 
     repr_attribute = 'subject'
+    element_type = 'Task'
+    element_shortcut = 'task'
 
     allowed_params = [
         'assigned_to', 'blocked_note', 'description', 'version',
@@ -744,6 +759,8 @@ class Issue(CustomAttributeResource, CommentableResource):
     endpoint = 'issues'
 
     repr_attribute = 'subject'
+    element_type = 'Issue'
+    element_shortcut = 'issue'
 
     allowed_params = [
         'assigned_to', 'blocked_note', 'description', 'version',
@@ -980,6 +997,25 @@ class Project(InstanceResource):
         'us_statuses': UserStoryStatuses
     }
 
+    def get_item_by_ref(self, ref):
+        response = self.requester.get(
+            '/resolver?project={project_id}&ref={task_ref}',
+            task_ref=ref,
+            project_id=self.name
+        )
+        response_json = response.json()
+
+        if response_json and 'task' in response_json:
+            return self.get_task_by_ref(ref)
+        elif response_json and 'us' in response_json:
+            return self.get_userstory_by_ref(ref)
+        elif response_json and 'issue' in response_json:
+            return self.get_issue_by_ref(ref)
+        elif response_json and 'epic' in response_json:
+            return self.get_epic_by_ref(ref)
+        else:
+            return None
+
     def get_task_by_ref(self, ref):
         """
         Get a :class:`Task` by ref.
@@ -1007,6 +1043,20 @@ class Project(InstanceResource):
             project_id=self.id
         )
         return UserStory.parse(self.requester, response.json())
+
+    def get_epic_by_ref(self, ref):
+        """
+        Get a :class:`Epic` by ref.
+
+        :param ref: :class:`Epic` reference
+        """
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            endpoint=Epic.endpoint,
+            us_ref=ref,
+            project_id=self.id
+        )
+        return Epic.parse(self.requester, response.json())
 
     def get_issue_by_ref(self, ref):
         """
