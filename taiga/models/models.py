@@ -266,6 +266,7 @@ class UserStoryAttachments(Attachments):
     """
     instance = UserStoryAttachment
 
+
 class Epic(CustomAttributeResource, CommentableResource):
     """
     Epic model
@@ -275,7 +276,6 @@ class Epic(CustomAttributeResource, CommentableResource):
     repr_attribute = 'subject'
     element_type = 'Epic'
     element_shortcut = 'epic'
-
 
 
 class UserStory(CustomAttributeResource, CommentableResource):
