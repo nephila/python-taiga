@@ -57,7 +57,11 @@ class RequestMakerException(Exception):
 
 class RequestMaker(object):
 
-    def __init__(self, api_path, host, token, token_type='Bearer', tls_verify=True):
+    def __init__(self,
+                 api_path, host,
+                 token,
+                 token_type='Bearer',
+                 tls_verify=True):
         self.api_path = api_path
         self.host = host
         self.token = token
