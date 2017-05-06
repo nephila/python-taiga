@@ -58,6 +58,28 @@ You can also specify a different host if you use Taiga somewhere else
         host='http://taiga.my.host.org'
     )
 
+To use LDAP or other authentication backends, user ``auth_type`` argumento
+
+.. code:: python
+
+    from taiga import TaigaAPI
+
+    api = TaigaAPI(
+        host='http://taiga.my.host.org',
+        auth_type='ldap'
+    )
+
+To ignore SSL certificate verification (use at your own risk!) use ``tls_verify`` argument
+
+.. code:: python
+
+    from taiga import TaigaAPI
+
+    api = TaigaAPI(
+        host='http://taiga.my.host.org',
+        tls_verify=False
+    )
+
 Get projects, user stories, task and issues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
