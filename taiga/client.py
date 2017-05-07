@@ -26,6 +26,7 @@ from .models import History
 from .models import Webhooks
 from .requestmaker import RequestMaker
 from requests.exceptions import RequestException
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from . import exceptions
 from . import utils
 
@@ -46,15 +47,21 @@ class TaigaAPI:
     :param host: the host of your Taiga.io instance
     :param token: the token you may provide
     :param token_type: the token type
+    :param tls_verify: verify server certificate
+    :param auth_type: authentication type identifier
     """
     def __init__(self, host='https://api.taiga.io', token=None,
-                 token_type='Bearer'):
+                 token_type='Bearer', tls_verify=True, auth_type='normal'):
         self.host = host
         self.token = token
         self.token_type = token_type
+        self.tls_verify = tls_verify
+        self.auth_type = auth_type
+        if not self.tls_verify:
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         if token:
             self.raw_request = RequestMaker('/api/v1', self.host, self.token,
-                                            self.token_type)
+                                            self.token_type, self.tls_verify)
             self._init_resources()
 
     def _init_resources(self):
@@ -122,7 +129,7 @@ class TaigaAPI:
             'Content-type': 'application/json'
         }
         payload = {
-            'type': 'normal',
+            'type': self.auth_type,
             'username': username,
             'password': password
         }
@@ -131,7 +138,8 @@ class TaigaAPI:
             response = requests.post(
                 full_url,
                 data=json.dumps(payload),
-                headers=headers
+                headers=headers,
+                verify=self.tls_verify
             )
         except RequestException:
             raise exceptions.TaigaRestException(
@@ -147,7 +155,7 @@ class TaigaAPI:
             )
         self.token = response.json()['auth_token']
         self.raw_request = RequestMaker('/api/v1', self.host, self.token,
-                                        'Bearer')
+                                        'Bearer', self.tls_verify)
         self._init_resources()
 
     def auth_app(self, app_id, app_secret, auth_code, state=''):
@@ -174,7 +182,8 @@ class TaigaAPI:
             response = requests.post(
                 full_url,
                 data=json.dumps(payload),
-                headers=headers
+                headers=headers,
+                verify=self.tls_verify
             )
         except RequestException:
             raise exceptions.TaigaRestException(
@@ -210,5 +219,5 @@ class TaigaAPI:
             )
 
         self.raw_request = RequestMaker('/api/v1', self.host, self.token,
-                                        'Application')
+                                        'Application', self.tls_verify)
         self._init_resources()

@@ -29,6 +29,7 @@ class TestRequestMaker(unittest.TestCase):
         rm.post('nowhere', files={'sample' : file_desc})
         requests_post.assert_called_once_with(
             'http://host/v1/nowhere', files={'sample' : file_desc},
+            verify=True,
             data=None, params={},
             headers={
                 'Authorization': 'Bearer f4k3',

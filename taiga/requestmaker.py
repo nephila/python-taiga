@@ -4,6 +4,7 @@ import time
 from . import exceptions, utils
 from distutils.version import LooseVersion
 from requests.exceptions import RequestException
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
 def _disable_pagination():
@@ -56,12 +57,19 @@ class RequestMakerException(Exception):
 
 class RequestMaker(object):
 
-    def __init__(self, api_path, host, token, token_type='Bearer'):
+    def __init__(self,
+                 api_path, host,
+                 token,
+                 token_type='Bearer',
+                 tls_verify=True):
         self.api_path = api_path
         self.host = host
         self.token = token
         self.token_type = token_type
+        self.tls_verify = tls_verify
         self._cache = RequestCache()
+        if not self.tls_verify:
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     @property
     def cache(self):
@@ -107,7 +115,8 @@ class RequestMaker(object):
                 result = requests.get(
                     full_url,
                     headers=self.headers(),
-                    params=query
+                    params=query,
+                    verify=self.tls_verify
                 )
             if cache:
                 self._cache.put(full_url, result)
@@ -144,7 +153,8 @@ class RequestMaker(object):
                 headers=headers,
                 data=data,
                 params=query,
-                files=files
+                files=files,
+                verify=self.tls_verify
             )
         except RequestException:
             raise exceptions.TaigaRestException(
@@ -168,7 +178,8 @@ class RequestMaker(object):
             result = requests.delete(
                 full_url,
                 headers=self.headers(),
-                params=query
+                params=query,
+                verify=self.tls_verify
             )
         except RequestException:
             raise exceptions.TaigaRestException(
@@ -193,7 +204,8 @@ class RequestMaker(object):
                 full_url,
                 headers=self.headers(),
                 data=json.dumps(payload),
-                params=query
+                params=query,
+                verify=self.tls_verify
             )
         except RequestException:
             raise exceptions.TaigaRestException(
@@ -218,7 +230,8 @@ class RequestMaker(object):
                 full_url,
                 headers=self.headers(),
                 data=json.dumps(payload),
-                params=query
+                params=query,
+                verify=self.tls_verify
             )
         except RequestException:
             raise exceptions.TaigaRestException(
