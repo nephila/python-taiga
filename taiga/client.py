@@ -46,6 +46,8 @@ class TaigaAPI:
     :param host: the host of your Taiga.io instance
     :param token: the token you may provide
     :param token_type: the token type
+    :param tls_verify: verify server certificate
+    :param auth_type: authentication type identifier
     """
     def __init__(self, host='https://api.taiga.io', token=None,
                  token_type='Bearer', tls_verify=True, auth_type='normal'):
