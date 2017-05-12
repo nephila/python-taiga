@@ -31,5 +31,8 @@ cover
 # PyCharm/IntelliJ
 .idea
 
+# Visual Studio Code
+.vscode
+
 #htmlcov
 *htmlcov*

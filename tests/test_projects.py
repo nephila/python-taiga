@@ -441,3 +441,18 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_memberships()
         mock_list_memberships.assert_called_with(project=1)
+
+    @patch('taiga.models.Webhooks.create')
+    def test_add_webhook(self, mock_new_webhook):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_webhook('New Webhook', 'webhook-url', 'webhook-key')
+        mock_new_webhook.assert_called_with(1, 'New Webhook', 'webhook-url',
+                                            'webhook-key')
+
+    @patch('taiga.models.Webhooks.list')
+    def test_list_webhooks(self, mock_list_webhooks):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_webhooks()
+        mock_list_webhooks.assert_called_with(project=1)

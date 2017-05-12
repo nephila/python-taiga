@@ -23,6 +23,7 @@ from .models import TaskStatuses
 from .models import WikiPages
 from .models import WikiLinks
 from .models import History
+from .models import Webhooks
 from .requestmaker import RequestMaker
 from requests.exceptions import RequestException
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -87,6 +88,7 @@ class TaigaAPI:
         self.wikipages = WikiPages(self.raw_request)
         self.wikilinks = WikiLinks(self.raw_request)
         self.history = History(self.raw_request)
+        self.webhooks = Webhooks(self.raw_request)
 
     def me(self):
         """

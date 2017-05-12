@@ -1470,6 +1470,25 @@ class Project(InstanceResource):
         """
         return UserStoryAttributes(self.requester).list(project=self.id)
 
+    def add_webhook(self, name, url, key, **attrs):
+        """
+        Add a new Webhook and return a :class:`Webhook` object.
+
+        :param name: name of the :class:`Webhook`
+        :param url: payload url of the :class:`Webhook`
+        :param key: secret key of the :class:`Webhook`
+        :param attrs: optional attributes for :class:`Webhook`
+        """
+        return Webhooks(self.requester).create(
+            self.id, name, url, key, **attrs
+        )
+
+    def list_webhooks(self):
+        """
+        Get the list of :class:`Webhook` resources for the project.
+        """
+        return Webhooks(self.requester).list(project=self.id)
+
 
 class Projects(ListResource):
     """
@@ -1719,3 +1738,45 @@ class HistoryWiki(HistoryEntity):
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
         self.entity = 'wiki'
+
+
+class Webhook(InstanceResource):
+    """
+    Webhook model
+
+    :param requester: :class:`Requester` instance
+    :param name: name of the :class:`Webhook`
+    :param url: payload url of the :class:`Webhook`
+    :param key: secret key of the :class:`Webhook`
+
+    """
+    endpoint = 'webhooks'
+
+    allowed_params = ['name', 'url', 'key']
+
+
+class Webhooks(ListResource):
+    """
+    Webhooks factory
+    """
+    instance = Webhook
+
+    def create(self, project, name, url, key, **attrs):
+        """
+        Create a new :class:`Webhook`
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`Webhook`
+        :param url: payload url of the :class:`Webhook`
+        :param key: secret key of the :class:`Webhook`
+        :param attrs: optional attributes for :class:`Webhook`
+        """
+        attrs.update(
+            {
+                'project': project,
+                'name': name,
+                'url': url,
+                'key': key
+            }
+        )
+        return self._new_resource(payload=attrs)
