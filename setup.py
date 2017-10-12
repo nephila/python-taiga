@@ -34,7 +34,7 @@ setup(
     license="MIT",
     author="Nephila",
     author_email="info@nephila.it",
-    url="",
+    url="https://github.com/nephila/python-taiga",
     keywords="taiga kanban wrapper api",
     install_requires=[
         "requests",
