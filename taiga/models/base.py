@@ -34,11 +34,55 @@ class Resource(object):
 
 class ListResource(Resource):
 
-    def list(self, **queryparams):
+    def list(self, pagination=True, page_size=None, page=None, **queryparams):
+        """
+        Retrieves a list of objects.
+
+        By default uses local cache and remote pagination
+
+        If pagination is used and no page is requested (the default), all the
+        remote objects are retrieved and appended in a single list.
+
+        If pagination is disabled, all the objects are fetched from the
+        endpojnt and returned. This may trigger some parsing error if the
+        result set is very large.
+
+        :param pagination: Use pagination (default: `True`)
+        :param page_size: Size of the pagination page (default: `100`).
+                          Any non numeric value will be casted to the
+                          default value
+        :param page: Page number to retrieve (default: `None`). Ignored if
+                     `pagination` is `False`
+        :param queryparams: Additional filter parameters as accepted by the
+                            remote API
+        :return: <SearchableList>
+        """
+        if page_size and pagination:
+            try:
+                page_size = int(page_size)
+            except (ValueError, TypeError):
+                page_size = 100
+            queryparams['page_size'] = page_size
         result = self.requester.get(
-            self.instance.endpoint, query=queryparams
+            self.instance.endpoint, query=queryparams, paginate=pagination
         )
-        objects = self.parse_list(result.json())
+        objects = SearchableList()
+        objects.extend(self.parse_list(result.json()))
+        if result.headers.get('X-Pagination-Next', False) and not page:
+            next_page = 2
+        else:
+            next_page = None
+        while next_page:
+            pageparams = queryparams.copy()
+            pageparams['page'] = next_page
+            result = self.requester.get(
+                self.instance.endpoint, query=pageparams,
+            )
+            objects.extend(self.parse_list(result.json()))
+            if result.headers.get('X-Pagination-Next', False):
+                next_page += 1
+            else:
+                next_page = None
         return objects
 
     def get(self, resource_id):
