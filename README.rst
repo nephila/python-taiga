@@ -6,7 +6,7 @@ versions| |License| |Downloads|
 
 A module for using the `Taiga REST
 API <http://taigaio.github.io/taiga-doc/dist/api.html>`__.
-Documentation: http://python-taiga.github.io/
+Documentation: https://python-taiga.readthedocs.io/
 
 Install
 -------
