@@ -1,19 +1,15 @@
-export LC_ALL=en_US.UTF-8
+#!/usr/bin/env bash
+export LC_ALL="C"
 
-rm -rf docs/build/.doctrees docs/build/_sources docs/build/static docs/build/.buildinfo
-rm -rf docs/build/*.*
+pip install -e . --upgrade
 
-pip install . --upgrade
+cd docs ; make clean html
 
-sphinx-build -b html docs/ docs/build
+mv build/html/_static build/html/static
+mv build/html/_sources build/html/sources
 
-mv docs/build/_static docs/build/static
-mv docs/build/_sources docs/build/sources
-
-sed -i '' 's/_static/static/g' docs/build/index.html
-sed -i '' 's/_sources/sources/g' docs/build/index.html
-sed -i '' 's/_static/static/g' docs/build/genindex.html
-sed -i '' 's/_static/static/g' docs/build/py-modindex.html
-sed -i '' 's/_static/static/g' docs/build/search.html
-
-pip uninstall python-taiga --yes
+sed -i -e's/_static/static/g' build/html/index.html
+sed -i -e's/_sources/sources/g' build/html/index.html
+sed -i -e's/_static/static/g' build/html/genindex.html
+sed -i -e's/_static/static/g' build/html/py-modindex.html
+sed -i -e's/_static/static/g' build/html/search.html

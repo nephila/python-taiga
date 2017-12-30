@@ -1193,9 +1193,9 @@ class Project(InstanceResource):
 
         :param name: name of the :class:`Milestone`
         :param estimated_start: estimated start time of the
-        :class:`Milestone`
+                                :class:`Milestone`
         :param estimated_finish: estimated finish time of the
-         :class:`Milestone`
+                                 :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
         return Milestones(self.requester).create(
@@ -1210,9 +1210,9 @@ class Project(InstanceResource):
 
         :param name: name of the :class:`Milestone`
         :param estimated_start: estimated start time of the
-        :class:`Milestone`
+                                :class:`Milestone`
         :param estimated_finish: estimated finish time of the
-        :class:`Milestone`
+                                 :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
         return Milestones(self.requester).import_(
