@@ -2,6 +2,7 @@
 
 from setuptools import setup, find_packages
 import os, sys
+from taiga import __version__
 
 
 def read(fname):
@@ -28,7 +29,7 @@ classifiers = [
 
 setup(
     name="python-taiga",
-    version="0.8.6",
+    version=__version__,
     packages=find_packages(),
     include_package_data=True,
     description="Taiga python API",
