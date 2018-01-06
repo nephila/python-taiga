@@ -30,7 +30,7 @@ classifiers = [
 setup(
     name="python-taiga",
     version=__version__,
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     include_package_data=True,
     description="Taiga python API",
     long_description=read('README.rst'),
