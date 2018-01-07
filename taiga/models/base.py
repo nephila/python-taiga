@@ -1,5 +1,6 @@
-import dateutil.parser
 import re
+
+import dateutil.parser
 import six
 
 

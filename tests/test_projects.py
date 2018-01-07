@@ -1,21 +1,23 @@
-from datetime import datetime
-from taiga.requestmaker import RequestMaker
-from taiga.models import User, Point, UserStoryStatus
-from taiga.models import Severity, Role, Project, Projects
 import unittest
+from datetime import datetime
+
 from mock import patch
+
 from taiga import TaigaAPI
-from taiga.exceptions import TaigaRestException
-from .tools import create_mock_json
-from .tools import MockResponse
+from taiga.models import Point, Project, Projects, Severity, User, UserStoryStatus
+from taiga.requestmaker import RequestMaker
+
+from .tools import MockResponse, create_mock_json
 
 
 class TestProjects(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_single_project_parsing(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/project_details_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/project_details_success.json')
+        )
         api = TaigaAPI(token='f4k3')
         project = api.projects.get(1)
         self.assertEqual(project.description, 'Project example 0 description')
@@ -27,8 +29,10 @@ class TestProjects(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_projects_parsing(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/projects_list_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/projects_list_success.json')
+        )
         api = TaigaAPI(token='f4k3')
         projects = api.projects.list()
         self.assertEqual(projects[0].description, 'Project example 0 description')
@@ -36,8 +40,10 @@ class TestProjects(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_project_by_slug(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/project_details_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/project_details_success.json')
+        )
         api = TaigaAPI(token='f4k3')
         project = api.projects.get_by_slug('my_slug')
         self.assertTrue(isinstance(project, Project))
@@ -49,31 +55,34 @@ class TestProjects(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_userstories_by_ref(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/userstory_details_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/userstory_details_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
-        api = TaigaAPI(token='f4k3')
         us = project.get_userstory_by_ref(1)
         self.assertEqual(us.description, "Description of the story")
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_tasks_by_ref(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/task_details_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/task_details_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
-        api = TaigaAPI(token='f4k3')
         task = project.get_task_by_ref(1)
         self.assertEqual(task.description, "Implement API CALL")
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_issues_by_ref(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/issue_details_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/issue_details_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
-        api = TaigaAPI(token='f4k3')
         issue = project.get_issue_by_ref(31)
         self.assertEqual(issue.description, "Implement API CALL")
 
@@ -141,7 +150,7 @@ class TestProjects(unittest.TestCase):
     def test_create_project(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = Project(rm)
-        sv = Projects(rm).create('PR 1', 'PR desc 1')
+        Projects(rm).create('PR 1', 'PR desc 1')
         mock_new_resource.assert_called_with(
             payload={'name': 'PR 1', 'description': 'PR desc 1'}
         )
@@ -150,7 +159,7 @@ class TestProjects(unittest.TestCase):
     def test_import_project(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         roles = [{'name': 'Role 1'}]
-        sv = Projects(rm).import_('PR 1 1', 'PR 1 desc 1', roles)
+        Projects(rm).import_('PR 1 1', 'PR 1 desc 1', roles)
         mock_requestmaker_post.assert_called_with(
             '/{endpoint}', payload={'description': 'PR 1 desc 1',
                                     'name': 'PR 1 1',

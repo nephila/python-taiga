@@ -1,10 +1,12 @@
 import json
-import requests
 import time
-from . import exceptions, utils
 from distutils.version import LooseVersion
+
+import requests
 from requests.exceptions import RequestException
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+from . import exceptions, utils
 
 
 def _disable_pagination():

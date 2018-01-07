@@ -1,34 +1,17 @@
 import json
+
 import requests
-from .models import Users
-from .models import Projects
-from .models import UserStories
-from .models import UserStoryAttachments
-from .models import Tasks
-from .models import TaskAttachments
-from .models import Issues
-from .models import IssueAttachments
-from .models import Milestones
-from .models import Points
-from .models import UserStoryStatuses
-from .models import Severities
-from .models import Roles
-from .models import Priorities
-from .models import IssueStatuses
-from .models import IssueAttributes
-from .models import IssueTypes
-from .models import TaskAttributes
-from .models import UserStoryAttributes
-from .models import TaskStatuses
-from .models import WikiPages
-from .models import WikiLinks
-from .models import History
-from .models import Webhooks
-from .requestmaker import RequestMaker
 from requests.exceptions import RequestException
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from . import exceptions
-from . import utils
+
+from . import exceptions, utils
+from .models import (
+    History, IssueAttachments, IssueAttributes, Issues, IssueStatuses, IssueTypes, Milestones,
+    Points, Priorities, Projects, Roles, Severities, TaskAttachments, TaskAttributes, Tasks,
+    TaskStatuses, Users, UserStories, UserStoryAttachments, UserStoryAttributes, UserStoryStatuses,
+    Webhooks, WikiLinks, WikiPages,
+)
+from .requestmaker import RequestMaker
 
 
 class SearchResult(object):

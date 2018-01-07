@@ -1,7 +1,9 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import Membership, Memberships
 import unittest
+
 from mock import patch
+
+from taiga.models import Membership, Memberships
+from taiga.requestmaker import RequestMaker
 
 
 class TestMemberships(unittest.TestCase):
@@ -10,7 +12,7 @@ class TestMemberships(unittest.TestCase):
     def test_create_severity(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = Membership(rm)
-        mb = Memberships(rm).create(1, 'stagi.andrea@gmail.com', 2)
+        Memberships(rm).create(1, 'stagi.andrea@gmail.com', 2)
         mock_new_resource.assert_called_with(
             payload={
                 'project': 1,

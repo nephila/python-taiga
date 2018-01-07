@@ -1,7 +1,9 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import IssueStatus, IssueStatuses
 import unittest
+
 from mock import patch
+
+from taiga.models import IssueStatus, IssueStatuses
+from taiga.requestmaker import RequestMaker
 
 
 class TestIssueStatuses(unittest.TestCase):
@@ -10,8 +12,7 @@ class TestIssueStatuses(unittest.TestCase):
     def test_create_issue_status(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = IssueStatus(rm)
-        ist = IssueStatuses(rm).create(1, 'IST 1')
+        IssueStatuses(rm).create(1, 'IST 1')
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'name': 'IST 1'}
         )
-

@@ -1,9 +1,13 @@
-from taiga.requestmaker import RequestMaker, _disable_pagination
-import taiga.exceptions
-import requests
 import unittest
+
+import requests
 from mock import patch
+
+import taiga.exceptions
+from taiga.requestmaker import RequestMaker, _disable_pagination
+
 from .tools import MockResponse
+
 
 class TestRequestMaker(unittest.TestCase):
 
@@ -26,9 +30,9 @@ class TestRequestMaker(unittest.TestCase):
         rm = RequestMaker(api_path='/v1/', host='http://host', token='f4k3')
         requests_post.return_value = MockResponse(200, '')
         file_desc = open('tests/resources/fake_objects.json')
-        rm.post('nowhere', files={'sample' : file_desc})
+        rm.post('nowhere', files={'sample': file_desc})
         requests_post.assert_called_once_with(
-            'http://host/v1/nowhere', files={'sample' : file_desc},
+            'http://host/v1/nowhere', files={'sample': file_desc},
             verify=True,
             data=None, params={},
             headers={

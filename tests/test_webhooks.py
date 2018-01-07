@@ -1,7 +1,9 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import Webhook, Webhooks
 import unittest
+
 from mock import patch
+
+from taiga.models import Webhook, Webhooks
+from taiga.requestmaker import RequestMaker
 
 
 class TestWebhooks(unittest.TestCase):
@@ -10,7 +12,7 @@ class TestWebhooks(unittest.TestCase):
     def test_create_webhook(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = Webhook(rm)
-        webhook = Webhooks(rm).create(1, 'Webhook-Name', 'Webhook-Url', 'Webhook-Key')
+        Webhooks(rm).create(1, 'Webhook-Name', 'Webhook-Url', 'Webhook-Key')
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'name': 'Webhook-Name', 'url': 'Webhook-Url',
                      'key': 'Webhook-Key'}
