@@ -16,11 +16,14 @@ class TestIssues(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_attachments(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(200,
+            create_mock_json('tests/resources/issues_list_success.json'))
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         Issue(rm, id=1).list_attachments()
         mock_requestmaker_get.assert_called_with(
             'issues/attachments',
             query={"object_id": 1},
+            paginate=True
         )
 
     @patch('taiga.requestmaker.RequestMaker.post')
