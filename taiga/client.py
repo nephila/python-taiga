@@ -203,11 +203,14 @@ class TaigaAPI:
             from jwkest.jwe import JWE
 
             sym_key = SYMKey(key=app_secret, alg='A128KW')
-            (data, success) = JWE().decrypt(cyphered_token, keys=[sym_key])
-            if success:
-                self.token = json.loads(data.decode('utf-8')).get('token',
-                                                                  None)
-            else:
+            data, success = JWE().decrypt(cyphered_token, keys=[sym_key]), True
+            if isinstance(data, tuple):
+                data, success = data
+            try:
+                self.token = json.loads(data.decode('utf-8')).get('token', None)
+            except ValueError:
+                self.token = None
+            if not success:
                 self.token = None
         else:
             self.token = None
