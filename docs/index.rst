@@ -202,7 +202,7 @@ Examples
 
    tasks = api.tasks.list(paginate=False)
 
-.. warning:: be aware that if the unpaginated results may exceed
+.. warning:: be aware that the unpaginated results may exceed
              the data the parser can handle and may result in an error.
 
 **Retrieve a single page**

@@ -44,7 +44,7 @@ class ListResource(Resource):
         remote objects are retrieved and appended in a single list.
 
         If pagination is disabled, all the objects are fetched from the
-        endpojnt and returned. This may trigger some parsing error if the
+        endpoint and returned. This may trigger some parsing error if the
         result set is very large.
 
         :param pagination: Use pagination (default: `True`)
