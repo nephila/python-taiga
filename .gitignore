@@ -36,3 +36,9 @@ cover
 
 #htmlcov
 *htmlcov*
+/.pybuild/
+/debian/python-taiga*
+/debian/python3-taiga*
+/debian/.debhelper/
+/debian/files
+/debian/*build*

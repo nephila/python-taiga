@@ -1,0 +1,8 @@
+include AUTHORS
+include LICENSE
+include README.rst
+include CONTRIBUTING.rst
+include HISTORY.rst
+include requirements.txt
+include requirements-tests.txt
+recursive-include taiga *.html *.png *.gif *js *jpg *jpeg *svg *py *mo *po
