@@ -1,4 +1,3 @@
-requests==2.11.1
-six==1.9.0
-python-dateutil==2.4.0
-git+git://github.com/astagi/pyjwkest@63d5cb0597c77c1a2ec30c28bd0e478d9a11f131
+requests>2.11
+six>=1.9
+python-dateutil>=2.4
