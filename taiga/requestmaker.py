@@ -7,7 +7,7 @@ from requests.exceptions import RequestException
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
-def _disable_pagination():
+def _requests_compatible_true():
     if LooseVersion(requests.__version__) >= LooseVersion('2.11.0'):
         return 'True'
     else:
@@ -61,12 +61,15 @@ class RequestMaker(object):
                  api_path, host,
                  token,
                  token_type='Bearer',
-                 tls_verify=True):
+                 tls_verify=True,
+                 enable_pagination=True
+                 ):
         self.api_path = api_path
         self.host = host
         self.token = token
         self.token_type = token_type
         self.tls_verify = tls_verify
+        self.enable_pagination = enable_pagination
         self._cache = RequestCache()
         if not self.tls_verify:
             requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -78,12 +81,15 @@ class RequestMaker(object):
     def is_bad_response(self, response):
         return 400 <= response.status_code <= 500
 
-    def headers(self):
+    def headers(self, paginate=True):
         headers = {
             'Content-type': 'application/json',
             'Authorization': '{0} {1}'.format(self.token_type, self.token),
-            'x-disable-pagination': _disable_pagination()
         }
+        if self.enable_pagination and paginate:
+            headers['x-lazy-pagination'] = _requests_compatible_true()
+        else:
+            headers['x-disable-pagination'] = _requests_compatible_true()
         return headers
 
     def urljoin(self, *parts):
@@ -96,7 +102,7 @@ class RequestMaker(object):
         )
         return full_url
 
-    def get(self, uri, query={}, cache=False, **parameters):
+    def get(self, uri, query={}, cache=False, paginate=True, **parameters):
         try:
             full_url = self.urljoin(
                 self.host, self.api_path,
@@ -114,7 +120,7 @@ class RequestMaker(object):
             if not result:
                 result = requests.get(
                     full_url,
-                    headers=self.headers(),
+                    headers=self.headers(paginate),
                     params=query,
                     verify=self.tls_verify
                 )
@@ -137,7 +143,7 @@ class RequestMaker(object):
         if files:
             headers = {
                 'Authorization': '{0} {1}'.format(self.token_type, self.token),
-                'x-disable-pagination': _disable_pagination()
+                'x-disable-pagination': _requests_compatible_true()
             }
             data = payload
         else:

@@ -169,6 +169,55 @@ You can also specify filters
 
     tasks = api.tasks.list(project=1)
 
+By default list returns all objects, eventually getting the
+paginated results behind the scenes.
+
+Pagination
+^^^^^^^^^^
+
+Pagination is controlled by three parameters as explained below:
+
++------------------+----------------------------+-------------+--------------------------------------------------------+
+|`pagination`      | `page_size` (default: 100) | `page`      | Output                                                 |
++==================+============================+=============+========================================================+
+| `True` (default) | `<integer>`                | `None`      | All results retrieved by using paginated results and   |
+|                  |                            |             | loading them behind the scenes, using given page       |
+|                  |                            |             | size (higher page size could yield better performances)|
++------------------+----------------------------+-------------+--------------------------------------------------------+
+| `True` (default) | `<integer>`                | `<integer>` | Only results for the given page of the given size      |
+|                  |                            |             | are retrieved                                          |
++------------------+----------------------------+-------------+--------------------------------------------------------+
+| `False`          | `unused`                   | `unused`    | Current behavior: all results, ignoring pagination     |
++------------------+----------------------------+-------------+--------------------------------------------------------+
+
+
+.. note:: non numerical or false `page_size` values is casted to the default value
+
+Examples
+^^^^^^^^^
+
+**No pagination**
+
+.. code:: python
+
+   tasks = api.tasks.list(paginate=False)
+
+.. warning:: be aware that the unpaginated results may exceed
+             the data the parser can handle and may result in an error.
+
+**Retrieve a single page**
+
+.. code:: python
+
+   tasks_page_1 = api.tasks.list(page=1)  # Will only return page 1
+
+**Specify the page size**
+
+.. code:: python
+
+   tasks_page_1 = api.tasks.list(page=1, page_size=200)  # Will 200 results from page 1
+
+
 Attach a file
 ~~~~~~~~~~~~~
 

@@ -1,4 +1,4 @@
-from taiga.requestmaker import RequestMaker, _disable_pagination
+from taiga.requestmaker import RequestMaker, _requests_compatible_true
 import taiga.exceptions
 import requests
 import unittest
@@ -33,7 +33,7 @@ class TestRequestMaker(unittest.TestCase):
             data=None, params={},
             headers={
                 'Authorization': 'Bearer f4k3',
-                'x-disable-pagination': _disable_pagination()
+                'x-disable-pagination': _requests_compatible_true()
             }
         )
 

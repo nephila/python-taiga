@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+import json
 
+from taiga.models import Projects
 from taiga.requestmaker import RequestMaker
 from taiga.models.base import InstanceResource, ListResource, SearchableList
 import unittest
 from mock import patch
 import datetime
-from .tools import MockResponse
+from .tools import MockResponse, create_mock_json
 
 
 class Fake(InstanceResource):
@@ -18,12 +20,26 @@ class Fake(InstanceResource):
 
     def my_method(self):
         response = self.requester.get('/users/{id}/starred', id=self.id)
-        return projects.Projects.parse(response.json(), self.requester)
+        return Projects.parse(response.json(), self.requester)
 
 
 class Fakes(ListResource):
 
     instance = Fake
+
+
+class FakeHeaders(dict):
+    sequence = []
+    counter = -1
+
+    def __init__(self, sequence=[], *args, **kwargs):
+        self.sequence = sequence
+        self.counter = -1
+        super(FakeHeaders, self).__init__(*args, **kwargs)
+
+    def get(self, k, d=None):
+        self.counter += 1
+        return self.sequence[self.counter]
 
 
 class TestModelBase(unittest.TestCase):
@@ -136,12 +152,112 @@ class TestModelBase(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_call_model_base_list_elements(self, mock_requestmaker_get):
+        js_list = json.loads(create_mock_json('tests/resources/fakes_list_success.json'))
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         fakes = Fakes(rm)
-        fakes.list()
-        mock_requestmaker_get.assert_called_with('fakes',  query={})
-        fakes.list(project_id=1)
-        mock_requestmaker_get.assert_called_with('fakes', query={'project_id':1})
+
+        data = json.dumps(js_list)
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list()
+        mock_requestmaker_get.assert_called_with('fakes',  query={}, paginate=True)
+        self.assertEqual(len(f_list), 9)
+
+        data = json.dumps(js_list[0])
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(id=1)
+        mock_requestmaker_get.assert_called_with('fakes', query={'id':1}, paginate=True)
+        self.assertEqual(len(f_list), 1)
+
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_call_model_base_list_page_size(self, mock_requestmaker_get):
+        js_list = json.loads(create_mock_json('tests/resources/fakes_list_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fakes = Fakes(rm)
+
+        data = json.dumps(js_list)
+        mock_requestmaker_get.return_value = MockResponse(200, data, FakeHeaders(
+            [True, True, False],
+            **{'X-Pagination-Next': True}
+        ))
+        f_list = fakes.list(page_size=2)
+        mock_requestmaker_get.assert_called_with('fakes',  query={'page': 3, 'page_size': 2})
+        self.assertEqual(len(f_list), 27)
+
+        data = json.dumps(js_list)
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(page_size='wrong')
+        mock_requestmaker_get.assert_called_with('fakes',  query={'page_size': 100}, paginate=True)
+        self.assertEqual(len(f_list), 9)
+
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_call_model_base_list_elements_no_paginate(self, mock_requestmaker_get):
+        js_list = json.loads(create_mock_json('tests/resources/fakes_list_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fakes = Fakes(rm)
+
+        data = json.dumps(js_list)
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(pagination=False)
+        mock_requestmaker_get.assert_called_with('fakes',  query={}, paginate=False)
+        self.assertEqual(len(f_list), 9)
+
+        data = json.dumps(js_list[0])
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(id=1, pagination=False)
+        mock_requestmaker_get.assert_called_with('fakes', query={'id':1}, paginate=False)
+        self.assertEqual(len(f_list), 1)
+
+    @patch('taiga.requestmaker.requests.get')
+    def test_call_model_base_list_elements_no_paginate_check_requests(self, mock_requestmaker_get):
+        js_list = json.loads(create_mock_json('tests/resources/fakes_list_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fakes = Fakes(rm)
+
+        data = json.dumps(js_list)
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(pagination=False)
+        mock_requestmaker_get.assert_called_with(
+            'fakehost/api/v1/fakes', verify=True, params={},
+            headers={
+                'x-disable-pagination': 'True', 'Content-type': 'application/json', 'Authorization': 'Bearer faketoken'
+            }
+        )
+        self.assertEqual(len(f_list), 9)
+
+    @patch('taiga.requestmaker.requests.get')
+    def test_call_model_base_list_elements_paginate_check_requests(self, mock_requestmaker_get):
+        js_list = json.loads(create_mock_json('tests/resources/fakes_list_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fakes = Fakes(rm)
+
+        data = json.dumps(js_list)
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list()
+        mock_requestmaker_get.assert_called_with(
+            'fakehost/api/v1/fakes', verify=True, params={},
+            headers={
+                'x-lazy-pagination': 'True', 'Content-type': 'application/json', 'Authorization': 'Bearer faketoken'
+            }
+        )
+        self.assertEqual(len(f_list), 9)
+
+    @patch('taiga.requestmaker.RequestMaker.get')
+    def test_call_model_base_list_elements_single_page(self, mock_requestmaker_get):
+        js_list = json.loads(create_mock_json('tests/resources/fakes_list_success.json'))
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        fakes = Fakes(rm)
+
+        data = json.dumps(js_list[:5])
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(page_size=5, page=1)
+        self.assertEqual(len(f_list), 5)
+        mock_requestmaker_get.assert_called_with('fakes',  query={'page_size': 5}, paginate=True)
+
+        data = json.dumps(js_list[5:])
+        mock_requestmaker_get.return_value = MockResponse(200, data)
+        f_list = fakes.list(page_size=5, page=2)
+        self.assertEqual(len(f_list), 4)
+        mock_requestmaker_get.assert_called_with('fakes',  query={'page_size': 5}, paginate=True)
 
     def test_to_dict_method(self):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
