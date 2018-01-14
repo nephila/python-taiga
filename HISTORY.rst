@@ -11,6 +11,11 @@ History
 * Add support for multiple authentication backends
 * Add support for self-signed and not verified SSL certificates
 * Add support for webhooks
+* Add pagination support for lists
+* Add debian packaging
+* Avoid installing tests as a separate module
+* Move documentation to readthedocs
+* Add support for Python 3.5/3.6
 
 ******************
 0.8.6 (2016-08-26)

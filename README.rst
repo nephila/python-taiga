@@ -1,8 +1,7 @@
 python-taiga
 ============
 
-|Build Status| |Codecov.io Status| |Latest Version| |Supported Python
-versions| |License| |Downloads|
+|Gitter| |PyPiVersion| |PyVersion| |Status| |TestCoverage| |CodeClimate| |License|
 
 A module for using the `Taiga REST
 API <http://taigaio.github.io/taiga-doc/dist/api.html>`__.
@@ -211,15 +210,31 @@ You can access the history of issues, tasks, userstories and wiki pages:
 
 You can find a complete example in demo.py.
 
-.. |Build Status| image:: http://img.shields.io/travis/nephila/python-taiga.svg?branch=master
-   :target: https://travis-ci.org/nephila/python-taiga
-.. |Codecov.io Status| image:: https://img.shields.io/codecov/c/github/nephila/python-taiga.svg
-   :target: http://codecov.io/github/nephila/python-taiga?branch=master
-.. |Latest Version| image:: https://img.shields.io/pypi/v/python-taiga.svg
+
+.. |Gitter| image:: https://img.shields.io/badge/GITTER-join%20chat-brightgreen.svg?style=flat-square
+    :target: https://gitter.im/nephila/applications
+    :alt: Join the Gitter chat
+
+.. |PyPiVersion| image:: https://img.shields.io/pypi/v/python-taiga.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/python-taiga
+    :alt: Latest PyPI version
+
+.. |PyVersion| image:: https://img.shields.io/pypi/pyversions/python-taiga.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/python-taiga
+    :alt: Python versions
+
+.. |Status| image:: https://img.shields.io/travis/nephila/python-taiga.svg?style=flat-square
+    :target: https://travis-ci.org/nephila/python-taiga
+    :alt: Latest Travis CI build status
+
+.. |TestCoverage| image:: https://img.shields.io/coveralls/nephila/python-taiga/master.svg?style=flat-square
+    :target: https://coveralls.io/r/nephila/python-taiga?branch=master
+    :alt: Test coverage
+
+.. |License| image:: https://img.shields.io/github/license/nephila/python-taiga.svg?style=flat-square
    :target: https://pypi.python.org/pypi/python-taiga/
-.. |Supported Python versions| image:: https://img.shields.io/badge/python-2.6%2C%202.7%2C%203.3%2C%203.4%2C%203.5-blue.svg
-   :target: https://pypi.python.org/pypi/python-taiga/
-.. |License| image:: https://img.shields.io/github/license/nephila/python-taiga.svg
-   :target: https://pypi.python.org/pypi/python-taiga/
-.. |Downloads| image:: https://img.shields.io/pypi/dm/python-taiga.svg
-   :target: https://pypi.python.org/pypi/python-taiga/
+    :alt: License
+
+.. |CodeClimate| image:: https://codeclimate.com/github/nephila/python-taiga/badges/gpa.svg?style=flat-square
+   :target: https://codeclimate.com/github/nephila/python-taiga
+   :alt: Code Climate
