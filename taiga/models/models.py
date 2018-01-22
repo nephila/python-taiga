@@ -267,6 +267,50 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
+class Epic(CustomAttributeResource, CommentableResource):
+
+    endpoint = 'epics'
+
+    repr_attribute = 'subject'
+
+    def list_user_stories(self):
+        """
+        Returns the :class:`UserStory` list of the project.
+        """
+        return UserStories(self.requester).list(epic=self.id)
+
+
+class Epics(ListResource):
+    """
+    Epics factory class
+    """
+    instance = Epic
+
+    def create(self, project, subject, **attrs):
+        """
+        Create a new :class:`Epic`.
+
+        :param project: :class:`Project` id
+        :param subject: subject of the :class:`Epic`
+        :param attrs: optional attributes of the :class:`Epic`
+        """
+        attrs.update({'project': project, 'subject': subject})
+        return self._new_resource(payload=attrs)
+
+    def import_(self, project, subject, status, **attrs):
+        attrs.update(
+            {
+                'project': project,
+                'subject': subject,
+                'status': status
+            }
+        )
+        response = self.requester.post('/{endpoint}/{id}/{type}',
+                                       endpoint="importer", id=project,
+                                       type="ep", payload=attrs)
+        return self.instance.parse(self.requester, response.json())
+
+
 class UserStory(CustomAttributeResource, CommentableResource):
     """
     User Story model
@@ -998,6 +1042,20 @@ class Project(InstanceResource):
         )
         return Task.parse(self.requester, response.json())
 
+    def get_epic_by_ref(self, ref):
+        """
+        Get a :class:`Epic` by ref.
+
+        :param ref: :class:`Epic` reference
+        """
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={ep_ref}&project={project_id}',
+            endpoint=Epic.endpoint,
+            ep_ref=ref,
+            project_id=self.id
+        )
+        return Epic.parse(self.requester, response.json())
+
     def get_userstory_by_ref(self, ref):
         """
         Get a :class:`UserStory` by ref.
@@ -1144,6 +1202,12 @@ class Project(InstanceResource):
         return UserStories(self.requester).import_(
             self.id, subject, status, **attrs
         )
+
+    def list_epics(self):
+        """
+        Returns the :class:`Epic` list of the project.
+        """
+        return Epics(self.requester).list(project=self.id)
 
     def list_user_stories(self):
         """
