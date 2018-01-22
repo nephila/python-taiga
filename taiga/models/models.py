@@ -273,11 +273,11 @@ class Epic(CustomAttributeResource, CommentableResource):
 
     repr_attribute = 'subject'
 
-    def list_user_stories(self):
+    def list_user_stories(self, **queryparams):
         """
         Returns the :class:`UserStory` list of the project.
         """
-        return UserStories(self.requester).list(epic=self.id)
+        return UserStories(self.requester).list(epic=self.id, **queryparams)
 
 
 class Epics(ListResource):
