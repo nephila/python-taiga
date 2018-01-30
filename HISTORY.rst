@@ -5,7 +5,7 @@ History
 =======
 
 ******************
-0.9.0 (unreleased)
+0.9.0 (2018-01-31)
 ******************
 
 * Add support for multiple authentication backends
