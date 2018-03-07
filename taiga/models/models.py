@@ -1288,11 +1288,11 @@ class Project(InstanceResource):
             estimated_finish, **attrs
         )
 
-    def list_milestones(self):
+    def list_milestones(self, **queryparams):
         """
         Get the list of :class:`Milestone` resources for the project.
         """
-        return Milestones(self.requester).list(project=self.id)
+        return Milestones(self.requester).list(project=self.id, **queryparams)
 
     def add_point(self, name, value, **attrs):
         """
