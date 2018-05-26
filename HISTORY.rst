@@ -5,6 +5,13 @@ History
 =======
 
 ******************
+1.0.0 (unreleased)
+******************
+
+* Add support for additional attributes from Taiga 3.2/3.3
+* Fix and enforce code style
+
+******************
 0.9.0 (2018-01-31)
 ******************
 
