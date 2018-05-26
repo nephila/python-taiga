@@ -1,4 +1,3 @@
-import dateutil.parser
 import re
 import six
 
@@ -137,6 +136,8 @@ class InstanceResource(Resource):
     repr_attribute = 'name'
 
     def __init__(self, requester, **params):
+        import dateutil.parser
+
         self.requester = requester
         for key, value in six.iteritems(params):
             if key in ['created_date', 'modified_date']:
