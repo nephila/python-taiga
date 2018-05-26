@@ -1,7 +1,9 @@
-from taiga.requestmaker import RequestMaker, RequestCache, RequestCacheInvalidException, RequestCacheMissingException
-from mock import patch
-import requests
 import unittest
+
+from mock import patch
+
+from taiga.requestmaker import RequestCache, RequestCacheInvalidException, RequestCacheMissingException, RequestMaker
+
 from .tools import MockResponse
 
 

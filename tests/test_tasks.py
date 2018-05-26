@@ -1,23 +1,26 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import Task, Tasks
-from taiga.exceptions import TaigaException
 import unittest
-from mock import patch
-import six
 
+import six
+from mock import patch
 from tests.tools import MockResponse, create_mock_json
+
+from taiga.exceptions import TaigaException
+from taiga.models import Task, Tasks
+from taiga.requestmaker import RequestMaker
 
 if six.PY2:
     import_open = '__builtin__.open'
 else:
     import_open = 'builtins.open'
 
+
 class TestTasks(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_attachments(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/tasks_list_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/tasks_list_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         Task(rm, id=1).list_attachments()
         mock_requestmaker_get.assert_called_with(
@@ -63,11 +66,11 @@ class TestTasks(unittest.TestCase):
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_import_task(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
-        task = Tasks(rm).import_(1, 'Subject', 'New')
+        Tasks(rm).import_(1, 'Subject', 'New')
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/{type}', endpoint='importer', payload={'project': 1,
-                                                                     'subject': 'Subject',
-                                                                     'status': 'New'},
+            '/{endpoint}/{id}/{type}', endpoint='importer', payload={
+                'project': 1, 'subject': 'Subject', 'status': 'New'
+            },
             id=1, type='task'
         )
 

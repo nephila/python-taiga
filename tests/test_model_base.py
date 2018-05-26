@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
+import datetime
 import json
+import unittest
+
+from mock import patch
 
 from taiga.models import Projects
-from taiga.requestmaker import RequestMaker
 from taiga.models.base import InstanceResource, ListResource, SearchableList
-import unittest
-from mock import patch
-import datetime
+from taiga.requestmaker import RequestMaker
+
 from .tools import MockResponse, create_mock_json
 
 
 class Fake(InstanceResource):
-
     endpoint = 'fakes'
 
     allowed_params = ['param1', 'param2']
@@ -24,7 +25,6 @@ class Fake(InstanceResource):
 
 
 class Fakes(ListResource):
-
     instance = Fake
 
 
@@ -47,10 +47,10 @@ class TestModelBase(unittest.TestCase):
     def test_encoding(self):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         param2 = {
-            'list' : [u'Caf\xe9 project', 'Andrea'],
-            'dict' : {
-                'el1' : 'Andrea',
-                'el2' : u'Caf\xe9 project'
+            'list': [u'Caf\xe9 project', 'Andrea'],
+            'dict': {
+                'el1': 'Andrea',
+                'el2': u'Caf\xe9 project'
             }
         }
         fake = Fake(rm, id=1, param1=u'Caf\xe9 project', param2=param2)
@@ -64,7 +64,7 @@ class TestModelBase(unittest.TestCase):
         fake = Fake(rm, id=1, param1='one', param2='two')
         fake.update()
         mock_requestmaker_put.assert_called_once_with('/{endpoint}/{id}', endpoint='fakes',
-            id=1, payload=fake.to_dict())
+                                                      id=1, payload=fake.to_dict())
 
     @patch('taiga.requestmaker.RequestMaker.put')
     def test_call_model_base_update_with_params(self, mock_requestmaker_put):
@@ -96,7 +96,7 @@ class TestModelBase(unittest.TestCase):
         fake = Fake(rm, id=1, param1='one', param2='two')
         fake.patch(['param1'])
         mock_requestmaker_patch.assert_called_once_with('/{endpoint}/{id}', endpoint='fakes',
-            id=1, payload={"param1": "one"})
+                                                        id=1, payload={"param1": "one"})
 
     @patch('taiga.requestmaker.RequestMaker.patch')
     def test_call_model_base_patch_with_params(self, mock_requestmaker_patch):
@@ -159,13 +159,13 @@ class TestModelBase(unittest.TestCase):
         data = json.dumps(js_list)
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list()
-        mock_requestmaker_get.assert_called_with('fakes',  query={}, paginate=True)
+        mock_requestmaker_get.assert_called_with('fakes', query={}, paginate=True)
         self.assertEqual(len(f_list), 9)
 
         data = json.dumps(js_list[0])
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(id=1)
-        mock_requestmaker_get.assert_called_with('fakes', query={'id':1}, paginate=True)
+        mock_requestmaker_get.assert_called_with('fakes', query={'id': 1}, paginate=True)
         self.assertEqual(len(f_list), 1)
 
     @patch('taiga.requestmaker.RequestMaker.get')
@@ -180,13 +180,13 @@ class TestModelBase(unittest.TestCase):
             **{'X-Pagination-Next': True}
         ))
         f_list = fakes.list(page_size=2)
-        mock_requestmaker_get.assert_called_with('fakes',  query={'page': 3, 'page_size': 2})
+        mock_requestmaker_get.assert_called_with('fakes', query={'page': 3, 'page_size': 2})
         self.assertEqual(len(f_list), 27)
 
         data = json.dumps(js_list)
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(page_size='wrong')
-        mock_requestmaker_get.assert_called_with('fakes',  query={'page_size': 100}, paginate=True)
+        mock_requestmaker_get.assert_called_with('fakes', query={'page_size': 100}, paginate=True)
         self.assertEqual(len(f_list), 9)
 
     @patch('taiga.requestmaker.RequestMaker.get')
@@ -198,13 +198,13 @@ class TestModelBase(unittest.TestCase):
         data = json.dumps(js_list)
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(pagination=False)
-        mock_requestmaker_get.assert_called_with('fakes',  query={}, paginate=False)
+        mock_requestmaker_get.assert_called_with('fakes', query={}, paginate=False)
         self.assertEqual(len(f_list), 9)
 
         data = json.dumps(js_list[0])
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(id=1, pagination=False)
-        mock_requestmaker_get.assert_called_with('fakes', query={'id':1}, paginate=False)
+        mock_requestmaker_get.assert_called_with('fakes', query={'id': 1}, paginate=False)
         self.assertEqual(len(f_list), 1)
 
     @patch('taiga.requestmaker.requests.get')
@@ -251,18 +251,18 @@ class TestModelBase(unittest.TestCase):
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(page_size=5, page=1)
         self.assertEqual(len(f_list), 5)
-        mock_requestmaker_get.assert_called_with('fakes',  query={'page_size': 5}, paginate=True)
+        mock_requestmaker_get.assert_called_with('fakes', query={'page_size': 5}, paginate=True)
 
         data = json.dumps(js_list[5:])
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(page_size=5, page=2)
         self.assertEqual(len(f_list), 4)
-        mock_requestmaker_get.assert_called_with('fakes',  query={'page_size': 5}, paginate=True)
+        mock_requestmaker_get.assert_called_with('fakes', query={'page_size': 5}, paginate=True)
 
     def test_to_dict_method(self):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         fake = Fake(rm, id=1, param1='one', param2='two', param3='three')
-        expected_dict = {'param1':'one', 'param2':'two'}
+        expected_dict = {'param1': 'one', 'param2': 'two'}
         self.assertEqual(len(fake.to_dict()), 2)
         self.assertEqual(fake.to_dict(), expected_dict)
 
@@ -295,12 +295,12 @@ class TestModelBase(unittest.TestCase):
         self.assertTrue(searchable_list.get())
 
     @patch('taiga.requestmaker.RequestMaker.put')
-    def test_call_model_base_update(self, mock_requestmaker_put):
+    def test_call_model_base_update_2(self, mock_requestmaker_put):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         fake = Fake(rm, id=1, param1='one', param2='two')
         fake.update()
         mock_requestmaker_put.assert_called_once_with('/{endpoint}/{id}', endpoint='fakes',
-            id=1, payload=fake.to_dict())
+                                                      id=1, payload=fake.to_dict())
 
     @patch('taiga.requestmaker.RequestMaker.put')
     def test_datetime_parsing(self, mock_requestmaker_put):

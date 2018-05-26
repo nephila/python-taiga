@@ -1,13 +1,13 @@
 import datetime
-import six
 import warnings
+
+import six
+
+from .. import exceptions
+from .base import InstanceResource, ListResource
 
 if six.PY3:
     from io import IOBase as file
-
-
-from .base import InstanceResource, ListResource
-from .. import exceptions
 
 
 class CommentableResource(InstanceResource):

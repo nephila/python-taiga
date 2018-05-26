@@ -1,24 +1,28 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import UserStory, UserStories, Task
-from taiga.exceptions import TaigaException
 import unittest
-from mock import patch
+
 import six
+from mock import patch
+
 from taiga import TaigaAPI
-from .tools import create_mock_json
-from .tools import MockResponse
+from taiga.exceptions import TaigaException
+from taiga.models import Task, UserStories, UserStory
+from taiga.requestmaker import RequestMaker
+
+from .tools import MockResponse, create_mock_json
 
 if six.PY2:
     import_open = '__builtin__.open'
 else:
     import_open = 'builtins.open'
 
+
 class TestUserStories(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_attachments(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/userstories_list_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/userstories_list_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         UserStory(rm, id=1).list_attachments()
         mock_requestmaker_get.assert_called_with(
@@ -29,16 +33,18 @@ class TestUserStories(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_single_userstory_parsing(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/userstory_details_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/userstory_details_success.json')
+        )
         api = TaigaAPI(token='f4k3')
         userstory = api.user_stories.get(1)
         self.assertEqual(userstory.description, 'Description of the story')
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_userstories_parsing(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/userstories_list_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/userstories_list_success.json')
+        )
         api = TaigaAPI(token='f4k3')
         userstories = api.user_stories.list()
         self.assertEqual(userstories[0].description, 'Description of the story')
@@ -46,8 +52,9 @@ class TestUserStories(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_add_task(self, mock_requestmaker_post):
-        mock_requestmaker_post.return_value = MockResponse(200,
-            create_mock_json('tests/resources/task_details_success.json'))
+        mock_requestmaker_post.return_value = MockResponse(
+            200, create_mock_json('tests/resources/task_details_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         userstory = UserStory(rm, id=1, project=1)
         task = userstory.add_task('', '')
@@ -55,8 +62,9 @@ class TestUserStories(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_tasks(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/tasks_list_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/tasks_list_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         userstory = UserStory(rm, id=1, project=1)
         tasks = userstory.list_tasks()
@@ -100,7 +108,7 @@ class TestUserStories(unittest.TestCase):
     def test_create_user_story(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = UserStory(rm)
-        user_story = UserStories(rm).create(1, 'UserStory 1')
+        UserStories(rm).create(1, 'UserStory 1')
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'subject': 'UserStory 1'}
         )
@@ -108,10 +116,11 @@ class TestUserStories(unittest.TestCase):
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_import_user_story(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
-        user_story = UserStories(rm).import_(1, 'UserStory 1', 'New')
+        UserStories(rm).import_(1, 'UserStory 1', 'New')
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/{type}', payload={'status': 'New', 'project': 1,
-                                                'subject': 'UserStory 1'},
+            '/{endpoint}/{id}/{type}', payload={
+                'status': 'New', 'project': 1, 'subject': 'UserStory 1'
+            },
             endpoint='importer', type='us', id=1
         )
 
