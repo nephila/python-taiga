@@ -12,17 +12,17 @@ api.auth(
     password='123123'
 )
 
-print (api.me())
+print(api.me())
 
 new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 
 new_project.name = 'TEST PROJECT 3'
 new_project.update()
 
-print (new_project.members)
+print(new_project.members)
 
 for member in new_project.members:
-    print (member)
+    print(member)
 
 jan_feb_milestone = new_project.add_milestone(
     'New milestone jan feb', '2015-01-26', '2015-02-26'
@@ -34,11 +34,12 @@ userstory = new_project.add_user_story(
 )
 userstory.attach('README.md')
 
-userstory.add_task('New Task 2',
+userstory.add_task(
+    'New Task 2',
     new_project.task_statuses[0].id
 ).attach('README.md')
 
-print (userstory.list_tasks())
+print(userstory.list_tasks())
 
 newissue = new_project.add_issue(
     'New Issue',
@@ -51,13 +52,13 @@ newissue = new_project.add_issue(
 
 projects = api.projects.list()
 
-print (projects)
+print(projects)
 
 stories = api.user_stories.list()
 
-print (stories)
+print(stories)
 
-print (api.history.user_story.get(stories[0].id))
+print(api.history.user_story.get(stories[0].id))
 
 try:
     projects[0].star()
@@ -67,19 +68,20 @@ except TaigaException:
 api.milestones.list()
 
 projects = api.projects.list()
-print (projects)
+print(projects)
 
 another_new_project = projects.get(name='TEST PROJECT 3')
 
-print (another_new_project)
+print(another_new_project)
 
 users = api.users.list()
 
-print (users)
+print(users)
 
-print (api.search(projects.get(name='TEST PROJECT 3').id, 'New').user_stories[0].subject)
+print(api.search(projects.get(name='TEST PROJECT 3').id, 'New').user_stories[0].subject)
 
-print new_project.add_issue_attribute(
+print
+new_project.add_issue_attribute(
     'Device', description='(iPad, iPod, iPhone, Desktop, etc.)'
 )
 
@@ -90,4 +92,4 @@ new_project.add_role('New role', permissions=["add_issue", "modify_issue"])
 
 new_project.add_membership('stagi.andrea@gmail.com', new_project.roles[0].id)
 for membership in memberships:
-    print (membership.role_name)
+    print(membership.role_name)

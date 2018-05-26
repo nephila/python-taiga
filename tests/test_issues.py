@@ -1,23 +1,27 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import Issue, Issues
-from taiga.exceptions import TaigaException
 import unittest
-from mock import patch
-from .tools import create_mock_json
-from .tools import MockResponse
+
 import six
+from mock import patch
+
+from taiga.exceptions import TaigaException
+from taiga.models import Issue, Issues
+from taiga.requestmaker import RequestMaker
+
+from .tools import MockResponse, create_mock_json
 
 if six.PY2:
     import_open = '__builtin__.open'
 else:
     import_open = 'builtins.open'
 
+
 class TestIssues(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
     def test_list_attachments(self, mock_requestmaker_get):
-        mock_requestmaker_get.return_value = MockResponse(200,
-            create_mock_json('tests/resources/issues_list_success.json'))
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/issues_list_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         Issue(rm, id=1).list_attachments()
         mock_requestmaker_get.assert_called_with(
@@ -48,8 +52,9 @@ class TestIssues(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_issue_creation(self, mock_requestmaker_post):
-        mock_requestmaker_post.return_value = MockResponse(200,
-            create_mock_json('tests/resources/issue_details_success.json'))
+        mock_requestmaker_post.return_value = MockResponse(
+            200, create_mock_json('tests/resources/issue_details_success.json')
+        )
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         issue = Issues(rm).create(1, 2, 3, 4, 5, 6)
         self.assertTrue(isinstance(issue, Issue))
@@ -57,14 +62,12 @@ class TestIssues(unittest.TestCase):
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_issue_import(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
-        issue = Issues(rm).import_(1, 'subject', 'Normal', 'Closed', 'Normal', 'Wishlist')
+        Issues(rm).import_(1, 'subject', 'Normal', 'Closed', 'Normal', 'Wishlist')
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/{type}', type='issue', payload={'type': 'Normal',
-                                                              'project': 1,
-                                                              'subject': 'subject',
-                                                              'priority': 'Normal',
-                                                              'status': 'Closed',
-                                                              'severity': 'Wishlist'},
+            '/{endpoint}/{id}/{type}', type='issue', payload={
+                'type': 'Normal', 'project': 1, 'subject': 'subject', 'priority': 'Normal',
+                'status': 'Closed', 'severity': 'Wishlist'
+            },
             endpoint='importer', id=1
         )
 

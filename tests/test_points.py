@@ -1,7 +1,9 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import Point, Points
 import unittest
+
 from mock import patch
+
+from taiga.models import Point, Points
+from taiga.requestmaker import RequestMaker
 
 
 class TestPoints(unittest.TestCase):
@@ -10,8 +12,7 @@ class TestPoints(unittest.TestCase):
     def test_create_point(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = Point(rm)
-        point = Points(rm).create(1, 'Point 1', 4)
+        Points(rm).create(1, 'Point 1', 4)
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'name': 'Point 1', 'value': 4}
         )
-

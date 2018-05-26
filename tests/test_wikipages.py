@@ -1,14 +1,17 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import WikiPage, WikiPages
-from taiga.exceptions import TaigaException
 import unittest
-from mock import patch
+
 import six
+from mock import patch
+
+from taiga.exceptions import TaigaException
+from taiga.models import WikiPage, WikiPages
+from taiga.requestmaker import RequestMaker
 
 if six.PY2:
     import_open = '__builtin__.open'
 else:
     import_open = 'builtins.open'
+
 
 class TestWikiPages(unittest.TestCase):
 
@@ -16,7 +19,7 @@ class TestWikiPages(unittest.TestCase):
     def test_create_wikipage(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = WikiPage(rm)
-        wikipage = WikiPages(rm).create(1, 'WikiPage-Slug', 'Some content')
+        WikiPages(rm).create(1, 'WikiPage-Slug', 'Some content')
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'slug': 'WikiPage-Slug', 'content': 'Some content'}
         )
@@ -24,11 +27,11 @@ class TestWikiPages(unittest.TestCase):
     @patch('taiga.requestmaker.RequestMaker.post')
     def test_import_wikipage(self, mock_requestmaker_post):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
-        wikipage = WikiPages(rm).import_(1, 'WikiPage-Slug', 'Some content')
+        WikiPages(rm).import_(1, 'WikiPage-Slug', 'Some content')
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{id}/{type}', endpoint='importer', payload={'project': 1,
-                                                                     'content': 'Some content',
-                                                                     'slug': 'WikiPage-Slug'},
+            '/{endpoint}/{id}/{type}', endpoint='importer', payload={
+                'project': 1, 'content': 'Some content', 'slug': 'WikiPage-Slug'
+            },
             id=1, type='wiki_page'
         )
 

@@ -1,21 +1,24 @@
-from taiga import TaigaAPI
-import taiga.exceptions
-import requests
 import unittest
+
+import requests
 from mock import patch
-from .tools import create_mock_json
-from .tools import MockResponse
+
+import taiga.exceptions
+from taiga import TaigaAPI
+
+from .tools import MockResponse, create_mock_json
+
 
 class TestAuth(unittest.TestCase):
 
     @patch('taiga.client.TaigaAPI._init_resources')
     def test_call_init_if_token_provided(self, init):
-        api = TaigaAPI(token='f4k3')
+        TaigaAPI(token='f4k3')
         init.assert_called_once_with()
 
     @patch('taiga.client.TaigaAPI._init_resources')
     def test_not_call_init_if_no_token_provided(self, init):
-        api = TaigaAPI(host='host')
+        TaigaAPI(host='host')
         self.assertFalse(init.called)
 
     @patch('taiga.client.requests')

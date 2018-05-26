@@ -1,7 +1,9 @@
-from taiga.requestmaker import RequestMaker
-from taiga.models import Role, Roles
 import unittest
+
 from mock import patch
+
+from taiga.models import Role, Roles
+from taiga.requestmaker import RequestMaker
 
 
 class TestRoles(unittest.TestCase):
@@ -10,8 +12,7 @@ class TestRoles(unittest.TestCase):
     def test_create_role(self, mock_new_resource):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         mock_new_resource.return_value = Role(rm)
-        sv = Roles(rm).create(1, 'RL 1')
+        Roles(rm).create(1, 'RL 1')
         mock_new_resource.assert_called_with(
             payload={'project': 1, 'name': 'RL 1'}
         )
-

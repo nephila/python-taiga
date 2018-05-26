@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import os
 import setuptools
-import sys
 
 from taiga import __version__
 
