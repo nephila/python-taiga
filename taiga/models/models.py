@@ -272,6 +272,7 @@ class UserStory(CustomAttributeResource, CommentableResource):
     User Story model
 
     :param assigned_to: assigned to of the :class:`UserStory`
+    :param assigned_users: additional users assigned to of the :class:`UserStory`
     :param backlog_order: backlog order of the :class:`UserStory`
     :param blocked_note: blocked note of the :class:`UserStory`
     :param version: version of the :class:`UserStory`
@@ -288,16 +289,18 @@ class UserStory(CustomAttributeResource, CommentableResource):
     :param tags: tags of the :class:`UserStory`
     :param team_requirement: team requirement of the :class:`UserStory`
     :param watchers: watchers of the :class:`UserStory`
+    :param due_date: :class:`UserStory` due date
     """
     endpoint = 'userstories'
 
     repr_attribute = 'subject'
 
     allowed_params = [
-        'assigned_to', 'backlog_order', 'blocked_note', 'version',
+        'assigned_to', 'assigned_users', 'backlog_order', 'blocked_note', 'version',
         'client_requirement', 'description', 'is_blocked', 'is_closed',
         'kanban_order', 'milestone', 'points', 'project', 'sprint_order',
-        'status', 'subject', 'tags', 'team_requirement', 'watchers'
+        'status', 'subject', 'tags', 'team_requirement', 'watchers', 'due_date',
+
     ]
 
     def add_task(self, subject, status, **attrs):
@@ -587,6 +590,7 @@ class Task(CustomAttributeResource, CommentableResource):
     :param is_iocaine: the is iocaine of the :class:`TaskStatus`
     :param external_reference: external reference of the :class:`TaskStatus`
     :param watchers: watchers of the :class:`TaskStatus`
+    :param due_date: :class:`Task` due date
     """
 
     endpoint = 'tasks'
@@ -738,7 +742,7 @@ class Issue(CustomAttributeResource, CommentableResource):
     :param subject: subject of the issue
     :param tags: array of tags
     :param watchers: array of watchers id
-
+    :param due_date: :class:`Issue` due date
     """
 
     endpoint = 'issues'
