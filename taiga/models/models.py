@@ -267,6 +267,20 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
+class EpicAttachment(Attachment):
+    """
+    EpicAttachment class
+    """
+    endpoint = 'epics/attachments'
+
+
+class EpicAttachments(Attachments):
+    """
+    EpicAttachments factory class
+    """
+    instance = EpicAttachment
+
+
 class Epic(CustomAttributeResource, CommentableResource):
 
     endpoint = 'epics'
@@ -278,6 +292,24 @@ class Epic(CustomAttributeResource, CommentableResource):
         Returns the :class:`UserStory` list of the project.
         """
         return UserStories(self.requester).list(epic=self.id, **queryparams)
+
+    def list_attachments(self):
+        """
+        Get a list of :class:`EpicAttachment`.
+        """
+        return EpicAttachments(self.requester).list(object_id=self.id)
+
+    def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`Epic`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
+        return EpicAttachments(self.requester).create(
+            self.project, self.id,
+            attached_file, **attrs
+        )
 
 
 class Epics(ListResource):
