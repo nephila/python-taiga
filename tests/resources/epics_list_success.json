@@ -1,0 +1,64 @@
+[
+    {
+        "assigned_to": null,
+        "assigned_to_extra_info": null,
+        "attachments": [],
+        "blocked_note": "",
+        "client_requirement": false,
+        "color": "#a40000",
+        "created_date": "2017-06-28T14:56:50.437Z",
+        "epics_order": 1498661810437,
+        "id": 1,
+        "is_blocked": false,
+        "is_closed": false,
+        "is_voter": true,
+        "is_watcher": false,
+        "modified_date": "2017-06-28T14:56:50.649Z",
+        "owner": 12,
+        "owner_extra_info": {
+            "big_photo": null,
+            "full_name_display": "Vanesa Garcia",
+            "gravatar_id": "74cb769a5e64d445b8550789e1553502",
+            "id": 12,
+            "is_active": true,
+            "photo": null,
+            "username": "user6"
+        },
+        "project": 1,
+        "project_extra_info": {
+            "id": 1,
+            "logo_small_url": null,
+            "name": "Project Example 0",
+            "slug": "project-0"
+        },
+        "ref": 106,
+        "status": 4,
+        "status_extra_info": {
+            "color": "#fcc000",
+            "is_closed": false,
+            "name": "Ready for test"
+        },
+        "subject": "Added file copying and processing of images (resizing)",
+        "tags": [
+            [
+                "reprehenderit",
+                null
+            ],
+            [
+                "pariatur",
+                null
+            ]
+        ],
+        "team_requirement": false,
+        "total_voters": 6,
+        "total_watchers": 1,
+        "user_stories_counts": {
+            "progress": 0.4,
+            "total": 3
+        },
+        "version": 1,
+        "watchers": [
+            11
+        ]
+    }
+]
