@@ -311,6 +311,43 @@ class Epics(ListResource):
         return self.instance.parse(self.requester, response.json())
 
 
+class EpicStatus(InstanceResource):
+    """
+    Taiga Epic Status model
+
+    :param color: the color of the :class:`EpicStatus`
+    :param is_closed: closed property of the :class:`EpicStatus`
+    :param name: The name of the :class:`EpicStatus`
+    :param order: order of the :class:`EpicStatus`
+    :param project: the Taiga project of the :class:`EpicStatus`
+    :param slug: the slug of the :class:`EpicStatus`
+    """
+
+    repr_attribute = 'subject'
+
+    endpoint = 'epic-statuses'
+
+    allowed_params = [
+        'color', 'is_closed', 'name', 'order', 'project', 'slug`'
+    ]
+
+
+class EpicStatuses(ListResource):
+
+    instance = EpicStatus
+
+    def create(self, project, name, **attrs):
+        """
+        Create a new :class:`EpicStatus`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`EpicStatus`
+        :param attrs: optional attributes of the :class:`EpicStatus`
+        """
+        attrs.update({'project': project, 'name': name})
+        return self._new_resource(payload=attrs)
+
+
 class UserStory(CustomAttributeResource, CommentableResource):
     """
     User Story model
