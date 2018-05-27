@@ -267,6 +267,20 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
+class EpicAttachment(Attachment):
+    """
+    EpicAttachment class
+    """
+    endpoint = 'epics/attachments'
+
+
+class EpicAttachments(Attachments):
+    """
+    EpicAttachments factory class
+    """
+    instance = EpicAttachment
+
+
 class Epic(CustomAttributeResource, CommentableResource):
 
     endpoint = 'epics'
@@ -278,6 +292,24 @@ class Epic(CustomAttributeResource, CommentableResource):
         Returns the :class:`UserStory` list of the project.
         """
         return UserStories(self.requester).list(epic=self.id, **queryparams)
+
+    def list_attachments(self):
+        """
+        Get a list of :class:`EpicAttachment`.
+        """
+        return EpicAttachments(self.requester).list(object_id=self.id)
+
+    def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`Epic`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
+        return EpicAttachments(self.requester).create(
+            self.project, self.id,
+            attached_file, **attrs
+        )
 
 
 class Epics(ListResource):
@@ -309,6 +341,43 @@ class Epics(ListResource):
                                        endpoint="importer", id=project,
                                        type="ep", payload=attrs)
         return self.instance.parse(self.requester, response.json())
+
+
+class EpicStatus(InstanceResource):
+    """
+    Taiga Epic Status model
+
+    :param color: the color of the :class:`EpicStatus`
+    :param is_closed: closed property of the :class:`EpicStatus`
+    :param name: The name of the :class:`EpicStatus`
+    :param order: order of the :class:`EpicStatus`
+    :param project: the Taiga project of the :class:`EpicStatus`
+    :param slug: the slug of the :class:`EpicStatus`
+    """
+
+    repr_attribute = 'subject'
+
+    endpoint = 'epic-statuses'
+
+    allowed_params = [
+        'color', 'is_closed', 'name', 'order', 'project', 'slug`'
+    ]
+
+
+class EpicStatuses(ListResource):
+
+    instance = EpicStatus
+
+    def create(self, project, name, **attrs):
+        """
+        Create a new :class:`EpicStatus`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`EpicStatus`
+        :param attrs: optional attributes of the :class:`EpicStatus`
+        """
+        attrs.update({'project': project, 'name': name})
+        return self._new_resource(payload=attrs)
 
 
 class UserStory(CustomAttributeResource, CommentableResource):
@@ -1288,11 +1357,11 @@ class Project(InstanceResource):
             estimated_finish, **attrs
         )
 
-    def list_milestones(self):
+    def list_milestones(self, **queryparams):
         """
         Get the list of :class:`Milestone` resources for the project.
         """
-        return Milestones(self.requester).list(project=self.id)
+        return Milestones(self.requester).list(project=self.id, **queryparams)
 
     def add_point(self, name, value, **attrs):
         """
