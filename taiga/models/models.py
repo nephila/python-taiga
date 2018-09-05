@@ -1700,7 +1700,8 @@ class HistoryEntity(object):
         """
         response = self.requester.get(
             '/{endpoint}/{entity}/{id}',
-            endpoint=self.endpoint, entity=self.entity, id=resource_id
+            endpoint=self.endpoint, entity=self.entity, id=resource_id,
+            paginate=False
         )
         return response.json()
 
