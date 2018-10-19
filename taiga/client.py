@@ -6,8 +6,8 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from . import exceptions, utils
 from .models import (
-    History, IssueAttachments, IssueAttributes, Issues, IssueStatuses, IssueTypes, Milestones, Points, Epics, Priorities,
-    Projects, Roles, Severities, TaskAttachments, TaskAttributes, Tasks, TaskStatuses, Users, UserStories,
+    Epics, History, IssueAttachments, IssueAttributes, Issues, IssueStatuses, IssueTypes, Milestones, Points,
+    Priorities, Projects, Roles, Severities, TaskAttachments, TaskAttributes, Tasks, TaskStatuses, Users, UserStories,
     UserStoryAttachments, UserStoryAttributes, UserStoryStatuses, Webhooks, WikiLinks, WikiPages,
 )
 from .requestmaker import RequestMaker
