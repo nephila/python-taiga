@@ -12,6 +12,13 @@ History
 * Fix and enforce code style
 
 ******************
+0.9.1 (2018-10-19)
+******************
+
+* Add support for epics
+* Add support for project's tags
+
+******************
 0.9.0 (2018-01-31)
 ******************
 
