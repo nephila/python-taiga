@@ -333,8 +333,8 @@ class TestProjects(unittest.TestCase):
     def test_list_milestones(self, mock_list_milestones):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
-        project.list_milestones()
-        mock_list_milestones.assert_called_with(project=1)
+        project.list_milestones(subject='foo')
+        mock_list_milestones.assert_called_with(project=1, subject='foo')
 
     @patch('taiga.models.Issues.create')
     def test_add_issue(self, mock_new_issue):
