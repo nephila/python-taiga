@@ -142,7 +142,7 @@ class InstanceResource(Resource):
         self.requester = requester
         for key, value in six.iteritems(params):
             if key in ['created_date', 'modified_date']:
-                if re.compile('\d+-\d+-\d+T\d+:\d+:\d+\+0000').match(value):
+                if re.compile(r'\d+-\d+-\d+T\d+:\d+:\d+\+0000').match(value):
                     d = dateutil.parser.parse(value)
                     value = d.astimezone(dateutil.tz.tzlocal())
             if six.PY2:

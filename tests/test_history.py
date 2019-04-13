@@ -20,7 +20,7 @@ class TestHistory(unittest.TestCase):
         api.history.issue.get(res_id)
         mock_requestmaker_get.assert_called_with(
             '/{endpoint}/{entity}/{id}',
-            endpoint='history', entity='issue', id=res_id
+            endpoint='history', entity='issue', id=res_id, paginate=False
         )
 
     @patch('taiga.requestmaker.RequestMaker.get')
@@ -34,7 +34,7 @@ class TestHistory(unittest.TestCase):
         api.history.task.get(res_id)
         mock_requestmaker_get.assert_called_with(
             '/{endpoint}/{entity}/{id}',
-            endpoint='history', entity='task', id=res_id
+            endpoint='history', entity='task', id=res_id, paginate=False
         )
 
     @patch('taiga.requestmaker.RequestMaker.get')
@@ -48,7 +48,7 @@ class TestHistory(unittest.TestCase):
         api.history.user_story.get(res_id)
         mock_requestmaker_get.assert_called_with(
             '/{endpoint}/{entity}/{id}',
-            endpoint='history', entity='userstory', id=res_id
+            endpoint='history', entity='userstory', id=res_id, paginate=False
         )
 
     @patch('taiga.requestmaker.RequestMaker.get')
@@ -62,7 +62,7 @@ class TestHistory(unittest.TestCase):
         api.history.wiki.get(res_id)
         mock_requestmaker_get.assert_called_with(
             '/{endpoint}/{entity}/{id}',
-            endpoint='history', entity='wiki', id=res_id
+            endpoint='history', entity='wiki', id=res_id, paginate=False
         )
 
     @patch('taiga.requestmaker.RequestMaker.post')

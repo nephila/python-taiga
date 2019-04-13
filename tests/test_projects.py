@@ -49,6 +49,43 @@ class TestProjects(unittest.TestCase):
         )
 
     @patch('taiga.requestmaker.RequestMaker.get')
+    def test_get_item_by_ref(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/project_details_success.json')
+        )
+        api = TaigaAPI(token='f4k3')
+        project = api.projects.get_by_slug('my_slug')
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/projects_resolve_us.json')
+        )
+        with patch.object(project, 'get_userstory_by_ref') as mock_get_userstory_by_ref:
+            mock_get_userstory_by_ref.return_value = MockResponse(
+                200, create_mock_json('tests/resources/userstory_details_success.json')
+            )
+            project.get_item_by_ref(1)
+            mock_get_userstory_by_ref.assert_called_with(1)
+
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/projects_resolve_issue.json')
+        )
+        with patch.object(project, 'get_issue_by_ref') as mock_get_issue_by_ref:
+            mock_get_issue_by_ref.return_value = MockResponse(
+                200, create_mock_json('tests/resources/issue_details_success.json')
+            )
+            project.get_item_by_ref(1)
+            mock_get_issue_by_ref.assert_called_with(1)
+
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json('tests/resources/projects_resolve_task.json')
+        )
+        with patch.object(project, 'get_task_by_ref') as mock_get_task_by_ref:
+            mock_get_task_by_ref.return_value = MockResponse(
+                200, create_mock_json('tests/resources/task_details_success.json')
+            )
+            project.get_item_by_ref(1)
+            mock_get_task_by_ref.assert_called_with(1)
+
+    @patch('taiga.requestmaker.RequestMaker.get')
     def test_get_userstories_by_ref(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(
             200, create_mock_json('tests/resources/userstory_details_success.json')
@@ -296,8 +333,8 @@ class TestProjects(unittest.TestCase):
     def test_list_milestones(self, mock_list_milestones):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
         project = Project(rm, id=1)
-        project.list_milestones()
-        mock_list_milestones.assert_called_with(project=1)
+        project.list_milestones(subject='foo')
+        mock_list_milestones.assert_called_with(project=1, subject='foo')
 
     @patch('taiga.models.Issues.create')
     def test_add_issue(self, mock_new_issue):
