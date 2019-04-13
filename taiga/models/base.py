@@ -232,7 +232,10 @@ class InstanceResource(Resource):
         return cls(requester, **entry)
 
     def __repr__(self):
-        return '{0}({1})'.format(self.__class__.__name__, self.id)
+        try:
+            return '{0}({1})'.format(self.__class__.__name__, self.id)
+        except AttributeError:
+            return '{0}({1})'.format(self.__class__.__name__, id(self))
 
     def __str__(self):
         return self._rp()

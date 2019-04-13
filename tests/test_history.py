@@ -10,6 +10,16 @@ from .tools import MockResponse, create_mock_json
 class TestHistory(unittest.TestCase):
 
     @patch('taiga.requestmaker.RequestMaker.get')
+    def test_history_repr(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200,
+            create_mock_json('tests/resources/history_success.json')
+        )
+        api = TaigaAPI(token='f4k3')
+        api.history.issue.get(1)
+        self.assertTrue('History' in str(api.history))
+
+    @patch('taiga.requestmaker.RequestMaker.get')
     def test_issue(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(
             200,
