@@ -497,3 +497,17 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_webhooks()
         mock_list_webhooks.assert_called_with(project=1)
+
+    @patch('taiga.models.Epics.create')
+    def test_add_epic(self, mock_new_epic):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.add_epic('Epic 1')
+        mock_new_epic.assert_called_with(1, 'Epic 1')
+
+    @patch('taiga.models.Epics.list')
+    def test_list_epics(self, mock_list_epics):
+        rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
+        project = Project(rm, id=1)
+        project.list_epics()
+        mock_list_epics.assert_called_with(project=1)

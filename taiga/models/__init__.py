@@ -8,7 +8,7 @@ from .models import (
 )
 
 __all__ = [
-    'User', 'Users', 'Project', 'Projects', 'UserStory', 'UserStories',
+    'Epic', 'Epics', 'User', 'Users', 'Project', 'Projects', 'UserStory', 'UserStories',
     'UserStoryAttachment', 'UserStoryAttachments', 'Task', 'Tasks',
     'TaskAttachment', 'TaskAttachments', 'Issue', 'Issues', 'IssueAttachment',
     'IssueAttachments', 'Milestone', 'Milestones', 'Point', 'Points',
@@ -18,5 +18,5 @@ __all__ = [
     'History', 'IssueAttribute', 'IssueAttributes', 'TaskAttribute',
     'TaskAttributes', 'UserStoryAttribute', 'UserStoryAttributes',
     'Membership', 'Memberships', 'Role', 'Roles', 'IssueType', 'IssueTypes',
-    'Webhook', 'Webhooks', 'Epic', 'Epics',
+    'Webhook', 'Webhooks',
 ]

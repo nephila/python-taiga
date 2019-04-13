@@ -282,10 +282,30 @@ class EpicAttachments(Attachments):
 
 
 class Epic(CustomAttributeResource, CommentableResource):
+    """
+    Epic model
+
+    :param assigned_to: assigned to property of the :class:`Epic`
+    :param blocked_note: blocked note of the :class:`Epic`
+    :param description: description of of the :class:`Epic`
+    :param is_blocked: is blocked property of the :class:`Epic`
+    :param is_closed: is closed property of the :class:`Epic`
+    :param color: the color of the :class:`Epic`
+    :param project: the project of the :class:`TaskStatus`
+    :param subject: subject of the :class:`TaskStatus`
+    :param tags: tags of the :class:`TaskStatus`
+    :param watchers: watchers of the :class:`TaskStatus`
+    """
 
     endpoint = 'epics'
 
     repr_attribute = 'subject'
+
+    allowed_params = [
+        'assigned_to', 'blocked_note', 'description',
+        'is_blocked', 'is_closed', 'color', 'project',
+        'subject', 'tags', 'watchers'
+    ]
 
     def list_user_stories(self, **queryparams):
         """
@@ -1295,12 +1315,6 @@ class Project(InstanceResource):
             self.id, subject, status, **attrs
         )
 
-    def list_epics(self):
-        """
-        Returns the :class:`Epic` list of the project.
-        """
-        return Epics(self.requester).list(project=self.id)
-
     def list_user_stories(self):
         """
         Returns the :class:`UserStory` list of the project.
@@ -1401,6 +1415,23 @@ class Project(InstanceResource):
         Get the list of :class:`Point` resources for the project.
         """
         return Points(self.requester).list(project=self.id)
+
+    def add_epic(self, subject, **attrs):
+        """
+        Adds a :class:`UserStory` and returns a :class:`UserStory` resource.
+
+        :param subject: subject of the :class:`UserStory`
+        :param attrs: other :class:`UserStory` attributes
+        """
+        return Epics(self.requester).create(
+            self.id, subject, **attrs
+        )
+
+    def list_epics(self):
+        """
+        Get the list of :class:`Epic` resources for the project.
+        """
+        return Epics(self.requester).list(project=self.id)
 
     def add_task_status(self, name, **attrs):
         """
@@ -1648,6 +1679,30 @@ class Project(InstanceResource):
         Get the list of :class:`Webhook` resources for the project.
         """
         return Webhooks(self.requester).list(project=self.id)
+
+    def add_tag(self, tag, color=None):
+        """
+        Add a new tag and return a response object.
+
+        :param tag: name of the tag
+        :param color: optional color of the tag
+        """
+        attrs = {'tag': tag}
+        if color:
+            attrs['color'] = color
+        response = self.requester.post(
+            "/{}/{}/create_tag".format(self.endpoint, self.id), payload=attrs
+        )
+        return response
+
+    def list_tags(self):
+        """
+        Get the list of tags for the project.
+        """
+        response = self.requester.get(
+            "/{}/{}/tags_colors".format(self.endpoint, self.id)
+        )
+        return response.json()
 
 
 class Projects(ListResource):
