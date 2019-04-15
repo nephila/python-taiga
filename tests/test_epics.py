@@ -98,16 +98,6 @@ class TestEpics(unittest.TestCase):
             payload={'project': 1, 'subject': 'Epic 1'}
         )
 
-    # @patch('taiga.requestmaker.RequestMaker.post')
-    # def test_import_epic(self, mock_requestmaker_post):
-    #     rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')
-    #     Epics(rm).import_(1, 'Epic 1', 'New')
-    #     mock_requestmaker_post.assert_called_with(
-    #         '/{endpoint}/{id}/{type}', payload={'status': 'New', 'project': 1,
-    #                                             'subject': 'Epic 1'},
-    #         endpoint='importer', type='ep', id=1
-    #     )
-
     @patch('taiga.models.base.InstanceResource.update')
     def test_add_comment(self, mock_update):
         rm = RequestMaker('/api/v1', 'fakehost', 'faketoken')

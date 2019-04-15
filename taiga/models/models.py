@@ -349,20 +349,6 @@ class Epics(ListResource):
         attrs.update({'project': project, 'subject': subject})
         return self._new_resource(payload=attrs)
 
-    # Epic import is not supported
-    # def import_(self, project, subject, status, **attrs):
-    #     attrs.update(
-    #         {
-    #             'project': project,
-    #             'subject': subject,
-    #             'status': status
-    #         }
-    #     )
-    #     response = self.requester.post('/{endpoint}/{id}/{type}',
-    #                                    endpoint="importer", id=project,
-    #                                    type="ep", payload=attrs)
-    #     return self.instance.parse(self.requester, response.json())
-
 
 class EpicStatus(InstanceResource):
     """
