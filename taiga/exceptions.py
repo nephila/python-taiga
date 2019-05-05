@@ -17,4 +17,6 @@ class TaigaRestException(TaigaException):
                 message = json_message['_error_message']
         except ValueError:
             pass
+        if not message:
+            message = 'Status: {} on URI: {}'.format(status_code, uri)
         super(TaigaRestException, self).__init__(message)
