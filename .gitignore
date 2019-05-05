@@ -42,3 +42,4 @@ cover
 /debian/.debhelper/
 /debian/files
 /debian/*build*
+demo.py
