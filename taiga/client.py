@@ -99,6 +99,9 @@ class TaigaAPI:
         search_result.wikipages = self.wikipages.parse_list(
             result['wikipages']
         )
+        search_result.epics = self.epics.parse_list(
+            result['epics']
+        )
         return search_result
 
     def auth(self, username, password):

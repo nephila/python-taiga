@@ -131,5 +131,21 @@
             "modified_date": "2015-01-01T09:29:53+0000",
             "watchers": []
         }
+    ],
+    "epics":[
+        {
+            "id": 209,
+            "ref": 3,
+            "subject": "New Story",
+            "status": 138,
+            "assigned_to": null
+        },
+        {
+            "id": 210,
+            "ref": 4,
+            "subject": "New Story",
+            "status": 138,
+            "assigned_to": null
+        }
     ]
 }

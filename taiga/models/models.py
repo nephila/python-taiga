@@ -295,6 +295,7 @@ class Epic(CustomAttributeResource, CommentableResource):
     :param subject: subject of the :class:`TaskStatus`
     :param tags: tags of the :class:`TaskStatus`
     :param watchers: watchers of the :class:`TaskStatus`
+    :param version: version of the :class:`Epic`
     """
 
     endpoint = 'epics'
@@ -304,7 +305,7 @@ class Epic(CustomAttributeResource, CommentableResource):
     allowed_params = [
         'assigned_to', 'blocked_note', 'description',
         'is_blocked', 'is_closed', 'color', 'project',
-        'subject', 'tags', 'watchers'
+        'subject', 'tags', 'watchers', 'version'
     ]
 
     def list_user_stories(self, **queryparams):
@@ -1107,7 +1108,8 @@ class Project(InstanceResource):
         'severities': Severities,
         'roles': Roles,
         'points': Points,
-        'us_statuses': UserStoryStatuses
+        'us_statuses': UserStoryStatuses,
+        'milestones': Milestones
     }
 
     def get_item_by_ref(self, ref):
@@ -1856,6 +1858,7 @@ class History(InstanceResource):
         self.task = HistoryTask(self.requester)
         self.user_story = HistoryUserStory(self.requester)
         self.wiki = HistoryWiki(self.requester)
+        self.epic = HistoryEpic(self.requester)
 
 
 class HistoryEntity(object):
@@ -1914,6 +1917,15 @@ class HistoryIssue(HistoryEntity):
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
         self.entity = 'issue'
+
+
+class HistoryEpic(HistoryEntity):
+    """
+    HistoryEpic model
+    """
+    def __init__(self, *args, **kwargs):
+        super(type(self), self).__init__(*args, **kwargs)
+        self.entity = 'epic'
 
 
 class HistoryTask(HistoryEntity):
