@@ -8,6 +8,8 @@ History
 1.0.0 (unreleased)
 ******************
 
+* Add support for python 3.7
+* Add support for epics
 * Add support for additional attributes from Taiga 3.2/3.3
 * Fix and enforce code style
 
