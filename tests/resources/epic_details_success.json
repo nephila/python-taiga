@@ -1,0 +1,78 @@
+{
+    "assigned_to": null,
+    "assigned_to_extra_info": null,
+    "attachments": [],
+    "blocked_note": "",
+    "blocked_note_html": "",
+    "client_requirement": false,
+    "color": "#a40000",
+    "comment": "",
+    "created_date": "2017-06-28T14:56:50.437Z",
+    "description": "Description of the epic",
+    "description_html": "<p>Placeat ipsa quaerat consequuntur animi, dignissimos fugit perferendis quibusdam, eos autem unde deserunt alias voluptatum nisi ducimus ipsum in sed consequuntur? Repudiandae corporis soluta, aut aperiam saepe est atque alias nihil consequuntur adipisci odio aspernatur, iure alias atque, asperiores natus beatae. Cum harum beatae facilis nostrum quibusdam sapiente, deleniti aperiam aliquam ad eaque praesentium maiores iure repudiandae pariatur, eligendi quisquam eaque dignissimos atque doloremque totam quod blanditiis earum, atque praesentium hic nisi facere cum libero unde laboriosam, obcaecati minus pariatur ad vel iure ipsa. Dolore modi at consequatur autem excepturi inventore vel est aliquam, blanditiis laborum nam delectus quas assumenda necessitatibus, repellat nesciunt non laborum totam voluptatum, perferendis debitis similique nemo ullam iusto beatae nesciunt.</p>",
+    "epics_order": 1498661810437,
+    "id": 1,
+    "is_blocked": false,
+    "is_closed": false,
+    "is_voter": true,
+    "is_watcher": false,
+    "modified_date": "2017-06-28T14:56:50.649Z",
+    "neighbors": {
+        "next": {
+            "id": 2,
+            "ref": 107,
+            "subject": "Add setting to allow regular users to create folders at the root level."
+        },
+        "previous": {
+            "id": 32,
+            "ref": 110,
+            "subject": "New epic"
+        }
+    },
+    "owner": 12,
+    "owner_extra_info": {
+        "big_photo": null,
+        "full_name_display": "Vanesa Garcia",
+        "gravatar_id": "74cb769a5e64d445b8550789e1553502",
+        "id": 12,
+        "is_active": true,
+        "photo": null,
+        "username": "user6"
+    },
+    "project": 1,
+    "project_extra_info": {
+        "id": 1,
+        "logo_small_url": null,
+        "name": "Project Example 0",
+        "slug": "project-0"
+    },
+    "ref": 106,
+    "status": 4,
+    "status_extra_info": {
+        "color": "#fcc000",
+        "is_closed": false,
+        "name": "Ready for test"
+    },
+    "subject": "Added file copying and processing of images (resizing)",
+    "tags": [
+        [
+            "reprehenderit",
+            null
+        ],
+        [
+            "pariatur",
+            null
+        ]
+    ],
+    "team_requirement": false,
+    "total_voters": 6,
+    "total_watchers": 1,
+    "user_stories_counts": {
+        "progress": 0.4,
+        "total": 3
+    },
+    "version": 1,
+    "watchers": [
+        11
+    ]
+}

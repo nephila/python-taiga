@@ -267,6 +267,126 @@ class UserStoryAttachments(Attachments):
     instance = UserStoryAttachment
 
 
+class EpicAttachment(Attachment):
+    """
+    EpicAttachment class
+    """
+    endpoint = 'epics/attachments'
+
+
+class EpicAttachments(Attachments):
+    """
+    EpicAttachments factory class
+    """
+    instance = EpicAttachment
+
+
+class Epic(CustomAttributeResource, CommentableResource):
+    """
+    Epic model
+
+    :param assigned_to: assigned to property of the :class:`Epic`
+    :param blocked_note: blocked note of the :class:`Epic`
+    :param description: description of of the :class:`Epic`
+    :param is_blocked: is blocked property of the :class:`Epic`
+    :param is_closed: is closed property of the :class:`Epic`
+    :param color: the color of the :class:`Epic`
+    :param project: the project of the :class:`TaskStatus`
+    :param subject: subject of the :class:`TaskStatus`
+    :param tags: tags of the :class:`TaskStatus`
+    :param watchers: watchers of the :class:`TaskStatus`
+    """
+
+    endpoint = 'epics'
+
+    repr_attribute = 'subject'
+
+    allowed_params = [
+        'assigned_to', 'blocked_note', 'description',
+        'is_blocked', 'is_closed', 'color', 'project',
+        'subject', 'tags', 'watchers'
+    ]
+
+    def list_user_stories(self, **queryparams):
+        """
+        Returns the :class:`UserStory` list of the project.
+        """
+        return UserStories(self.requester).list(epic=self.id, **queryparams)
+
+    def list_attachments(self):
+        """
+        Get a list of :class:`EpicAttachment`.
+        """
+        return EpicAttachments(self.requester).list(object_id=self.id)
+
+    def attach(self, attached_file, **attrs):
+        """
+        Attach a file to the :class:`Epic`
+
+        :param attached_file: file path to attach
+        :param attrs: optional attributes for the attached file
+        """
+        return EpicAttachments(self.requester).create(
+            self.project, self.id,
+            attached_file, **attrs
+        )
+
+
+class Epics(ListResource):
+    """
+    Epics factory class
+    """
+    instance = Epic
+
+    def create(self, project, subject, **attrs):
+        """
+        Create a new :class:`Epic`.
+
+        :param project: :class:`Project` id
+        :param subject: subject of the :class:`Epic`
+        :param attrs: optional attributes of the :class:`Epic`
+        """
+        attrs.update({'project': project, 'subject': subject})
+        return self._new_resource(payload=attrs)
+
+
+class EpicStatus(InstanceResource):
+    """
+    Taiga Epic Status model
+
+    :param color: the color of the :class:`EpicStatus`
+    :param is_closed: closed property of the :class:`EpicStatus`
+    :param name: The name of the :class:`EpicStatus`
+    :param order: order of the :class:`EpicStatus`
+    :param project: the Taiga project of the :class:`EpicStatus`
+    :param slug: the slug of the :class:`EpicStatus`
+    """
+
+    repr_attribute = 'subject'
+
+    endpoint = 'epic-statuses'
+
+    allowed_params = [
+        'color', 'is_closed', 'name', 'order', 'project', 'slug`'
+    ]
+
+
+class EpicStatuses(ListResource):
+
+    instance = EpicStatus
+
+    def create(self, project, name, **attrs):
+        """
+        Create a new :class:`EpicStatus`.
+
+        :param project: :class:`Project` id
+        :param name: name of the :class:`EpicStatus`
+        :param attrs: optional attributes of the :class:`EpicStatus`
+        """
+        attrs.update({'project': project, 'name': name})
+        return self._new_resource(payload=attrs)
+
+
 class UserStory(CustomAttributeResource, CommentableResource):
     """
     User Story model
@@ -1021,6 +1141,20 @@ class Project(InstanceResource):
         )
         return Task.parse(self.requester, response.json())
 
+    def get_epic_by_ref(self, ref):
+        """
+        Get a :class:`Epic` by ref.
+
+        :param ref: :class:`Epic` reference
+        """
+        response = self.requester.get(
+            '/{endpoint}/by_ref?ref={ep_ref}&project={project_id}',
+            endpoint=Epic.endpoint,
+            ep_ref=ref,
+            project_id=self.id
+        )
+        return Epic.parse(self.requester, response.json())
+
     def get_userstory_by_ref(self, ref):
         """
         Get a :class:`UserStory` by ref.
@@ -1269,6 +1403,23 @@ class Project(InstanceResource):
         """
         return Points(self.requester).list(project=self.id)
 
+    def add_epic(self, subject, **attrs):
+        """
+        Adds a :class:`UserStory` and returns a :class:`UserStory` resource.
+
+        :param subject: subject of the :class:`UserStory`
+        :param attrs: other :class:`UserStory` attributes
+        """
+        return Epics(self.requester).create(
+            self.id, subject, **attrs
+        )
+
+    def list_epics(self):
+        """
+        Get the list of :class:`Epic` resources for the project.
+        """
+        return Epics(self.requester).list(project=self.id)
+
     def add_task_status(self, name, **attrs):
         """
         Add a Task status to the project and returns a
@@ -1515,6 +1666,30 @@ class Project(InstanceResource):
         Get the list of :class:`Webhook` resources for the project.
         """
         return Webhooks(self.requester).list(project=self.id)
+
+    def add_tag(self, tag, color=None):
+        """
+        Add a new tag and return a response object.
+
+        :param tag: name of the tag
+        :param color: optional color of the tag
+        """
+        attrs = {'tag': tag}
+        if color:
+            attrs['color'] = color
+        response = self.requester.post(
+            "/{}/{}/create_tag".format(self.endpoint, self.id), payload=attrs
+        )
+        return response
+
+    def list_tags(self):
+        """
+        Get the list of tags for the project.
+        """
+        response = self.requester.get(
+            "/{}/{}/tags_colors".format(self.endpoint, self.id)
+        )
+        return response.json()
 
 
 class Projects(ListResource):
