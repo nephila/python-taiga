@@ -1,0 +1,51 @@
+---
+trigger:
+  - test_azure
+
+jobs:
+  - job: 'Test'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      matrix:
+        py27:
+          python.version: '2.7'
+          tox.env: py27
+        py35:
+          python.version: '3.5'
+          tox.env: py35
+        py36:
+          python.version: '3.6'
+          tox.env: py36
+        py37:
+          python.version: '3.7'
+          tox.env: py37
+        pep8:
+          python.version: '3.7'
+          tox.env: pep8
+        isort:
+          python.version: '3.7'
+          tox.env: isort
+        docs:
+          python.version: '3.7'
+          tox.env: docs
+
+    steps:
+      - task: UsePythonVersion@0
+        displayName: Get Python for Python tools.
+        inputs:
+          versionSpec: '3.7'
+          addToPath: false
+        name: pyTools
+
+      - script: $(pyTools.pythonLocation)/bin/pip install --upgrade tox
+        displayName: Install Python-based tools.
+
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '$(python.version)'
+          architecture: 'x64'
+        displayName: Get Python for tests.
+
+      - script: $(pyTools.pythonLocation)/bin/tox -e $(tox.env)
+        displayName: run tox -e $(tox.env)
