@@ -1,7 +1,7 @@
 python-taiga
 ============
 
-|Gitter| |PyPiVersion| |PyVersion| |Status| |TestCoverage| |CodeClimate| |License|
+|Gitter| |PyPiVersion| |PyVersion| |Status| |Azure| |TestCoverage| |CodeClimate| |License|
 
 A module for using the `Taiga REST
 API <http://taigaio.github.io/taiga-doc/dist/api.html>`__.
@@ -210,7 +210,10 @@ You can access the history of issues, tasks, userstories and wiki pages:
 
 You can find a complete example in demo.py.
 
-
+.. |Azure| image:: https://dev.azure.com/nephiladigital/python-taiga/_apis/build/status/nephila.python-taiga?branchName=master
+   :target: https://dev.azure.com/nephiladigital/python-taiga/_build?definitionId=1
+   :alt: CI Status
+   
 .. |Gitter| image:: https://img.shields.io/badge/GITTER-join%20chat-brightgreen.svg?style=flat-square
     :target: https://gitter.im/nephila/applications
     :alt: Join the Gitter chat
