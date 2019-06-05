@@ -411,6 +411,8 @@ class UserStory(CustomAttributeResource, CommentableResource):
     :param team_requirement: team requirement of the :class:`UserStory`
     :param watchers: watchers of the :class:`UserStory`
     :param due_date: :class:`UserStory` due date
+    :param generated_from_issue: :class:`UserStory` parent issue
+    :param generated_from_task: :class:`UserStory` parent task
     """
     endpoint = 'userstories'
 
@@ -423,7 +425,7 @@ class UserStory(CustomAttributeResource, CommentableResource):
         'client_requirement', 'description', 'is_blocked', 'is_closed',
         'kanban_order', 'milestone', 'points', 'project', 'sprint_order',
         'status', 'subject', 'tags', 'team_requirement', 'watchers', 'due_date',
-
+        'generated_from_issue', 'generated_from_task',
     ]
 
     def add_task(self, subject, status, **attrs):
