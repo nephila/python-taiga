@@ -5,12 +5,14 @@ History
 =======
 
 ******************
-1.0.0 (unreleased)
+1.0.0 (2019-08-08)
 ******************
 
 * Add support for python 3.7
 * Add support for epics
 * Add support for additional attributes from Taiga 3.2/3.3
+* Improve models
+* Improve pagination support
 * Fix and enforce code style
 
 ******************
