@@ -1,6 +1,6 @@
 -r requirements.txt
 coverage==5.1
-coveralls
+coveralls==2.0.0
 codecov
 mock
 flake8
