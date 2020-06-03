@@ -1,5 +1,5 @@
 -r requirements.txt
-coverage<5.0
+coverage==5.1
 coveralls
 codecov
 mock
