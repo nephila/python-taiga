@@ -1,9 +1,14 @@
+.. :contributing:
+
 ============
 Contributing
 ============
 
 Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given. 
+little bit helps, and credit will always be given.
+
+Refer to `Nephila contribution guidelines<https://nephila.github.io/contributing/>`_
+for the general contribution guidelines and code of conduct.
 
 You can contribute in many ways:
 
@@ -13,7 +18,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/nephila/djangocms-helper/issues.
+Report bugs at https://github.com/nephila/python-taiga/issues.
 
 If you are reporting a bug, please include:
 
@@ -36,14 +41,14 @@ is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-djangocms-helper could always use more documentation, whether as part of the 
-official djangocms-helper docs, in docstrings, or even on the web in blog posts,
+python-taiga could always use more documentation, whether as part of the
+official python-taiga docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/nephila/djangocms-helper/issues.
+The best way to send feedback is to file an issue at https://github.com/nephila/python-taiga/issues.
 
 If you are proposing a feature:
 
@@ -55,17 +60,17 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `djangocms-helper` for local development.
+Ready to contribute? Here's how to set up ``python-taiga`` for local development.
 
-1. Fork the `djangocms-helper` repo on GitHub.
+1. Fork the ``python-taiga`` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/djangocms-helper.git
+    $ git clone git@github.com:your_name_here/python-taiga.git
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
-    $ mkvirtualenv djangocms-helper
-    $ cd djangocms-helper/
+    $ mkvirtualenv python-taiga
+    $ cd python-taiga/
     $ python setup.py develop
 
 4. Create a branch for local development::
@@ -81,7 +86,7 @@ tests, including testing other Python versions with tox::
 	$ python setup.py test
     $ tox
 
-To get flake8 and tox, just pip install them into your virtualenv. 
+To get flake8 and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub::
 
@@ -100,6 +105,6 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 2.6, 2.7, and 3.3, and for PyPy. Check 
-   https://travis-ci.org/nephila/djangocms-helper/pull_requests
+3. The pull request should work for Python 2.6, 2.7, and 3.3, and for PyPy. Check
+   https://travis-ci.org/nephila/python-taiga/pull_requests
    and make sure that the tests pass for all supported Python versions.
