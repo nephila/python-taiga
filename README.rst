@@ -7,6 +7,9 @@ A module for using the `Taiga REST
 API <http://taigaio.github.io/taiga-doc/dist/api.html>`__.
 Documentation: https://python-taiga.readthedocs.io/
 
+.. warning:: Version 1.0 changed will change th signature of HistoryItem methods.
+             Update your code if it uses kwargs for HistoryEntity.delete_comment / HistoryEntity.undelete_comment.
+
 Install
 -------
 

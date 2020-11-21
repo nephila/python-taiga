@@ -80,11 +80,11 @@ class TestHistory(unittest.TestCase):
         mock_requestmaker_post.return_value = MockResponse(204, '')
         api = TaigaAPI(token='f4k3')
         res_id = 1
-        ent_id = '9660411e-6fea-11e4-a5b3-b499ba565108'
-        api.history.task.delete_comment(res_id, ent_id)
+        comment_id = '9660411e-6fea-11e4-a5b3-b499ba565108'
+        api.history.task.delete_comment(res_id, comment_id)
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{entity}/{id}/delete_comment?id={ent_id}',
-            endpoint='history', entity='task', id=res_id, ent_id=ent_id
+            '/{endpoint}/{entity}/{id}/delete_comment?id={comment_id}',
+            endpoint='history', entity='task', id=res_id, comment_id=comment_id
         )
 
     @patch('taiga.requestmaker.RequestMaker.post')
@@ -92,9 +92,9 @@ class TestHistory(unittest.TestCase):
         mock_requestmaker_post.return_value = MockResponse(204, '')
         api = TaigaAPI(token='f4k3')
         res_id = 1
-        ent_id = '9660411e-6fea-11e4-a5b3-b499ba565108'
-        api.history.user_story.undelete_comment(res_id, ent_id)
+        comment_id = '9660411e-6fea-11e4-a5b3-b499ba565108'
+        api.history.user_story.undelete_comment(res_id, comment_id)
         mock_requestmaker_post.assert_called_with(
-            '/{endpoint}/{entity}/{id}/undelete_comment?id={ent_id}',
-            endpoint='history', entity='userstory', id=res_id, ent_id=ent_id
+            '/{endpoint}/{entity}/{id}/undelete_comment?id={comment_id}',
+            endpoint='history', entity='userstory', id=res_id, comment_id=comment_id
         )
