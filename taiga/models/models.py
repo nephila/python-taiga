@@ -1,19 +1,16 @@
 import datetime
 import warnings
-
-import six
+from io import IOBase
 
 from .. import exceptions
 from .base import InstanceResource, ListResource
-
-if six.PY3:
-    from io import IOBase as file
 
 
 class CommentableResource(InstanceResource):
     """
     CommentableResource base class
     """
+
     def add_comment(self, comment):
         """
         Add a comment to the current element
@@ -27,7 +24,8 @@ class CustomAttributeResource(InstanceResource):
     """
     CustomAttributeResource base class
     """
-    def set_attribute(self, id, value, version=1):
+
+    def set_attribute(self, id, value, version=1):  # noqa: A002
         """
         Set attribute to a specific value
 
@@ -36,27 +34,23 @@ class CustomAttributeResource(InstanceResource):
         :param version: version of the attribute (default = 1)
         """
         attributes = self._get_attributes(cache=True)
-        formatted_id = '{0}'.format(id)
-        attributes['attributes_values'][formatted_id] = value
+        formatted_id = "{}".format(id)
+        attributes["attributes_values"][formatted_id] = value
         response = self.requester.patch(
-            '/{endpoint}/custom-attributes-values/{id}',
-            endpoint=self.endpoint, id=self.id,
-            payload={
-                'attributes_values': attributes['attributes_values'],
-                'version': version
-            }
+            "/{endpoint}/custom-attributes-values/{id}",
+            endpoint=self.endpoint,
+            id=self.id,
+            payload={"attributes_values": attributes["attributes_values"], "version": version},
         )
         cache_key = self.requester.get_full_url(
-            '/{endpoint}/custom-attributes-values/{id}',
-            endpoint=self.endpoint, id=self.id
+            "/{endpoint}/custom-attributes-values/{id}", endpoint=self.endpoint, id=self.id
         )
         self.requester.cache.put(cache_key, response)
         return response.json()
 
     def _get_attributes(self, cache=False):
         response = self.requester.get(
-            '/{endpoint}/custom-attributes-values/{id}',
-            endpoint=self.endpoint, id=self.id, cache=cache
+            "/{endpoint}/custom-attributes-values/{id}", endpoint=self.endpoint, id=self.id, cache=cache
         )
         return response.json()
 
@@ -77,17 +71,17 @@ class CustomAttribute(InstanceResource):
     :param order: order of the custom attribute
     :param project: :class:`Project` id
     """
-    repr_attribute = 'name'
 
-    allowed_params = [
-        'name', 'description', 'order', 'project'
-    ]
+    repr_attribute = "name"
+
+    allowed_params = ["name", "description", "order", "project"]
 
 
 class CustomAttributes(ListResource):
     """
     CustomAttributes factory base class
     """
+
     def create(self, project, name, **attrs):
         """
         Create a new :class:`CustomAttribute`.
@@ -96,11 +90,7 @@ class CustomAttributes(ListResource):
         :param name: name of the custom attribute
         :param attrs: optional attributes of the custom attributes
         """
-        attrs.update(
-            {
-                'project': project, 'name': name
-            }
-        )
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -108,18 +98,16 @@ class User(InstanceResource):
     """
     User model
     """
-    endpoint = 'users'
 
-    repr_attribute = 'full_name'
+    endpoint = "users"
+
+    repr_attribute = "full_name"
 
     def starred_projects(self):
         """
         Get a list of starred :class:`Project`.
         """
-        response = self.requester.get(
-            '/{endpoint}/{id}/starred', endpoint=self.endpoint,
-            id=self.id
-        )
+        response = self.requester.get("/{endpoint}/{id}/starred", endpoint=self.endpoint, id=self.id)
         return Projects.parse(self.requester, response.json())
 
 
@@ -127,6 +115,7 @@ class Users(ListResource):
     """
     Users factory class
     """
+
     instance = User
 
 
@@ -138,17 +127,19 @@ class Membership(InstanceResource):
     :param role: role of the :class:`Membership`
     :param project: project of the :class:`Membership`
     """
-    endpoint = 'memberships'
 
-    allowed_params = ['email', 'role', 'project']
+    endpoint = "memberships"
 
-    repr_attribute = 'email'
+    allowed_params = ["email", "role", "project"]
+
+    repr_attribute = "email"
 
 
 class Memberships(ListResource):
     """
     Memberships factory class
     """
+
     instance = Membership
 
     def create(self, project, email, role, **attrs):
@@ -160,7 +151,7 @@ class Memberships(ListResource):
         :param role: role of the :class:`Membership`
         :param attrs: optional attributes of the :class:`Membership`
         """
-        attrs.update({'project': project, 'email': email, 'role': role})
+        attrs.update({"project": project, "email": email, "role": role})
         return self._new_resource(payload=attrs)
 
 
@@ -173,17 +164,19 @@ class Priority(InstanceResource):
     :param order: order of the class:`Priority`
     :param project: project of the class:`Priority`
     """
-    endpoint = 'priorities'
 
-    allowed_params = ['name', 'color', 'order', 'project']
+    endpoint = "priorities"
 
-    repr_attribute = 'name'
+    allowed_params = ["name", "color", "order", "project"]
+
+    repr_attribute = "name"
 
 
 class Priorities(ListResource):
     """
     Priorities factory class
     """
+
     instance = Priority
 
     def create(self, project, name, **attrs):
@@ -194,7 +187,7 @@ class Priorities(ListResource):
         :param name: email of the priority
         :param attrs: optional attributes of the priority
         """
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -208,19 +201,17 @@ class Attachment(InstanceResource):
     :param description: description of the :class:`Attachment`
     :param is_deprecated: is_deprecated of the :class:`Attachment`
     """
-    repr_attribute = 'subject'
 
-    allowed_params = [
-        'object_id', 'project', 'attached_file',
-        'description', 'is_deprecated', 'size',
-        'name', 'url'
-    ]
+    repr_attribute = "subject"
+
+    allowed_params = ["object_id", "project", "attached_file", "description", "is_deprecated", "size", "name", "url"]
 
 
 class Attachments(ListResource):
     """
     Attachments factory base class
     """
+
     def create(self, project, object_id, attached_file, **attrs):
         """
         Create a new :class:`Attachment`.
@@ -231,39 +222,34 @@ class Attachments(ListResource):
         :param attached_file: file path that you want to upload
         :param attrs: optional attributes for the :class:`Attachment`
         """
-        attrs.update({'project': project, 'object_id': object_id})
+        attrs.update({"project": project, "object_id": object_id})
 
-        if isinstance(attached_file, file):
+        if isinstance(attached_file, IOBase):
             attachment = attached_file
-        elif isinstance(attached_file, six.string_types):
+        elif isinstance(attached_file, str):
             try:
-                attachment = open(attached_file, 'rb')
-            except IOError:
-                raise exceptions.TaigaException(
-                    "Attachment must be a IOBase or a path to an existing file"
-                )
+                attachment = open(attached_file, "rb")
+            except OSError:
+                raise exceptions.TaigaException("Attachment must be a IOBase or a path to an existing file")
         else:
-            raise exceptions.TaigaException(
-                "Attachment must be a IOBase or a path to an existing file"
-            )
+            raise exceptions.TaigaException("Attachment must be a IOBase or a path to an existing file")
 
-        return self._new_resource(
-            files={'attached_file': attachment},
-            payload=attrs
-        )
+        return self._new_resource(files={"attached_file": attachment}, payload=attrs)
 
 
 class UserStoryAttachment(Attachment):
     """
     UserStoryAttachment class
     """
-    endpoint = 'userstories/attachments'
+
+    endpoint = "userstories/attachments"
 
 
 class UserStoryAttachments(Attachments):
     """
     UserStoryAttachments factory class
     """
+
     instance = UserStoryAttachment
 
 
@@ -271,13 +257,15 @@ class EpicAttachment(Attachment):
     """
     EpicAttachment class
     """
-    endpoint = 'epics/attachments'
+
+    endpoint = "epics/attachments"
 
 
 class EpicAttachments(Attachments):
     """
     EpicAttachments factory class
     """
+
     instance = EpicAttachment
 
 
@@ -298,14 +286,22 @@ class Epic(CustomAttributeResource, CommentableResource):
     :param version: version of the :class:`Epic`
     """
 
-    endpoint = 'epics'
+    endpoint = "epics"
 
-    repr_attribute = 'subject'
+    repr_attribute = "subject"
 
     allowed_params = [
-        'assigned_to', 'blocked_note', 'description',
-        'is_blocked', 'is_closed', 'color', 'project',
-        'subject', 'tags', 'watchers', 'version'
+        "assigned_to",
+        "blocked_note",
+        "description",
+        "is_blocked",
+        "is_closed",
+        "color",
+        "project",
+        "subject",
+        "tags",
+        "watchers",
+        "version",
     ]
 
     def list_user_stories(self, **queryparams):
@@ -327,16 +323,14 @@ class Epic(CustomAttributeResource, CommentableResource):
         :param attached_file: file path to attach
         :param attrs: optional attributes for the attached file
         """
-        return EpicAttachments(self.requester).create(
-            self.project, self.id,
-            attached_file, **attrs
-        )
+        return EpicAttachments(self.requester).create(self.project, self.id, attached_file, **attrs)
 
 
 class Epics(ListResource):
     """
     Epics factory class
     """
+
     instance = Epic
 
     def create(self, project, subject, **attrs):
@@ -347,7 +341,7 @@ class Epics(ListResource):
         :param subject: subject of the :class:`Epic`
         :param attrs: optional attributes of the :class:`Epic`
         """
-        attrs.update({'project': project, 'subject': subject})
+        attrs.update({"project": project, "subject": subject})
         return self._new_resource(payload=attrs)
 
 
@@ -363,13 +357,11 @@ class EpicStatus(InstanceResource):
     :param slug: the slug of the :class:`EpicStatus`
     """
 
-    repr_attribute = 'subject'
+    repr_attribute = "subject"
 
-    endpoint = 'epic-statuses'
+    endpoint = "epic-statuses"
 
-    allowed_params = [
-        'color', 'is_closed', 'name', 'order', 'project', 'slug`'
-    ]
+    allowed_params = ["color", "is_closed", "name", "order", "project", "slug`"]
 
 
 class EpicStatuses(ListResource):
@@ -384,7 +376,7 @@ class EpicStatuses(ListResource):
         :param name: name of the :class:`EpicStatus`
         :param attrs: optional attributes of the :class:`EpicStatus`
         """
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -414,18 +406,36 @@ class UserStory(CustomAttributeResource, CommentableResource):
     :param generated_from_issue: :class:`UserStory` parent issue
     :param generated_from_task: :class:`UserStory` parent task
     """
-    endpoint = 'userstories'
 
-    repr_attribute = 'subject'
-    element_type = 'User Story'
-    element_shortcut = 'us'
+    endpoint = "userstories"
+
+    repr_attribute = "subject"
+    element_type = "User Story"
+    element_shortcut = "us"
 
     allowed_params = [
-        'assigned_to', 'assigned_users', 'backlog_order', 'blocked_note', 'version',
-        'client_requirement', 'description', 'is_blocked', 'is_closed',
-        'kanban_order', 'milestone', 'points', 'project', 'sprint_order',
-        'status', 'subject', 'tags', 'team_requirement', 'watchers', 'due_date',
-        'generated_from_issue', 'generated_from_task',
+        "assigned_to",
+        "assigned_users",
+        "backlog_order",
+        "blocked_note",
+        "version",
+        "client_requirement",
+        "description",
+        "is_blocked",
+        "is_closed",
+        "kanban_order",
+        "milestone",
+        "points",
+        "project",
+        "sprint_order",
+        "status",
+        "subject",
+        "tags",
+        "team_requirement",
+        "watchers",
+        "due_date",
+        "generated_from_issue",
+        "generated_from_task",
     ]
 
     def add_task(self, subject, status, **attrs):
@@ -436,10 +446,7 @@ class UserStory(CustomAttributeResource, CommentableResource):
         :param attrs: optional attributes for :class:`Task`
 
         """
-        return Tasks(self.requester).create(
-            self.project, subject, status,
-            user_story=self.id, **attrs
-        )
+        return Tasks(self.requester).create(self.project, subject, status, user_story=self.id, **attrs)
 
     def list_tasks(self):
         """
@@ -460,16 +467,14 @@ class UserStory(CustomAttributeResource, CommentableResource):
         :param attached_file: file path to attach
         :param attrs: optional attributes for the attached file
         """
-        return UserStoryAttachments(self.requester).create(
-            self.project, self.id,
-            attached_file, **attrs
-        )
+        return UserStoryAttachments(self.requester).create(self.project, self.id, attached_file, **attrs)
 
 
 class UserStories(ListResource):
     """
     UserStories factory class
     """
+
     instance = UserStory
 
     def create(self, project, subject, **attrs):
@@ -480,20 +485,14 @@ class UserStories(ListResource):
         :param subject: subject of the :class:`UserStory`
         :param attrs: optional attributes of the :class:`UserStory`
         """
-        attrs.update({'project': project, 'subject': subject})
+        attrs.update({"project": project, "subject": subject})
         return self._new_resource(payload=attrs)
 
     def import_(self, project, subject, status, **attrs):
-        attrs.update(
-            {
-                'project': project,
-                'subject': subject,
-                'status': status
-            }
+        attrs.update({"project": project, "subject": subject, "status": status})
+        response = self.requester.post(
+            "/{endpoint}/{id}/{type}", endpoint="importer", id=project, type="us", payload=attrs
         )
-        response = self.requester.post('/{endpoint}/{id}/{type}',
-                                       endpoint="importer", id=project,
-                                       type="us", payload=attrs)
         return self.instance.parse(self.requester, response.json())
 
 
@@ -509,13 +508,11 @@ class UserStoryStatus(InstanceResource):
     :param wip_limit: wip limit of the :class:`UserStoryStatus`
     """
 
-    repr_attribute = 'subject'
+    repr_attribute = "subject"
 
-    endpoint = 'userstory-statuses'
+    endpoint = "userstory-statuses"
 
-    allowed_params = [
-        'color', 'is_closed', 'name', 'order', 'project', 'wip_limit'
-    ]
+    allowed_params = ["color", "is_closed", "name", "order", "project", "wip_limit"]
 
 
 class UserStoryStatuses(ListResource):
@@ -530,7 +527,7 @@ class UserStoryStatuses(ListResource):
         :param name: name of the :class:`UserStoryStatus`
         :param attrs: optional attributes of the :class:`UserStoryStatus`
         """
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -545,17 +542,18 @@ class Point(InstanceResource):
     :param project: the Taiga project of the :class:`Point`
     """
 
-    endpoint = 'points'
+    endpoint = "points"
 
-    repr_attribute = 'subject'
+    repr_attribute = "subject"
 
-    allowed_params = ['color', 'value', 'name', 'order', 'project']
+    allowed_params = ["color", "value", "name", "order", "project"]
 
 
 class Points(ListResource):
     """
     Points factory
     """
+
     instance = Point
 
     def create(self, project, name, value, **attrs):
@@ -567,7 +565,7 @@ class Points(ListResource):
         :param value: value of the :class:`Point`
         :param attrs: optional attributes of the :class:`Point`
         """
-        attrs.update({'project': project, 'name': name, 'value': value})
+        attrs.update({"project": project, "name": name, "value": value})
         return self._new_resource(payload=attrs)
 
 
@@ -581,25 +579,29 @@ class Milestone(InstanceResource):
     :param estimated_finish: the estimated finish  of the :class:`Milestone`
     :param disponibility: the disponibility  of the :class:`Milestone`
     """
-    endpoint = 'milestones'
+
+    endpoint = "milestones"
 
     allowed_params = [
-        'name', 'project', 'estimated_start', 'estimated_finish',
-        'disponibility', 'slug', 'order', 'watchers'
+        "name",
+        "project",
+        "estimated_start",
+        "estimated_finish",
+        "disponibility",
+        "slug",
+        "order",
+        "watchers",
     ]
 
     parser = {
-        'user_stories': UserStories,
+        "user_stories": UserStories,
     }
 
     def stats(self):
         """
         Get the stats for the current :class:`Milestone`
         """
-        response = self.requester.get(
-            '/{endpoint}/{id}/stats',
-            endpoint=self.endpoint, id=self.id
-        )
+        response = self.requester.get("/{endpoint}/{id}/stats", endpoint=self.endpoint, id=self.id)
         return response.json()
 
 
@@ -607,10 +609,10 @@ class Milestones(ListResource):
     """
     Milestones factory
     """
+
     instance = Milestone
 
-    def create(self, project, name, estimated_start,
-               estimated_finish, **attrs):
+    def create(self, project, name, estimated_start, estimated_finish, **attrs):
         """
         Create a new :class:`Milestone`.
 
@@ -621,32 +623,35 @@ class Milestones(ListResource):
         :param attrs: optional attributes of the :class:`Milestone`
         """
         if isinstance(estimated_start, datetime.datetime):
-            estimated_start = estimated_start.strftime('%Y-%m-%d')
+            estimated_start = estimated_start.strftime("%Y-%m-%d")
         if isinstance(estimated_finish, datetime.datetime):
-            estimated_finish = estimated_finish.strftime('%Y-%m-%d')
-        attrs.update({
-            'project': project,
-            'name': name,
-            'estimated_start': estimated_start,
-            'estimated_finish': estimated_finish
-        })
+            estimated_finish = estimated_finish.strftime("%Y-%m-%d")
+        attrs.update(
+            {
+                "project": project,
+                "name": name,
+                "estimated_start": estimated_start,
+                "estimated_finish": estimated_finish,
+            }
+        )
         return self._new_resource(payload=attrs)
 
-    def import_(self, project, name, estimated_start,
-                estimated_finish, **attrs):
+    def import_(self, project, name, estimated_start, estimated_finish, **attrs):
         if isinstance(estimated_start, datetime.datetime):
-            estimated_start = estimated_start.strftime('%Y-%m-%d')
+            estimated_start = estimated_start.strftime("%Y-%m-%d")
         if isinstance(estimated_finish, datetime.datetime):
-            estimated_finish = estimated_finish.strftime('%Y-%m-%d')
-        attrs.update({
-            'project': project,
-            'name': name,
-            'estimated_start': estimated_start,
-            'estimated_finish': estimated_finish
-        })
-        response = self.requester.post('/{endpoint}/{id}/{type}',
-                                       endpoint="importer", id=project,
-                                       type="milestone", payload=attrs)
+            estimated_finish = estimated_finish.strftime("%Y-%m-%d")
+        attrs.update(
+            {
+                "project": project,
+                "name": name,
+                "estimated_start": estimated_start,
+                "estimated_finish": estimated_finish,
+            }
+        )
+        response = self.requester.post(
+            "/{endpoint}/{id}/{type}", endpoint="importer", id=project, type="milestone", payload=attrs
+        )
         return self.instance.parse(self.requester, response.json())
 
 
@@ -660,9 +665,10 @@ class TaskStatus(InstanceResource):
     :param project: the project  of the :class:`TaskStatus`
     :param is_closed: the is closed property of the :class:`TaskStatus`
     """
-    endpoint = 'task-statuses'
 
-    allowed_params = ['name', 'color', 'order', 'project', 'is_closed']
+    endpoint = "task-statuses"
+
+    allowed_params = ["name", "color", "order", "project", "is_closed"]
 
 
 class TaskStatuses(ListResource):
@@ -677,7 +683,7 @@ class TaskStatuses(ListResource):
         :param name: name of the :class:`TaskStatus`
         :param attrs: optional attributes of the :class:`TaskStatus`
         """
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -685,13 +691,15 @@ class TaskAttachment(Attachment):
     """
     TaskAttachment model
     """
-    endpoint = 'tasks/attachments'
+
+    endpoint = "tasks/attachments"
 
 
 class TaskAttachments(Attachments):
     """
     TaskAttachments factory
     """
+
     instance = TaskAttachment
 
 
@@ -718,17 +726,30 @@ class Task(CustomAttributeResource, CommentableResource):
     :param due_date: :class:`Task` due date
     """
 
-    endpoint = 'tasks'
+    endpoint = "tasks"
 
-    repr_attribute = 'subject'
-    element_type = 'Task'
-    element_shortcut = 'task'
+    repr_attribute = "subject"
+    element_type = "Task"
+    element_shortcut = "task"
 
     allowed_params = [
-        'assigned_to', 'blocked_note', 'description', 'version',
-        'is_blocked', 'is_closed', 'milestone', 'project', 'user_story',
-        'status', 'subject', 'tags', 'us_order', 'taskboard_order',
-        'is_iocaine', 'external_reference', 'watchers'
+        "assigned_to",
+        "blocked_note",
+        "description",
+        "version",
+        "is_blocked",
+        "is_closed",
+        "milestone",
+        "project",
+        "user_story",
+        "status",
+        "subject",
+        "tags",
+        "us_order",
+        "taskboard_order",
+        "is_iocaine",
+        "external_reference",
+        "watchers",
     ]
 
     def list_attachments(self):
@@ -744,16 +765,14 @@ class Task(CustomAttributeResource, CommentableResource):
         :param attached_file: file path to attach
         :param attrs: optional attributes for the attached file
         """
-        return TaskAttachments(self.requester).create(
-            self.project, self.id,
-            attached_file, **attrs
-        )
+        return TaskAttachments(self.requester).create(self.project, self.id, attached_file, **attrs)
 
 
 class Tasks(ListResource):
     """
     Tasks factory
     """
+
     instance = Task
 
     def create(self, project, subject, status, **attrs):
@@ -765,25 +784,14 @@ class Tasks(ListResource):
         :param status: status of the :class:`Task`
         :param attrs: optional attributes of the :class:`Task`
         """
-        attrs.update(
-            {
-                'project': project, 'subject': subject,
-                'status': status
-            }
-        )
+        attrs.update({"project": project, "subject": subject, "status": status})
         return self._new_resource(payload=attrs)
 
     def import_(self, project, subject, status, **attrs):
-        attrs.update(
-            {
-                'project': project,
-                'subject': subject,
-                'status': status
-            }
+        attrs.update({"project": project, "subject": subject, "status": status})
+        response = self.requester.post(
+            "/{endpoint}/{id}/{type}", endpoint="importer", id=project, type="task", payload=attrs
         )
-        response = self.requester.post('/{endpoint}/{id}/{type}',
-                                       endpoint="importer", id=project,
-                                       type="task", payload=attrs)
         return self.instance.parse(self.requester, response.json())
 
 
@@ -796,19 +804,21 @@ class IssueType(InstanceResource):
     :param order: order of the :class:`IssueType`
     :param project: the taiga project of the :class:`IssueType`
     """
-    endpoint = 'issue-types'
 
-    allowed_params = ['name', 'color', 'order', 'project']
+    endpoint = "issue-types"
+
+    allowed_params = ["name", "color", "order", "project"]
 
 
 class IssueTypes(ListResource):
     """
     IssueTypes factory
     """
+
     instance = IssueType
 
     def create(self, project, name, **attrs):
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -823,19 +833,20 @@ class IssueStatus(InstanceResource):
     :param is_closed: is closed property of the :class:`IssueStatus`
     """
 
-    endpoint = 'issue-statuses'
+    endpoint = "issue-statuses"
 
-    allowed_params = ['name', 'color', 'order', 'project', 'is_closed']
+    allowed_params = ["name", "color", "order", "project", "is_closed"]
 
 
 class IssueStatuses(ListResource):
     """
     IssueStatuses factory
     """
+
     instance = IssueStatus
 
     def create(self, project, name, **attrs):
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -843,13 +854,15 @@ class IssueAttachment(Attachment):
     """
     IssueAttachment model
     """
-    endpoint = 'issues/attachments'
+
+    endpoint = "issues/attachments"
 
 
 class IssueAttachments(Attachments):
     """
     IssueAttachments factory
     """
+
     instance = IssueAttachment
 
 
@@ -872,16 +885,28 @@ class Issue(CustomAttributeResource, CommentableResource):
     :param due_date: :class:`Issue` due date
     """
 
-    endpoint = 'issues'
+    endpoint = "issues"
 
-    repr_attribute = 'subject'
-    element_type = 'Issue'
-    element_shortcut = 'issue'
+    repr_attribute = "subject"
+    element_type = "Issue"
+    element_shortcut = "issue"
 
     allowed_params = [
-        'assigned_to', 'blocked_note', 'description', 'version',
-        'is_blocked', 'is_closed', 'milestone', 'project', 'status',
-        'severity', 'priority', 'type', 'subject', 'tags', 'watchers',
+        "assigned_to",
+        "blocked_note",
+        "description",
+        "version",
+        "is_blocked",
+        "is_closed",
+        "milestone",
+        "project",
+        "status",
+        "severity",
+        "priority",
+        "type",
+        "subject",
+        "tags",
+        "watchers",
     ]
 
     def list_attachments(self):
@@ -894,20 +919,14 @@ class Issue(CustomAttributeResource, CommentableResource):
         """
         Upvote :class:`Issue`.
         """
-        self.requester.post(
-            '/{endpoint}/{id}/upvote',
-            endpoint=self.endpoint, id=self.id
-        )
+        self.requester.post("/{endpoint}/{id}/upvote", endpoint=self.endpoint, id=self.id)
         return self
 
     def downvote(self):
         """
         Downvote :class:`Issue`.
         """
-        self.requester.post(
-            '/{endpoint}/{id}/downvote',
-            endpoint=self.endpoint, id=self.id
-        )
+        self.requester.post("/{endpoint}/{id}/downvote", endpoint=self.endpoint, id=self.id)
         return self
 
     def attach(self, attached_file, **attrs):
@@ -917,18 +936,14 @@ class Issue(CustomAttributeResource, CommentableResource):
         :param attached_file: file path to attach
         :param attrs: optional attributes for the attached file
         """
-        return IssueAttachments(self.requester).create(
-            self.project, self.id,
-            attached_file, **attrs
-        )
+        return IssueAttachments(self.requester).create(self.project, self.id, attached_file, **attrs)
 
 
 class Issues(ListResource):
 
     instance = Issue
 
-    def create(self, project, subject, priority, status,
-               issue_type, severity, **attrs):
+    def create(self, project, subject, priority, status, issue_type, severity, **attrs):
         """
         Create a new :class:`Task`.
 
@@ -942,25 +957,30 @@ class Issues(ListResource):
         """
         attrs.update(
             {
-                'project': project, 'subject': subject,
-                'priority': priority, 'status': status,
-                'type': issue_type, 'severity': severity
+                "project": project,
+                "subject": subject,
+                "priority": priority,
+                "status": status,
+                "type": issue_type,
+                "severity": severity,
             }
         )
         return self._new_resource(payload=attrs)
 
-    def import_(self, project, subject, priority, status,
-                issue_type, severity, **attrs):
+    def import_(self, project, subject, priority, status, issue_type, severity, **attrs):
         attrs.update(
             {
-                'project': project, 'subject': subject,
-                'priority': priority, 'status': status,
-                'type': issue_type, 'severity': severity
+                "project": project,
+                "subject": subject,
+                "priority": priority,
+                "status": status,
+                "type": issue_type,
+                "severity": severity,
             }
         )
-        response = self.requester.post('/{endpoint}/{id}/{type}',
-                                       endpoint="importer", id=project,
-                                       type="issue", payload=attrs)
+        response = self.requester.post(
+            "/{endpoint}/{id}/{type}", endpoint="importer", id=project, type="issue", payload=attrs
+        )
         return self.instance.parse(self.requester, response.json())
 
 
@@ -968,13 +988,15 @@ class IssueAttribute(CustomAttribute):
     """
     IssueAttribute model
     """
-    endpoint = 'issue-custom-attributes'
+
+    endpoint = "issue-custom-attributes"
 
 
 class IssueAttributes(CustomAttributes):
     """
     IssueAttributes factory
     """
+
     instance = IssueAttribute
 
 
@@ -982,13 +1004,15 @@ class TaskAttribute(CustomAttribute):
     """
     TaskAttribute model
     """
-    endpoint = 'task-custom-attributes'
+
+    endpoint = "task-custom-attributes"
 
 
 class TaskAttributes(CustomAttributes):
     """
     TaskAttributes factory
     """
+
     instance = TaskAttribute
 
 
@@ -996,13 +1020,15 @@ class UserStoryAttribute(CustomAttribute):
     """
     UserStoryAttribute model
     """
-    endpoint = 'userstory-custom-attributes'
+
+    endpoint = "userstory-custom-attributes"
 
 
 class UserStoryAttributes(CustomAttributes):
     """
     UserStoryAttributes factory
     """
+
     instance = UserStoryAttribute
 
 
@@ -1015,15 +1041,17 @@ class Severity(InstanceResource):
     :param order: order of the :class:`Severity`
     :param project: :class:`Project` id
     """
-    endpoint = 'severities'
 
-    allowed_params = ['name', 'color', 'order', 'project']
+    endpoint = "severities"
+
+    allowed_params = ["name", "color", "order", "project"]
 
 
 class Severities(ListResource):
     """
     Severities factory
     """
+
     instance = Severity
 
     def create(self, project, name, **attrs):
@@ -1034,7 +1062,7 @@ class Severities(ListResource):
         :param name: name of the :class:`Severity`
         :param attrs: optional attributes for :class:`Role`
         """
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -1049,15 +1077,17 @@ class Role(InstanceResource):
     :param computable: choose if :class:`Role` is computable or not
 
     """
-    endpoint = 'roles'
 
-    allowed_params = ['name', 'slug', 'order', 'computable']
+    endpoint = "roles"
+
+    allowed_params = ["name", "slug", "order", "computable"]
 
 
 class Roles(ListResource):
     """
     Roles factory
     """
+
     instance = Role
 
     def create(self, project, name, **attrs):
@@ -1068,7 +1098,7 @@ class Roles(ListResource):
         :param name: name of the :class:`Role`
         :param attrs: optional attributes for :class:`Role`
         """
-        attrs.update({'project': project, 'name': name})
+        attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
 
 
@@ -1091,42 +1121,47 @@ class Project(InstanceResource):
 
     """
 
-    endpoint = 'projects'
+    endpoint = "projects"
 
     allowed_params = [
-        'name', 'description', 'creation_template',
-        'is_backlog_activated', 'is_issues_activated',
-        'is_kanban_activated', 'is_private', 'is_wiki_activated',
-        'videoconferences', 'videoconferences_salt', 'total_milestones',
-        'total_story_points'
+        "name",
+        "description",
+        "creation_template",
+        "is_backlog_activated",
+        "is_issues_activated",
+        "is_kanban_activated",
+        "is_private",
+        "is_wiki_activated",
+        "videoconferences",
+        "videoconferences_salt",
+        "total_milestones",
+        "total_story_points",
     ]
 
     parser = {
-        'members': Users,
-        'priorities': Priorities,
-        'issue_statuses': IssueStatuses,
-        'issue_types': IssueTypes,
-        'task_statuses': TaskStatuses,
-        'severities': Severities,
-        'roles': Roles,
-        'points': Points,
-        'us_statuses': UserStoryStatuses,
-        'milestones': Milestones
+        "members": Users,
+        "priorities": Priorities,
+        "issue_statuses": IssueStatuses,
+        "issue_types": IssueTypes,
+        "task_statuses": TaskStatuses,
+        "severities": Severities,
+        "roles": Roles,
+        "points": Points,
+        "us_statuses": UserStoryStatuses,
+        "milestones": Milestones,
     }
 
     def get_item_by_ref(self, ref):
         response = self.requester.get(
-            '/resolver?project={project_id}&ref={task_ref}',
-            task_ref=ref,
-            project_id=self.slug
+            "/resolver?project={project_id}&ref={task_ref}", task_ref=ref, project_id=self.slug
         )
         response_json = response.json()
 
-        if response_json and 'task' in response_json:
+        if response_json and "task" in response_json:
             return self.get_task_by_ref(ref)
-        elif response_json and 'us' in response_json:
+        elif response_json and "us" in response_json:
             return self.get_userstory_by_ref(ref)
-        elif response_json and 'issue' in response_json:
+        elif response_json and "issue" in response_json:
             return self.get_issue_by_ref(ref)
         else:
             return None
@@ -1138,10 +1173,10 @@ class Project(InstanceResource):
         :param ref: :class:`Task` reference
         """
         response = self.requester.get(
-            '/{endpoint}/by_ref?ref={task_ref}&project={project_id}',
+            "/{endpoint}/by_ref?ref={task_ref}&project={project_id}",
             endpoint=Task.endpoint,
             task_ref=ref,
-            project_id=self.id
+            project_id=self.id,
         )
         return Task.parse(self.requester, response.json())
 
@@ -1152,10 +1187,10 @@ class Project(InstanceResource):
         :param ref: :class:`Epic` reference
         """
         response = self.requester.get(
-            '/{endpoint}/by_ref?ref={ep_ref}&project={project_id}',
+            "/{endpoint}/by_ref?ref={ep_ref}&project={project_id}",
             endpoint=Epic.endpoint,
             ep_ref=ref,
-            project_id=self.id
+            project_id=self.id,
         )
         return Epic.parse(self.requester, response.json())
 
@@ -1166,10 +1201,10 @@ class Project(InstanceResource):
         :param ref: :class:`UserStory` reference
         """
         response = self.requester.get(
-            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            "/{endpoint}/by_ref?ref={us_ref}&project={project_id}",
             endpoint=UserStory.endpoint,
             us_ref=ref,
-            project_id=self.id
+            project_id=self.id,
         )
         return UserStory.parse(self.requester, response.json())
 
@@ -1180,10 +1215,10 @@ class Project(InstanceResource):
         :param ref: :class:`Issue` reference
         """
         response = self.requester.get(
-            '/{endpoint}/by_ref?ref={us_ref}&project={project_id}',
+            "/{endpoint}/by_ref?ref={us_ref}&project={project_id}",
             endpoint=Issue.endpoint,
             us_ref=ref,
-            project_id=self.id
+            project_id=self.id,
         )
         return Issue.parse(self.requester, response.json())
 
@@ -1191,40 +1226,28 @@ class Project(InstanceResource):
         """
         Get the stats of the project
         """
-        response = self.requester.get(
-            '/{endpoint}/{id}/stats',
-            endpoint=self.endpoint, id=self.id
-        )
+        response = self.requester.get("/{endpoint}/{id}/stats", endpoint=self.endpoint, id=self.id)
         return response.json()
 
     def issues_stats(self):
         """
         Get stats for issues of the project
         """
-        response = self.requester.get(
-            '/{endpoint}/{id}/issues_stats',
-            endpoint=self.endpoint, id=self.id
-        )
+        response = self.requester.get("/{endpoint}/{id}/issues_stats", endpoint=self.endpoint, id=self.id)
         return response.json()
 
     def like(self):
         """
         Like the project
         """
-        self.requester.post(
-            '/{endpoint}/{id}/like',
-            endpoint=self.endpoint, id=self.id
-        )
+        self.requester.post("/{endpoint}/{id}/like", endpoint=self.endpoint, id=self.id)
         return self
 
     def unlike(self):
         """
         Unlike the project
         """
-        self.requester.post(
-            '/{endpoint}/{id}/unlike',
-            endpoint=self.endpoint, id=self.id
-        )
+        self.requester.post("/{endpoint}/{id}/unlike", endpoint=self.endpoint, id=self.id)
         return self
 
     def star(self):
@@ -1235,14 +1258,8 @@ class Project(InstanceResource):
 
             Update Taiga and use like instead
         """
-        warnings.warn(
-            "Deprecated! Update Taiga and use .like() instead",
-            DeprecationWarning
-        )
-        self.requester.post(
-            '/{endpoint}/{id}/star',
-            endpoint=self.endpoint, id=self.id
-        )
+        warnings.warn("Deprecated! Update Taiga and use .like() instead", DeprecationWarning)
+        self.requester.post("/{endpoint}/{id}/star", endpoint=self.endpoint, id=self.id)
         return self
 
     def unstar(self):
@@ -1253,14 +1270,8 @@ class Project(InstanceResource):
 
             Update Taiga and use unlike instead
         """
-        warnings.warn(
-            "Deprecated! Update Taiga and use .unlike() instead",
-            DeprecationWarning
-        )
-        self.requester.post(
-            '/{endpoint}/{id}/unstar',
-            endpoint=self.endpoint, id=self.id
-        )
+        warnings.warn("Deprecated! Update Taiga and use .unlike() instead", DeprecationWarning)
+        self.requester.post("/{endpoint}/{id}/unstar", endpoint=self.endpoint, id=self.id)
         return self
 
     def add_membership(self, email, role, **attrs):
@@ -1273,9 +1284,7 @@ class Project(InstanceResource):
         :param attrs: role for :class:`Membership`
         :param attrs: optional :class:`Membership` attributes
         """
-        return Memberships(self.requester).create(
-            self.id, email, role, **attrs
-        )
+        return Memberships(self.requester).create(self.id, email, role, **attrs)
 
     def list_memberships(self):
         """
@@ -1290,9 +1299,7 @@ class Project(InstanceResource):
         :param subject: subject of the :class:`UserStory`
         :param attrs: other :class:`UserStory` attributes
         """
-        return UserStories(self.requester).create(
-            self.id, subject, **attrs
-        )
+        return UserStories(self.requester).create(self.id, subject, **attrs)
 
     def import_user_story(self, subject, status, **attrs):
         """
@@ -1302,9 +1309,7 @@ class Project(InstanceResource):
         :param status: status of the :class:`UserStory`
         :param attrs: optional :class:`UserStory` attributes
         """
-        return UserStories(self.requester).import_(
-            self.id, subject, status, **attrs
-        )
+        return UserStories(self.requester).import_(self.id, subject, status, **attrs)
 
     def list_user_stories(self):
         """
@@ -1312,8 +1317,7 @@ class Project(InstanceResource):
         """
         return UserStories(self.requester).list(project=self.id)
 
-    def add_issue(self, subject, priority, status,
-                  issue_type, severity, **attrs):
+    def add_issue(self, subject, priority, status, issue_type, severity, **attrs):
         """
         Adds a Issue and returns a :class:`Issue` resource.
 
@@ -1324,13 +1328,9 @@ class Project(InstanceResource):
         :param severity: severity of the :class:`Issue`
         :param attrs: other :class:`Issue` attributes
         """
-        return Issues(self.requester).create(
-            self.id, subject, priority, status,
-            issue_type, severity, **attrs
-        )
+        return Issues(self.requester).create(self.id, subject, priority, status, issue_type, severity, **attrs)
 
-    def import_issue(self, subject, priority, status,
-                     issue_type, severity, **attrs):
+    def import_issue(self, subject, priority, status, issue_type, severity, **attrs):
         """
         Import and issue and returns a :class:`Issue` resource.
 
@@ -1341,10 +1341,7 @@ class Project(InstanceResource):
         :param severity: severity of :class:`Issue`
         :param attrs: optional :class:`Issue` attributes
         """
-        return Issues(self.requester).import_(
-            self.id, subject, priority, status,
-            issue_type, severity, **attrs
-        )
+        return Issues(self.requester).import_(self.id, subject, priority, status, issue_type, severity, **attrs)
 
     def list_issues(self):
         """
@@ -1363,13 +1360,9 @@ class Project(InstanceResource):
                                  :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
-        return Milestones(self.requester).create(
-            self.id, name, estimated_start,
-            estimated_finish, **attrs
-        )
+        return Milestones(self.requester).create(self.id, name, estimated_start, estimated_finish, **attrs)
 
-    def import_milestone(self, name, estimated_start, estimated_finish,
-                         **attrs):
+    def import_milestone(self, name, estimated_start, estimated_finish, **attrs):
         """
         Import a Milestone and returns a :class:`Milestone` object.
 
@@ -1380,10 +1373,7 @@ class Project(InstanceResource):
                                  :class:`Milestone`
         :param attrs: optional attributes for :class:`Milestone`
         """
-        return Milestones(self.requester).import_(
-            self.id, name, estimated_start,
-            estimated_finish, **attrs
-        )
+        return Milestones(self.requester).import_(self.id, name, estimated_start, estimated_finish, **attrs)
 
     def list_milestones(self, **queryparams):
         """
@@ -1414,9 +1404,7 @@ class Project(InstanceResource):
         :param subject: subject of the :class:`UserStory`
         :param attrs: other :class:`UserStory` attributes
         """
-        return Epics(self.requester).create(
-            self.id, subject, **attrs
-        )
+        return Epics(self.requester).create(self.id, subject, **attrs)
 
     def list_epics(self):
         """
@@ -1448,9 +1436,7 @@ class Project(InstanceResource):
         :param status: status of the :class:`Task`
         :param attrs: optional attributes for :class:`Task`
         """
-        return Tasks(self.requester).import_(
-            self.id, subject, status, **attrs
-        )
+        return Tasks(self.requester).import_(self.id, subject, status, **attrs)
 
     def add_user_story_status(self, name, **attrs):
         """
@@ -1552,9 +1538,7 @@ class Project(InstanceResource):
         :param name: name of the :class:`WikiPage`
         :param attrs: optional attributes for :class:`WikiPage`
         """
-        return WikiPages(self.requester).create(
-            self.id, slug, content, **attrs
-        )
+        return WikiPages(self.requester).create(self.id, slug, content, **attrs)
 
     def import_wikipage(self, slug, content, **attrs):
         """
@@ -1564,9 +1548,7 @@ class Project(InstanceResource):
         :param content: content of the :class:`WikiPage`
         :param attrs: optional attributes for :class:`Task`
         """
-        return WikiPages(self.requester).import_(
-            self.id, slug, content, **attrs
-        )
+        return WikiPages(self.requester).import_(self.id, slug, content, **attrs)
 
     def list_wikipages(self):
         """
@@ -1607,9 +1589,7 @@ class Project(InstanceResource):
         :param name: name of the :class:`IssueAttribute`
         :param attrs: optional attributes for :class:`IssueAttribute`
         """
-        return IssueAttributes(self.requester).create(
-            self.id, name, **attrs
-        )
+        return IssueAttributes(self.requester).create(self.id, name, **attrs)
 
     def list_issue_attributes(self):
         """
@@ -1624,9 +1604,7 @@ class Project(InstanceResource):
         :param name: name of the :class:`TaskAttribute`
         :param attrs: optional attributes for :class:`TaskAttribute`
         """
-        return TaskAttributes(self.requester).create(
-            self.id, name, **attrs
-        )
+        return TaskAttributes(self.requester).create(self.id, name, **attrs)
 
     def list_task_attributes(self):
         """
@@ -1642,9 +1620,7 @@ class Project(InstanceResource):
         :param name: name of the :class:`UserStoryAttribute`
         :param attrs: optional attributes for :class:`UserStoryAttribute`
         """
-        return UserStoryAttributes(self.requester).create(
-            self.id, name, **attrs
-        )
+        return UserStoryAttributes(self.requester).create(self.id, name, **attrs)
 
     def list_user_story_attributes(self):
         """
@@ -1661,9 +1637,7 @@ class Project(InstanceResource):
         :param key: secret key of the :class:`Webhook`
         :param attrs: optional attributes for :class:`Webhook`
         """
-        return Webhooks(self.requester).create(
-            self.id, name, url, key, **attrs
-        )
+        return Webhooks(self.requester).create(self.id, name, url, key, **attrs)
 
     def list_webhooks(self):
         """
@@ -1678,21 +1652,17 @@ class Project(InstanceResource):
         :param tag: name of the tag
         :param color: optional color of the tag
         """
-        attrs = {'tag': tag}
+        attrs = {"tag": tag}
         if color:
-            attrs['color'] = color
-        response = self.requester.post(
-            "/{}/{}/create_tag".format(self.endpoint, self.id), payload=attrs
-        )
+            attrs["color"] = color
+        response = self.requester.post("/{}/{}/create_tag".format(self.endpoint, self.id), payload=attrs)
         return response
 
     def list_tags(self):
         """
         Get the list of tags for the project.
         """
-        response = self.requester.get(
-            "/{}/{}/tags_colors".format(self.endpoint, self.id)
-        )
+        response = self.requester.get("/{}/{}/tags_colors".format(self.endpoint, self.id))
         return response.json()
 
 
@@ -1711,19 +1681,12 @@ class Projects(ListResource):
         :param description: description of the :class:`Project`
         :param attrs: optional attributes for :class:`Project`
         """
-        attrs.update({'name': name, 'description': description})
+        attrs.update({"name": name, "description": description})
         return self._new_resource(payload=attrs)
 
     def import_(self, name, description, roles, **attrs):
-        attrs.update(
-            {
-                'name': name,
-                'description': description,
-                'roles': roles
-            }
-        )
-        response = self.requester.post('/{endpoint}', endpoint="importer",
-                                       payload=attrs)
+        attrs.update({"name": name, "description": description, "roles": roles})
+        response = self.requester.post("/{endpoint}", endpoint="importer", payload=attrs)
         return self.instance.parse(self.requester, response.json())
 
     def get_by_slug(self, slug):
@@ -1732,11 +1695,7 @@ class Projects(ListResource):
 
         :param slug: the slug of the :class:`Project`
         """
-        response = self.requester.get(
-            '/{endpoint}/by_slug?slug={slug}',
-            endpoint=self.instance.endpoint,
-            slug=slug
-        )
+        response = self.requester.get("/{endpoint}/by_slug?slug={slug}", endpoint=self.instance.endpoint, slug=slug)
         return self.instance.parse(self.requester, response.json())
 
 
@@ -1744,13 +1703,15 @@ class WikiAttachment(Attachment):
     """
     WikiAttachment model
     """
-    endpoint = 'wiki/attachments'
+
+    endpoint = "wiki/attachments"
 
 
 class WikiAttachments(Attachments):
     """
     WikiAttachments factory
     """
+
     instance = WikiAttachment
 
 
@@ -1763,11 +1724,12 @@ class WikiPage(InstanceResource):
     :param content: content of the wiki page
     :param watchers: list of watchers id
     """
-    endpoint = 'wiki'
 
-    repr_attribute = 'slug'
+    endpoint = "wiki"
 
-    allowed_params = ['project', 'slug', 'content', 'watchers']
+    repr_attribute = "slug"
+
+    allowed_params = ["project", "slug", "content", "watchers"]
 
     def attach(self, attached_file, **attrs):
         """
@@ -1776,16 +1738,14 @@ class WikiPage(InstanceResource):
         :param attached_file: file path to attach
         :param attrs: optional attributes for the attached file
         """
-        return WikiAttachments(self.requester).create(
-            self.project, self.id,
-            attached_file, **attrs
-        )
+        return WikiAttachments(self.requester).create(self.project, self.id, attached_file, **attrs)
 
 
 class WikiPages(ListResource):
     """
     WikiPages factory
     """
+
     instance = WikiPage
 
     def create(self, project, slug, content, **attrs):
@@ -1797,14 +1757,14 @@ class WikiPages(ListResource):
         :param content: content of the wiki page
         :param attrs: optional attributes for the :class:`WikiPage`
         """
-        attrs.update({'project': project, 'slug': slug, 'content': content})
+        attrs.update({"project": project, "slug": slug, "content": content})
         return self._new_resource(payload=attrs)
 
     def import_(self, project, slug, content, **attrs):
-        attrs.update({'project': project, 'slug': slug, 'content': content})
-        response = self.requester.post('/{endpoint}/{id}/{type}',
-                                       endpoint="importer", id=project,
-                                       type="wiki_page", payload=attrs)
+        attrs.update({"project": project, "slug": slug, "content": content})
+        response = self.requester.post(
+            "/{endpoint}/{id}/{type}", endpoint="importer", id=project, type="wiki_page", payload=attrs
+        )
         return self.instance.parse(self.requester, response.json())
 
 
@@ -1817,17 +1777,19 @@ class WikiLink(InstanceResource):
     :param href: href for the wiki link
     :param order: order of the wiki link
     """
-    endpoint = 'wiki-links'
 
-    repr_attribute = 'title'
+    endpoint = "wiki-links"
 
-    allowed_params = ['project', 'title', 'href', 'order']
+    repr_attribute = "title"
+
+    allowed_params = ["project", "title", "href", "order"]
 
 
 class WikiLinks(ListResource):
     """
     WikiLinks factory
     """
+
     instance = WikiLink
 
     def create(self, project, title, href, **attrs):
@@ -1839,14 +1801,14 @@ class WikiLinks(ListResource):
         :param href: href for the wiki link
         :param attrs: optional attributes for the :class:`WikiLink`
         """
-        attrs.update({'project': project, 'title': title, 'href': href})
+        attrs.update({"project": project, "title": title, "href": href})
         return self._new_resource(payload=attrs)
 
     def import_(self, project, title, href, **attrs):
-        attrs.update({'project': project, 'title': title, 'href': href})
-        response = self.requester.post('/{endpoint}/{id}/{type}',
-                                       endpoint="importer", id=project,
-                                       type="wiki_link", payload=attrs)
+        attrs.update({"project": project, "title": title, "href": href})
+        response = self.requester.post(
+            "/{endpoint}/{id}/{type}", endpoint="importer", id=project, type="wiki_link", payload=attrs
+        )
         return self.instance.parse(self.requester, response.json())
 
 
@@ -1854,8 +1816,9 @@ class History(InstanceResource):
     """
     History model
     """
+
     def __init__(self, *args, **kwargs):
-        super(History, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.issue = HistoryIssue(self.requester)
         self.task = HistoryTask(self.requester)
         self.user_story = HistoryUserStory(self.requester)
@@ -1863,11 +1826,12 @@ class History(InstanceResource):
         self.epic = HistoryEpic(self.requester)
 
 
-class HistoryEntity(object):
+class HistoryEntity:
     """
     HistoryEntity model
     """
-    endpoint = 'history'
+
+    endpoint = "history"
 
     def __init__(self, requester):
         self.requester = requester
@@ -1879,9 +1843,7 @@ class HistoryEntity(object):
         :param resource_id: id of the resource object (resource type is defined by the HistoryEntity subclass used)
         """
         response = self.requester.get(
-            '/{endpoint}/{entity}/{id}',
-            endpoint=self.endpoint, entity=self.entity, id=resource_id,
-            paginate=False
+            "/{endpoint}/{entity}/{id}", endpoint=self.endpoint, entity=self.entity, id=resource_id, paginate=False
         )
         return response.json()
 
@@ -1893,9 +1855,11 @@ class HistoryEntity(object):
         :param comment_id: id of the comment to delete
         """
         self.requester.post(
-            '/{endpoint}/{entity}/{id}/delete_comment?id={comment_id}',
-            endpoint=self.endpoint, entity=self.entity,
-            id=resource_id, comment_id=comment_id
+            "/{endpoint}/{entity}/{id}/delete_comment?id={comment_id}",
+            endpoint=self.endpoint,
+            entity=self.entity,
+            id=resource_id,
+            comment_id=comment_id,
         )
 
     def undelete_comment(self, resource_id, comment_id):
@@ -1916,45 +1880,50 @@ class HistoryIssue(HistoryEntity):
     """
     HistoryIssue model
     """
+
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.entity = 'issue'
+        self.entity = "issue"
 
 
 class HistoryEpic(HistoryEntity):
     """
     HistoryEpic model
     """
+
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.entity = 'epic'
+        self.entity = "epic"
 
 
 class HistoryTask(HistoryEntity):
     """
     HistoryTask model
     """
+
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.entity = 'task'
+        self.entity = "task"
 
 
 class HistoryUserStory(HistoryEntity):
     """
     HistoryUserStory model
     """
+
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.entity = 'userstory'
+        self.entity = "userstory"
 
 
 class HistoryWiki(HistoryEntity):
     """
     HistoryWiki model
     """
+
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.entity = 'wiki'
+        self.entity = "wiki"
 
 
 class Webhook(InstanceResource):
@@ -1967,15 +1936,17 @@ class Webhook(InstanceResource):
     :param key: secret key of the :class:`Webhook`
 
     """
-    endpoint = 'webhooks'
 
-    allowed_params = ['name', 'url', 'key']
+    endpoint = "webhooks"
+
+    allowed_params = ["name", "url", "key"]
 
 
 class Webhooks(ListResource):
     """
     Webhooks factory
     """
+
     instance = Webhook
 
     def create(self, project, name, url, key, **attrs):
@@ -1988,12 +1959,5 @@ class Webhooks(ListResource):
         :param key: secret key of the :class:`Webhook`
         :param attrs: optional attributes for :class:`Webhook`
         """
-        attrs.update(
-            {
-                'project': project,
-                'name': name,
-                'url': url,
-                'key': key
-            }
-        )
+        attrs.update({"project": project, "name": name, "url": url, "key": key})
         return self._new_resource(payload=attrs)

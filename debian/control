@@ -3,8 +3,6 @@ Section: python
 Priority: optional
 Maintainer: Robin Gustafsson <robin@rgson.se>
 Build-Depends: debhelper (>= 9), dh-python,
- python-all (>= 2.6), python-setuptools,
- python-dateutil, python-requests, python-six,
  python3-all (>= 3.3), python3-setuptools,
  python3-dateutil, python3-requests, python3-six
 
