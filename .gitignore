@@ -1,4 +1,7 @@
-*.py[co]
+*.py[cod]
+
+# C extensions
+*.so
 
 # Packages
 *.egg
@@ -8,11 +11,12 @@ build
 eggs
 parts
 bin
+var
+sdist
 develop-eggs
 .installed.cfg
-scratch
-env
-venv*
+lib
+lib64
 
 # Installer logs
 pip-log.txt
@@ -20,26 +24,22 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+nosetests.xml
 
-.DS_Store
+# Translations
+*.mo
 
-# Sphinx
-docs/tmp
-docs/_build
-cover
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
 
-# PyCharm/IntelliJ
-.idea
 
-# Visual Studio Code
-.vscode
-
-#htmlcov
-*htmlcov*
-/.pybuild/
-/debian/python-taiga*
-/debian/python3-taiga*
-/debian/.debhelper/
-/debian/files
-/debian/*build*
 demo.py
+docs/_build/
+.pybuild
+debian/.debhelper
+debian/debhelper*
+debian/files
+debian/python-taiga*
+debian/python3-taiga*
