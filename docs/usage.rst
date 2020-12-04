@@ -1,20 +1,27 @@
+.. :usage:
 
+=======
 Install
--------
+=======
 
 ::
 
     pip install python-taiga
 
 
+=====================
 Getting Started
----------------
+=====================
 
-Getting started with the Taiga API couldn't be easier. Create a
-``TaigaAPI`` and you're ready to go.
+Getting started with the Taiga API couldn't be easier: create a ``TaigaAPI`` and you're ready to go.
 
+.. note:: python-taiga is a python wrapper for the `Taiga REST API <http://taigaio.github.io/taiga-doc/dist/api.html>`_.
+          Any data structure, argument and response matches exactly the Taiga REST API, so refer to it for any usage.
+
+
+*********************
 API Credentials
-~~~~~~~~~~~~~~~
+*********************
 
 The ``TaigaAPI`` needs your Taiga credentials. You can pass these
 directly to the auth method (see the code below).
@@ -71,8 +78,9 @@ To ignore SSL certificate verification (use at your own risk!) use ``tls_verify`
         tls_verify=False
     )
 
+******************************************************
 Get projects, user stories, task and issues
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+******************************************************
 
 You can get projects, user stories, tasks and issues using the primary
 key or using slug/ref
@@ -84,15 +92,17 @@ key or using slug/ref
     print (new_project.get_userstory_by_ref(1111))
     print (new_project.get_task_by_ref(1112))
 
+******************************************************
 Create a project
-~~~~~~~~~~~~~~~~
+******************************************************
 
 .. code:: python
 
     new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 
+******************************************************
 Create a new user story
-~~~~~~~~~~~~~~~~~~~~~~~
+******************************************************
 
 .. code:: python
 
@@ -122,8 +132,9 @@ To add a task to your user story just run
         new_project.task_statuses[0].id
     )
 
+******************************************************
 Create an issue
-~~~~~~~~~~~~~~~
+******************************************************
 
 .. code:: python
 
@@ -136,8 +147,9 @@ Create an issue
         description='Bug #5'
     )
 
+******************************************************
 Create a custom attribute
-~~~~~~~~~~~~~~~~~~~~~~~~~
+******************************************************
 
 .. code:: python
 
@@ -146,8 +158,9 @@ Create a custom attribute
     )
     newissue.set_attribute('1', 'Desktop')
 
+******************************************************
 List elements
-~~~~~~~~~~~~~
+******************************************************
 
 .. code:: python
 
@@ -164,28 +177,28 @@ By default list returns all objects, eventually getting the
 paginated results behind the scenes.
 
 Pagination
-^^^^^^^^^^
+===========
 
 Pagination is controlled by three parameters as explained below:
 
-+------------------+----------------------------+-------------+--------------------------------------------------------+
-|`pagination`      | `page_size` (default: 100) | `page`      | Output                                                 |
-+==================+============================+=============+========================================================+
-| `True` (default) | `<integer>`                | `None`      | All results retrieved by using paginated results and   |
-|                  |                            |             | loading them behind the scenes, using given page       |
-|                  |                            |             | size (higher page size could yield better performances)|
-+------------------+----------------------------+-------------+--------------------------------------------------------+
-| `True` (default) | `<integer>`                | `<integer>` | Only results for the given page of the given size      |
-|                  |                            |             | are retrieved                                          |
-+------------------+----------------------------+-------------+--------------------------------------------------------+
-| `False`          | `unused`                   | `unused`    | Current behavior: all results, ignoring pagination     |
-+------------------+----------------------------+-------------+--------------------------------------------------------+
++--------------------+------------------------------+---------------+--------------------------------------------------------+
+|``pagination``      | ``page_size`` (default: 100) | ``page``      | Output                                                 |
++====================+==============================+===============+========================================================+
+| ``True`` (default) | ``<integer>``                | ``None``      | All results retrieved by using paginated results and   |
+|                    |                              |               | loading them behind the scenes, using given page       |
+|                    |                              |               | size (higher page size could yield better performances)|
++--------------------+------------------------------+---------------+--------------------------------------------------------+
+| ``True`` (default) | ``<integer>``                | ``<integer>`` | Only results for the given page of the given size      |
+|                    |                              |               | are retrieved                                          |
++--------------------+------------------------------+---------------+--------------------------------------------------------+
+| ``False``          | ``unused``                   | ``unused``    | Current behavior: all results, ignoring pagination     |
++--------------------+------------------------------+---------------+--------------------------------------------------------+
 
 
 .. note:: non numerical or false `page_size` values is casted to the default value
 
 Examples
-^^^^^^^^^
+===========
 
 **No pagination**
 
@@ -209,8 +222,9 @@ Examples
    tasks_page_1 = api.tasks.list(page=1, page_size=200)  # Will 200 results from page 1
 
 
+******************************************************
 Attach a file
-~~~~~~~~~~~~~
+******************************************************
 
 You can attach files to issues, user stories and tasks
 
@@ -218,8 +232,9 @@ You can attach files to issues, user stories and tasks
 
     newissue.attach('README.md', description='Read the README in Issue')
 
+******************************************************
 Play with instances
-~~~~~~~~~~~~~~~~~~~
+******************************************************
 
 Instances can have actions, for example you can star a project just
 calling
@@ -237,8 +252,9 @@ Any instance can be updated and deleted
     new_project.update()
     new_project.delete()
 
+******************************************************
 Search
-~~~~~~
+******************************************************
 
 Search function returns a SearchResult object, containing tasks, user
 stories and issues:
@@ -250,8 +266,9 @@ stories and issues:
     for user_story in search_result.user_stories:
         print (user_story)
 
+******************************************************
 History
-~~~~~~~
+******************************************************
 
 You can access the history of issues, tasks, userstories and wiki pages:
 
