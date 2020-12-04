@@ -3,9 +3,12 @@ python-taiga
 
 |Gitter| |PyPiVersion| |PyVersion| |Status| |TestCoverage| |CodeClimate| |License|
 
-A module for using the `Taiga REST
-API <http://taigaio.github.io/taiga-doc/dist/api.html>`__.
+A module for using the `Taiga REST API <http://taigaio.github.io/taiga-doc/dist/api.html>`_.
 Documentation: https://python-taiga.readthedocs.io/
+
+.. warning:: Version 1.0 change the signature of HistoryItem methods.
+             Check the `documentation <https://python-taiga.readthedocs.io/>`_ and update your code if it uses kwargs for
+             ``HistoryEntity.delete_comment`` / ``HistoryEntity.undelete_comment``.
 
 Install
 -------
