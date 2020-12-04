@@ -7,7 +7,7 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every
 little bit helps, and credit will always be given.
 
-Refer to `Nephila contribution guidelines<https://nephila.github.io/contributing/>`_
+Refer to `Nephila contribution guidelines <https://nephila.github.io/contributing/>`_
 for the general contribution guidelines and code of conduct.
 
 You can contribute in many ways:
