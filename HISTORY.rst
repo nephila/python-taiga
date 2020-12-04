@@ -1,11 +1,11 @@
 .. :changelog:
 
-*******
+*********
 History
-*******
+*********
 
 1.0.0 (2019-08-08)
-===================
+==================
 
 * Add support for python 3.7
 * Add support for epics
@@ -15,7 +15,7 @@ History
 * Fix and enforce code style
 
 0.9.0 (2018-01-31)
-===================
+==================
 
 * Add support for multiple authentication backends
 * Add support for self-signed and not verified SSL certificates
@@ -27,7 +27,7 @@ History
 * Add support for Python 3.5/3.6
 
 0.8.6 (2016-08-26)
-===================
+==================
 
 * Fix header values to be strings instead of boolean
 * Fix requests compatibility issues
