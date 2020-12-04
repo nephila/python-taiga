@@ -1870,9 +1870,11 @@ class HistoryEntity:
         :param comment_id: id of the comment to undelete
         """
         self.requester.post(
-            '/{endpoint}/{entity}/{id}/undelete_comment?id={comment_id}',
-            endpoint=self.endpoint, entity=self.entity,
-            id=resource_id, comment_id=comment_id
+            "/{endpoint}/{entity}/{id}/undelete_comment?id={comment_id}",
+            endpoint=self.endpoint,
+            entity=self.entity,
+            id=resource_id,
+            comment_id=comment_id,
         )
 
 
