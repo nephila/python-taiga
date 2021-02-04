@@ -57,6 +57,8 @@ from .models import (
 __all__ = [
     "Epic",
     "Epics",
+    "EpicAttribute",
+    "EpicAttributes",
     "User",
     "Users",
     "Project",
