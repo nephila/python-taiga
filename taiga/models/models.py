@@ -1032,6 +1032,22 @@ class UserStoryAttributes(CustomAttributes):
     instance = UserStoryAttribute
 
 
+class EpicAttribute(CustomAttribute):
+    """
+    EpicAttribute model
+    """
+
+    endpoint = "epic-custom-attributes"
+
+
+class EpicAttributes(CustomAttributes):
+    """
+    EpicAttributes factory
+    """
+
+    instance = EpicAttribute
+
+
 class Severity(InstanceResource):
     """
     Severity model
@@ -1627,6 +1643,12 @@ class Project(InstanceResource):
         Get the list of :class:`UserStoryAttribute` resources for the project.
         """
         return UserStoryAttributes(self.requester).list(project=self.id)
+
+    def list_epic_attributes(self):
+        """
+        Get the list of :class:`EpicAttribute` resources for the project.
+        """
+        return EpicAttributes(self.requester).list(project=self.id)
 
     def add_webhook(self, name, url, key, **attrs):
         """
