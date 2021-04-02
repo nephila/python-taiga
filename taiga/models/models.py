@@ -1327,11 +1327,11 @@ class Project(InstanceResource):
         """
         return UserStories(self.requester).import_(self.id, subject, status, **attrs)
 
-    def list_user_stories(self):
+    def list_user_stories(self, **queryparams):
         """
         Returns the :class:`UserStory` list of the project.
         """
-        return UserStories(self.requester).list(project=self.id)
+        return UserStories(self.requester).list(project=self.id, **queryparams)
 
     def add_issue(self, subject, priority, status, issue_type, severity, **attrs):
         """
