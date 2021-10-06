@@ -139,6 +139,7 @@ class TaigaAPI:
         if response.status_code != 200:
             raise exceptions.TaigaRestException(full_url, response.status_code, response.text, "POST")
         self.token = response.json()["auth_token"]
+        self.refresh_token = response.json()["refresh"]
         self.raw_request = RequestMaker("/api/v1", self.host, self.token, "Bearer", self.tls_verify)
         self._init_resources()
 
