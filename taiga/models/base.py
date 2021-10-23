@@ -29,6 +29,13 @@ class Resource:
 
 
 class ListResource(Resource):
+    """ListResource model
+
+    Base class for methods that operates on a list of resources (:py:meth:`list`, :py:meth:`get`, :py:meth:`delete`).
+
+    :param requester: :class:`Requester` instance
+    """
+
     def list(self, pagination=True, page_size=None, page=None, **queryparams):  # noqa: A003
         """
         Retrieves a list of objects.
@@ -109,6 +116,8 @@ class ListResource(Resource):
 
 class InstanceResource(Resource):
     """InstanceResource model
+
+    Base class for methods that operates on a single resource (:py:meth:`update`, :py:meth:`patch`, :py:meth:`delete`).
 
     :param requester: :class:`Requester` instance
     :param params: :various parameters

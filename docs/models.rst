@@ -10,3 +10,6 @@ Contents:
    :members:
    :show-inheritance:
    :inherited-members:
+
+.. automodule:: taiga.models.base
+   :members:
