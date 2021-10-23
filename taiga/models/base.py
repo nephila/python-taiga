@@ -58,6 +58,8 @@ class ListResource(Resource):
             except (ValueError, TypeError):
                 page_size = 100
             queryparams["page_size"] = page_size
+        if page and pagination:
+            queryparams["page"] = page
         result = self.requester.get(self.instance.endpoint, query=queryparams, paginate=pagination)
         objects = SearchableList()
         objects.extend(self.parse_list(result.json()))
