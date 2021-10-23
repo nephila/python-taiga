@@ -11,15 +11,15 @@ except ImportError:  # pragma: no cover
 from . import exceptions, utils
 
 
-class RequestCacheException(Exception):
+class RequestCacheException(Exception):  # noqa: N818
     pass
 
 
-class RequestCacheMissingException(RequestCacheException):
+class RequestCacheMissingException(RequestCacheException):  # noqa: N818
     pass
 
 
-class RequestCacheInvalidException(RequestCacheException):
+class RequestCacheInvalidException(RequestCacheException):  # noqa: N818
     pass
 
 
@@ -44,7 +44,7 @@ class RequestCache:
         return self._cache[key]["value"]
 
 
-class RequestMakerException(Exception):
+class RequestMakerException(Exception):  # noqa: N818
     pass
 
 
