@@ -275,7 +275,7 @@ class Epic(CustomAttributeResource, CommentableResource):
 
     :param assigned_to: assigned to property of the :class:`Epic`
     :param blocked_note: blocked note of the :class:`Epic`
-    :param description: description of of the :class:`Epic`
+    :param description: description of the :class:`Epic` (not available in the :py:attr:`list` response)
     :param is_blocked: is blocked property of the :class:`Epic`
     :param is_closed: is closed property of the :class:`Epic`
     :param color: the color of the :class:`Epic`
@@ -390,7 +390,7 @@ class UserStory(CustomAttributeResource, CommentableResource):
     :param blocked_note: blocked note of the :class:`UserStory`
     :param version: version of the :class:`UserStory`
     :param client_requirement: client requirement of the :class:`UserStory`
-    :param description: description of the :class:`UserStory`
+    :param description: description of the :class:`UserStory` (not available in the :py:attr:`list` response)
     :param is_blocked: is blocked of the :class:`UserStory`
     :param kanban_order: kanban order of the :class:`UserStory`
     :param milestone: milestone of the :class:`UserStory`
@@ -709,7 +709,7 @@ class Task(CustomAttributeResource, CommentableResource):
 
     :param assigned_to: assigned to property of the :class:`TaskStatus`
     :param blocked_note: blocked note of the :class:`TaskStatus`
-    :param description: description of of the :class:`TaskStatus`
+    :param description: description of of the :class:`TaskStatus` (not available in the :py:attr:`list` response)
     :param version: version of the :class:`TaskStatus`
     :param is_blocked: is blocked property of the :class:`TaskStatus`
     :param milestone: milestone property of the :class:`TaskStatus`
@@ -871,7 +871,7 @@ class Issue(CustomAttributeResource, CommentableResource):
 
     :param requester: :class:`Requester` instance
     :param assigned_to: :class:`User` id this issue is assigned to
-    :param description: description of the issue
+    :param description: description of the issue (not available in the :py:attr:`list` response)
     :param is_blocked: set if this issue is blocked or not
     :param milestone: :class:`Milestone` id
     :param project: :class:`Project` id
@@ -1107,7 +1107,7 @@ class Project(InstanceResource):
 
     :param requester: :class:`Requester` instance
     :param name: name of the project
-    :param description: description of the project
+    :param description: description of the project (not available in the :py:attr:`list` response)
     :param creation_template: base template for the project
     :param is_backlog_activated: name of the project
     :param is_issues_activated: name of the project
