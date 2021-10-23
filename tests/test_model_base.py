@@ -245,13 +245,13 @@ class TestModelBase(unittest.TestCase):
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(page_size=5, page=1)
         self.assertEqual(len(f_list), 5)
-        mock_requestmaker_get.assert_called_with("fakes", query={"page_size": 5}, paginate=True)
+        mock_requestmaker_get.assert_called_with("fakes", query={"page_size": 5, "page": 1}, paginate=True)
 
         data = json.dumps(js_list[5:])
         mock_requestmaker_get.return_value = MockResponse(200, data)
         f_list = fakes.list(page_size=5, page=2)
         self.assertEqual(len(f_list), 4)
-        mock_requestmaker_get.assert_called_with("fakes", query={"page_size": 5}, paginate=True)
+        mock_requestmaker_get.assert_called_with("fakes", query={"page_size": 5, "page": 2}, paginate=True)
 
     def test_to_dict_method(self):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
