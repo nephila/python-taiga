@@ -1,6 +1,8 @@
 from .models import (
     Epic,
     Epics,
+    EpicAttribute,
+    EpicAttributes,
     History,
     Issue,
     IssueAttachment,
@@ -90,6 +92,8 @@ __all__ = [
     "WikiLink",
     "WikiLinks",
     "History",
+    "EpicAttribute",
+    "EpicAttributes",
     "IssueAttribute",
     "IssueAttributes",
     "TaskAttribute",
