@@ -984,6 +984,21 @@ class Issues(ListResource):
         return self.instance.parse(self.requester, response.json())
 
 
+class EpicAttribute(CustomAttribute):
+    """
+    EpicAttribute model
+    """
+
+    endpoint = "epic-custom-attributes"
+
+
+class EpicAttributes(CustomAttributes):
+    """
+    EpicAttributes factory
+    """
+
+    instance = IssueAttribute
+
 class IssueAttribute(CustomAttribute):
     """
     IssueAttribute model
@@ -1581,6 +1596,21 @@ class Project(InstanceResource):
         Get the list of :class:`WikiLink` resources for the project.
         """
         return WikiLinks(self.requester).list(project=self.id)
+
+    def add_epic_attribute(self, name, **attrs):
+        """
+        Add a new Epic attribute and return a :class:`IssueAttribute` object.
+
+        :param name: name of the :class:`EpicAttribute`
+        :param attrs: optional attributes for :class:`EpicAttribute`
+        """
+        return EpicAttributes(self.requester).create(self.id, name, **attrs)
+
+    def list_epic_attributes(self):
+        """
+        Get the list of :class:`EpicAttribute` resources for the project.
+        """
+        return EpicAttributes(self.requester).list(project=self.id)
 
     def add_issue_attribute(self, name, **attrs):
         """
