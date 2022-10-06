@@ -1,8 +1,8 @@
 from .models import (
     Epic,
-    Epics,
     EpicAttribute,
     EpicAttributes,
+    Epics,
     History,
     Issue,
     IssueAttachment,
