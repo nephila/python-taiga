@@ -365,7 +365,6 @@ class EpicStatus(InstanceResource):
 
 
 class EpicStatuses(ListResource):
-
     instance = EpicStatus
 
     def create(self, project, name, **attrs):
@@ -516,7 +515,6 @@ class UserStoryStatus(InstanceResource):
 
 
 class UserStoryStatuses(ListResource):
-
     instance = UserStoryStatus
 
     def create(self, project, name, **attrs):
@@ -672,7 +670,6 @@ class TaskStatus(InstanceResource):
 
 
 class TaskStatuses(ListResource):
-
     instance = TaskStatus
 
     def create(self, project, name, **attrs):
@@ -940,7 +937,6 @@ class Issue(CustomAttributeResource, CommentableResource):
 
 
 class Issues(ListResource):
-
     instance = Issue
 
     def create(self, project, subject, priority, status, issue_type, severity, **attrs):

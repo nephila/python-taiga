@@ -1,5 +1,3 @@
 -r requirements.txt
 coverage
 coveralls>=2.0
-codecov
-mock
