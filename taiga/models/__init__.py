@@ -1,6 +1,10 @@
 from .models import (
     Epic,
+    EpicAttribute,
+    EpicAttributes,
     Epics,
+    EpicStatus,
+    EpicStatuses,
     History,
     Issue,
     IssueAttachment,
@@ -54,6 +58,10 @@ from .models import (
 
 __all__ = [
     "Epic",
+    "EpicAttribute",
+    "EpicAttributes",
+    "EpicStatus",
+    "EpicStatuses",
     "Epics",
     "User",
     "Users",
