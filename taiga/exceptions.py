@@ -1,11 +1,11 @@
 import json
 
 
-class TaigaException(Exception):
+class TaigaException(Exception):  # noqa: N818
     pass
 
 
-class TaigaRestException(TaigaException):
+class TaigaRestException(TaigaException):  # noqa: N818
     def __init__(self, uri, status_code, message="", method="GET"):
         self.uri = uri
         self.status_code = status_code

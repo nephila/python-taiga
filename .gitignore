@@ -43,3 +43,4 @@ debian/debhelper*
 debian/files
 debian/python-taiga*
 debian/python3-taiga*
+.ruff_cache
