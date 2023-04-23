@@ -1,3 +1,41 @@
+python-taiga (1.1.0-1) UNRELEASED; urgency=low
+
+  * Update tooling, drop Python 2 (#59).
+  * Implement list_epic_attributes() (#103).
+  * Update packaging - python versions (#124).
+  * Update HistoryItem methods signatures (#97).
+  * Improve models documentation (#105).
+  * Add refresh token support to tests/resources/auth_users_success.json (#114)l
+  * Fix pagination (#116).
+  * Update linting tools and fix code style (#117).
+  * Improve documentation (#58).
+
+ --Iacopo Spalletti <i.spalletti@nephila.digital>  Sun, 23 Apr 2023 23:21:18 +0200
+
+python-taiga (1.0.0-1) UNRELEASED; urgency=low
+
+  * Add support for python 3.7
+  * Add support for epics
+  * Add support for additional attributes from Taiga 3.2/3.3
+  * Improve models
+  * Improve pagination support
+  * Fix and enforce code style
+
+ --Iacopo Spalletti <i.spalletti@nephila.digital>  Thu, 08 Aug 2019 23:21:18 +0200
+
+python-taiga (0.9.0-1) UNRELEASED; urgency=low
+
+  * Add support for multiple authentication backends.
+  * Add support for self-signed and not verified SSL certificates.
+  * Add support for webhooks.
+  * Add pagination support for lists.
+  * Add debian packaging.
+  * Avoid installing tests as a separate module.
+  * Move documentation to readthedocs.
+  * Add support for Python 3.5/3.6.
+
+ --Iacopo Spalletti <i.spalletti@nephila.digital>  Wed, 31 Jan 2018 23:21:18 +0100
+
 python-taiga (0.8.6-1) UNRELEASED; urgency=low
 
   * Initial release.

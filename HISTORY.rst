@@ -4,6 +4,35 @@
 History
 *********
 
+.. towncrier release notes start
+
+1.1.0 (2023-04-23)
+==================
+
+Features
+--------
+
+- Update tooling, drop Python 2 (#59)
+- Implement list_epic_attributes() (#103)
+- Update packaging - python versions (#124)
+
+
+Bugfixes
+--------
+
+- Update HistoryItem methods signatures (#97)
+- Improve models documentation (#105)
+- Add refresh token support to tests/resources/auth_users_success.json (#114)
+- Fix pagination (#116)
+- Update linting tools and fix code style (#117)
+
+
+Improved Documentation
+----------------------
+
+- Improve documentation (#58)
+
+
 1.0.0 (2019-08-08)
 ==================
 
