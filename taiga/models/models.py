@@ -123,9 +123,9 @@ class Membership(InstanceResource):
     """
     Membership model
 
-    :param email: email of the :class:`Membership`
-    :param role: role of the :class:`Membership`
-    :param project: project of the :class:`Membership`
+    :param email: email of :class:`Membership`
+    :param role: role of :class:`Membership`
+    :param project: project of :class:`Membership`
     """
 
     endpoint = "memberships"
@@ -147,9 +147,9 @@ class Memberships(ListResource):
         Create a new :class:`Membership`.
 
         :param project: :class:`Project` id
-        :param email: email of the :class:`Membership`
-        :param role: role of the :class:`Membership`
-        :param attrs: optional attributes of the :class:`Membership`
+        :param email: email of :class:`Membership`
+        :param role: role of :class:`Membership`
+        :param attrs: optional attributes of :class:`Membership`
         """
         attrs.update({"project": project, "email": email, "role": role})
         return self._new_resource(payload=attrs)
@@ -159,7 +159,7 @@ class Priority(InstanceResource):
     """
     Priority model
 
-    :param name: name of the :class:`Priority`
+    :param name: name of :class:`Priority`
     :param color: color of the class:`Priority`
     :param order: order of the class:`Priority`
     :param project: project of the class:`Priority`
@@ -195,11 +195,11 @@ class Attachment(InstanceResource):
     """
     Attachment base class
 
-    :param object_id: object_id of the :class:`Attachment`
-    :param project: project of the :class:`Attachment`
-    :param attached_file: attached_file of the :class:`Attachment`
-    :param description: description of the :class:`Attachment`
-    :param is_deprecated: is_deprecated of the :class:`Attachment`
+    :param object_id: object_id of :class:`Attachment`
+    :param project: project of :class:`Attachment`
+    :param attached_file: attached_file of :class:`Attachment`
+    :param description: description of :class:`Attachment`
+    :param is_deprecated: is_deprecated of :class:`Attachment`
     """
 
     repr_attribute = "subject"
@@ -273,17 +273,17 @@ class Epic(CustomAttributeResource, CommentableResource):
     """
     Epic model
 
-    :param assigned_to: assigned to property of the :class:`Epic`
-    :param blocked_note: blocked note of the :class:`Epic`
-    :param description: description of of the :class:`Epic`
-    :param is_blocked: is blocked property of the :class:`Epic`
-    :param is_closed: is closed property of the :class:`Epic`
-    :param color: the color of the :class:`Epic`
-    :param project: the project of the :class:`TaskStatus`
-    :param subject: subject of the :class:`TaskStatus`
-    :param tags: tags of the :class:`TaskStatus`
-    :param watchers: watchers of the :class:`TaskStatus`
-    :param version: version of the :class:`Epic`
+    :param assigned_to: assigned to property of :class:`Epic`
+    :param blocked_note: blocked note of :class:`Epic`
+    :param description: description of :class:`Epic` (not available in the :py:meth:`Epics.list` response)
+    :param is_blocked: is blocked property of :class:`Epic`
+    :param is_closed: is closed property of :class:`Epic`
+    :param color: the color of :class:`Epic`
+    :param project: the project of :class:`TaskStatus`
+    :param subject: subject of :class:`TaskStatus`
+    :param tags: tags of :class:`TaskStatus`
+    :param watchers: watchers of :class:`TaskStatus`
+    :param version: version of :class:`Epic`
     """
 
     endpoint = "epics"
@@ -338,8 +338,8 @@ class Epics(ListResource):
         Create a new :class:`Epic`.
 
         :param project: :class:`Project` id
-        :param subject: subject of the :class:`Epic`
-        :param attrs: optional attributes of the :class:`Epic`
+        :param subject: subject of :class:`Epic`
+        :param attrs: optional attributes of :class:`Epic`
         """
         attrs.update({"project": project, "subject": subject})
         return self._new_resource(payload=attrs)
@@ -349,12 +349,12 @@ class EpicStatus(InstanceResource):
     """
     Taiga Epic Status model
 
-    :param color: the color of the :class:`EpicStatus`
-    :param is_closed: closed property of the :class:`EpicStatus`
-    :param name: The name of the :class:`EpicStatus`
-    :param order: order of the :class:`EpicStatus`
-    :param project: the Taiga project of the :class:`EpicStatus`
-    :param slug: the slug of the :class:`EpicStatus`
+    :param color: the color of :class:`EpicStatus`
+    :param is_closed: closed property of :class:`EpicStatus`
+    :param name: The name of :class:`EpicStatus`
+    :param order: order of :class:`EpicStatus`
+    :param project: the Taiga project of :class:`EpicStatus`
+    :param slug: the slug of :class:`EpicStatus`
     """
 
     repr_attribute = "subject"
@@ -365,7 +365,6 @@ class EpicStatus(InstanceResource):
 
 
 class EpicStatuses(ListResource):
-
     instance = EpicStatus
 
     def create(self, project, name, **attrs):
@@ -373,8 +372,8 @@ class EpicStatuses(ListResource):
         Create a new :class:`EpicStatus`.
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`EpicStatus`
-        :param attrs: optional attributes of the :class:`EpicStatus`
+        :param name: name of :class:`EpicStatus`
+        :param attrs: optional attributes of :class:`EpicStatus`
         """
         attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
@@ -384,24 +383,24 @@ class UserStory(CustomAttributeResource, CommentableResource):
     """
     User Story model
 
-    :param assigned_to: assigned to of the :class:`UserStory`
-    :param assigned_users: additional users assigned to of the :class:`UserStory`
-    :param backlog_order: backlog order of the :class:`UserStory`
-    :param blocked_note: blocked note of the :class:`UserStory`
-    :param version: version of the :class:`UserStory`
-    :param client_requirement: client requirement of the :class:`UserStory`
-    :param description: description of the :class:`UserStory`
-    :param is_blocked: is blocked of the :class:`UserStory`
-    :param kanban_order: kanban order of the :class:`UserStory`
-    :param milestone: milestone of the :class:`UserStory`
-    :param points: points of the :class:`UserStory`
-    :param project: project of the :class:`UserStory`
-    :param sprint_order: sprint order of the :class:`UserStory`
-    :param status: status of the :class:`UserStory`
-    :param subject: subject of the :class:`UserStory`
-    :param tags: tags of the :class:`UserStory`
-    :param team_requirement: team requirement of the :class:`UserStory`
-    :param watchers: watchers of the :class:`UserStory`
+    :param assigned_to: assigned to of :class:`UserStory`
+    :param assigned_users: additional users assigned to of :class:`UserStory`
+    :param backlog_order: backlog order of :class:`UserStory`
+    :param blocked_note: blocked note of :class:`UserStory`
+    :param version: version of :class:`UserStory`
+    :param client_requirement: client requirement of :class:`UserStory`
+    :param description: description of :class:`UserStory` (not available in the :py:meth:`UserStories.list` response)
+    :param is_blocked: is blocked of :class:`UserStory`
+    :param kanban_order: kanban order of :class:`UserStory`
+    :param milestone: milestone of :class:`UserStory`
+    :param points: points of :class:`UserStory`
+    :param project: project of :class:`UserStory`
+    :param sprint_order: sprint order of :class:`UserStory`
+    :param status: status of :class:`UserStory`
+    :param subject: subject of :class:`UserStory`
+    :param tags: tags of :class:`UserStory`
+    :param team_requirement: team requirement of :class:`UserStory`
+    :param watchers: watchers of :class:`UserStory`
     :param due_date: :class:`UserStory` due date
     :param generated_from_issue: :class:`UserStory` parent issue
     :param generated_from_task: :class:`UserStory` parent task
@@ -441,8 +440,8 @@ class UserStory(CustomAttributeResource, CommentableResource):
     def add_task(self, subject, status, **attrs):
         """
         Add a :class:`Task` to the current :class:`UserStory` and return it.
-        :param subject: subject of the :class:`Task`
-        :param status: status of the :class:`Task`
+        :param subject: subject of :class:`Task`
+        :param status: status of :class:`Task`
         :param attrs: optional attributes for :class:`Task`
 
         """
@@ -482,8 +481,8 @@ class UserStories(ListResource):
         Create a new :class:`UserStory`.
 
         :param project: :class:`Project` id
-        :param subject: subject of the :class:`UserStory`
-        :param attrs: optional attributes of the :class:`UserStory`
+        :param subject: subject of :class:`UserStory`
+        :param attrs: optional attributes of :class:`UserStory`
         """
         attrs.update({"project": project, "subject": subject})
         return self._new_resource(payload=attrs)
@@ -500,12 +499,12 @@ class UserStoryStatus(InstanceResource):
     """
     Taiga User Story Status model
 
-    :param color: the color of the :class:`UserStoryStatus`
-    :param is_closed: closed property of the :class:`UserStoryStatus`
-    :param name: The name of the :class:`UserStoryStatus`
-    :param order: order of the :class:`UserStoryStatus`
-    :param project: the Taiga project of the :class:`UserStoryStatus`
-    :param wip_limit: wip limit of the :class:`UserStoryStatus`
+    :param color: the color of :class:`UserStoryStatus`
+    :param is_closed: closed property of :class:`UserStoryStatus`
+    :param name: The name of :class:`UserStoryStatus`
+    :param order: order of :class:`UserStoryStatus`
+    :param project: the Taiga project of :class:`UserStoryStatus`
+    :param wip_limit: wip limit of :class:`UserStoryStatus`
     """
 
     repr_attribute = "subject"
@@ -516,7 +515,6 @@ class UserStoryStatus(InstanceResource):
 
 
 class UserStoryStatuses(ListResource):
-
     instance = UserStoryStatus
 
     def create(self, project, name, **attrs):
@@ -524,8 +522,8 @@ class UserStoryStatuses(ListResource):
         Create a new :class:`UserStoryStatus`.
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`UserStoryStatus`
-        :param attrs: optional attributes of the :class:`UserStoryStatus`
+        :param name: name of :class:`UserStoryStatus`
+        :param attrs: optional attributes of :class:`UserStoryStatus`
         """
         attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
@@ -535,11 +533,11 @@ class Point(InstanceResource):
     """
     Taiga Point model
 
-    :param color: the color of the :class:`Point`
-    :param value: value of the :class:`Point`
-    :param name: name of the :class:`Point`
-    :param order: the order of the :class:`Point`
-    :param project: the Taiga project of the :class:`Point`
+    :param color: the color of :class:`Point`
+    :param value: value of :class:`Point`
+    :param name: name of :class:`Point`
+    :param order: the order of :class:`Point`
+    :param project: the Taiga project of :class:`Point`
     """
 
     endpoint = "points"
@@ -561,9 +559,9 @@ class Points(ListResource):
         Create a new :class:`UserStoryStatus`.
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`Point`
-        :param value: value of the :class:`Point`
-        :param attrs: optional attributes of the :class:`Point`
+        :param name: name of :class:`Point`
+        :param value: value of :class:`Point`
+        :param attrs: optional attributes of :class:`Point`
         """
         attrs.update({"project": project, "name": name, "value": value})
         return self._new_resource(payload=attrs)
@@ -573,11 +571,11 @@ class Milestone(InstanceResource):
     """
     Milestone model
 
-    :param name: the name of the :class:`Milestone`
-    :param project: the Taiga project  of the :class:`Milestone`
-    :param estimated_start: the estimated start of the :class:`Milestone`
-    :param estimated_finish: the estimated finish  of the :class:`Milestone`
-    :param disponibility: the disponibility  of the :class:`Milestone`
+    :param name: the name of :class:`Milestone`
+    :param project: the Taiga project  of :class:`Milestone`
+    :param estimated_start: the estimated start of :class:`Milestone`
+    :param estimated_finish: the estimated finish  of :class:`Milestone`
+    :param disponibility: the disponibility  of :class:`Milestone`
     """
 
     endpoint = "milestones"
@@ -617,10 +615,10 @@ class Milestones(ListResource):
         Create a new :class:`Milestone`.
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`Milestone`
-        :param estimated_start: est. start time of the :class:`Milestone`
-        :param estimated_finish: est. finish time of the :class:`Milestone`
-        :param attrs: optional attributes of the :class:`Milestone`
+        :param name: name of :class:`Milestone`
+        :param estimated_start: est. start time of :class:`Milestone`
+        :param estimated_finish: est. finish time of :class:`Milestone`
+        :param attrs: optional attributes of :class:`Milestone`
         """
         if isinstance(estimated_start, datetime.datetime):
             estimated_start = estimated_start.strftime("%Y-%m-%d")
@@ -659,11 +657,11 @@ class TaskStatus(InstanceResource):
     """
     Task Status model
 
-    :param name: the name of the :class:`TaskStatus`
-    :param color: the color of the :class:`TaskStatus`
-    :param order: the order of the :class:`TaskStatus`
-    :param project: the project  of the :class:`TaskStatus`
-    :param is_closed: the is closed property of the :class:`TaskStatus`
+    :param name: the name of :class:`TaskStatus`
+    :param color: the color of :class:`TaskStatus`
+    :param order: the order of :class:`TaskStatus`
+    :param project: the project  of :class:`TaskStatus`
+    :param is_closed: the is closed property of :class:`TaskStatus`
     """
 
     endpoint = "task-statuses"
@@ -672,7 +670,6 @@ class TaskStatus(InstanceResource):
 
 
 class TaskStatuses(ListResource):
-
     instance = TaskStatus
 
     def create(self, project, name, **attrs):
@@ -680,8 +677,8 @@ class TaskStatuses(ListResource):
         Create a new :class:`TaskStatus`.
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`TaskStatus`
-        :param attrs: optional attributes of the :class:`TaskStatus`
+        :param name: name of :class:`TaskStatus`
+        :param attrs: optional attributes of :class:`TaskStatus`
         """
         attrs.update({"project": project, "name": name})
         return self._new_resource(payload=attrs)
@@ -707,22 +704,22 @@ class Task(CustomAttributeResource, CommentableResource):
     """
     Task model
 
-    :param assigned_to: assigned to property of the :class:`TaskStatus`
-    :param blocked_note: blocked note of the :class:`TaskStatus`
-    :param description: description of of the :class:`TaskStatus`
-    :param version: version of the :class:`TaskStatus`
-    :param is_blocked: is blocked property of the :class:`TaskStatus`
-    :param milestone: milestone property of the :class:`TaskStatus`
-    :param project: the project of the :class:`TaskStatus`
-    :param user_story: the user story of the :class:`TaskStatus`
-    :param status: status of the :class:`TaskStatus`
-    :param subject: subject of the :class:`TaskStatus`
-    :param tags: tags of the :class:`TaskStatus`
-    :param us_order: the use order of the :class:`TaskStatus`
-    :param taskboard_order: the taskboard order of the :class:`TaskStatus`
-    :param is_iocaine: the is iocaine of the :class:`TaskStatus`
-    :param external_reference: external reference of the :class:`TaskStatus`
-    :param watchers: watchers of the :class:`TaskStatus`
+    :param assigned_to: assigned to property of :class:`TaskStatus`
+    :param blocked_note: blocked note of :class:`TaskStatus`
+    :param description: description of of :class:`TaskStatus` (not available in the :py:meth:`Tasks.list` response)
+    :param version: version of :class:`TaskStatus`
+    :param is_blocked: is blocked property of :class:`TaskStatus`
+    :param milestone: milestone property of :class:`TaskStatus`
+    :param project: the project of :class:`TaskStatus`
+    :param user_story: the user story of :class:`TaskStatus`
+    :param status: status of :class:`TaskStatus`
+    :param subject: subject of :class:`TaskStatus`
+    :param tags: tags of :class:`TaskStatus`
+    :param us_order: the use order of :class:`TaskStatus`
+    :param taskboard_order: the taskboard order of :class:`TaskStatus`
+    :param is_iocaine: the is iocaine of :class:`TaskStatus`
+    :param external_reference: external reference of :class:`TaskStatus`
+    :param watchers: watchers of :class:`TaskStatus`
     :param due_date: :class:`Task` due date
     """
 
@@ -780,9 +777,9 @@ class Tasks(ListResource):
         Create a new :class:`Task`.
 
         :param project: :class:`Project` id
-        :param subject: subject of the :class:`Task`
-        :param status: status of the :class:`Task`
-        :param attrs: optional attributes of the :class:`Task`
+        :param subject: subject of :class:`Task`
+        :param status: status of :class:`Task`
+        :param attrs: optional attributes of :class:`Task`
         """
         attrs.update({"project": project, "subject": subject, "status": status})
         return self._new_resource(payload=attrs)
@@ -799,10 +796,10 @@ class IssueType(InstanceResource):
     """
     IssueType model
 
-    :param name: name of the :class:`IssueType`
-    :param color: color of the :class:`IssueType`
-    :param order: order of the :class:`IssueType`
-    :param project: the taiga project of the :class:`IssueType`
+    :param name: name of :class:`IssueType`
+    :param color: color of :class:`IssueType`
+    :param order: order of :class:`IssueType`
+    :param project: the taiga project of :class:`IssueType`
     """
 
     endpoint = "issue-types"
@@ -826,11 +823,11 @@ class IssueStatus(InstanceResource):
     """
     Issue Status model
 
-    :param name: name of the :class:`IssueStatus`
-    :param color: color of the :class:`IssueStatus`
-    :param order: order of the :class:`IssueStatus`
-    :param project: the taiga project of the :class:`IssueStatus`
-    :param is_closed: is closed property of the :class:`IssueStatus`
+    :param name: name of :class:`IssueStatus`
+    :param color: color of :class:`IssueStatus`
+    :param order: order of :class:`IssueStatus`
+    :param project: the taiga project of :class:`IssueStatus`
+    :param is_closed: is closed property of :class:`IssueStatus`
     """
 
     endpoint = "issue-statuses"
@@ -871,7 +868,7 @@ class Issue(CustomAttributeResource, CommentableResource):
 
     :param requester: :class:`Requester` instance
     :param assigned_to: :class:`User` id this issue is assigned to
-    :param description: description of the issue
+    :param description: description of the issue (not available in the :py:meth:`Issues.list` response)
     :param is_blocked: set if this issue is blocked or not
     :param milestone: :class:`Milestone` id
     :param project: :class:`Project` id
@@ -940,7 +937,6 @@ class Issue(CustomAttributeResource, CommentableResource):
 
 
 class Issues(ListResource):
-
     instance = Issue
 
     def create(self, project, subject, priority, status, issue_type, severity, **attrs):
@@ -948,12 +944,12 @@ class Issues(ListResource):
         Create a new :class:`Task`.
 
         :param project: :class:`Project` id
-        :param subject: subject of the :class:`Issue`
-        :param priority: priority of the :class:`Issue`
-        :param status: status of the :class:`Issue`
-        :param issue_type: Issue type of the :class:`Issue`
-        :param severity: severity of the :class:`Issue`
-        :param attrs: optional attributes of the :class:`Task`
+        :param subject: subject of :class:`Issue`
+        :param priority: priority of :class:`Issue`
+        :param status: status of :class:`Issue`
+        :param issue_type: Issue type of :class:`Issue`
+        :param severity: severity of :class:`Issue`
+        :param attrs: optional attributes of :class:`Task`
         """
         attrs.update(
             {
@@ -1032,13 +1028,29 @@ class UserStoryAttributes(CustomAttributes):
     instance = UserStoryAttribute
 
 
+class EpicAttribute(CustomAttribute):
+    """
+    EpicAttribute model
+    """
+
+    endpoint = "epic-custom-attributes"
+
+
+class EpicAttributes(CustomAttributes):
+    """
+    EpicAttributes factory
+    """
+
+    instance = EpicAttribute
+
+
 class Severity(InstanceResource):
     """
     Severity model
 
     :param requester: :class:`Requester` instance
-    :param name: name of the :class:`Severity`
-    :param order: order of the :class:`Severity`
+    :param name: name of :class:`Severity`
+    :param order: order of :class:`Severity`
     :param project: :class:`Project` id
     """
 
@@ -1059,7 +1071,7 @@ class Severities(ListResource):
         Create a new :class:`Severity`
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`Severity`
+        :param name: name of :class:`Severity`
         :param attrs: optional attributes for :class:`Role`
         """
         attrs.update({"project": project, "name": name})
@@ -1071,9 +1083,9 @@ class Role(InstanceResource):
     Role model
 
     :param requester: :class:`Requester` instance
-    :param name: name of the :class:`Role`
-    :param slug: slug of the :class:`Role`
-    :param order: order of the :class:`Role`
+    :param name: name of :class:`Role`
+    :param slug: slug of :class:`Role`
+    :param order: order of :class:`Role`
     :param computable: choose if :class:`Role` is computable or not
 
     """
@@ -1095,7 +1107,7 @@ class Roles(ListResource):
         Create a new :class:`Role`
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`Role`
+        :param name: name of :class:`Role`
         :param attrs: optional attributes for :class:`Role`
         """
         attrs.update({"project": project, "name": name})
@@ -1107,7 +1119,7 @@ class Project(InstanceResource):
 
     :param requester: :class:`Requester` instance
     :param name: name of the project
-    :param description: description of the project
+    :param description: description of the project (not available in the :py:meth:`Projects.list` response)
     :param creation_template: base template for the project
     :param is_backlog_activated: name of the project
     :param is_issues_activated: name of the project
@@ -1296,7 +1308,7 @@ class Project(InstanceResource):
         """
         Adds a :class:`UserStory` and returns a :class:`UserStory` resource.
 
-        :param subject: subject of the :class:`UserStory`
+        :param subject: subject of :class:`UserStory`
         :param attrs: other :class:`UserStory` attributes
         """
         return UserStories(self.requester).create(self.id, subject, **attrs)
@@ -1305,27 +1317,27 @@ class Project(InstanceResource):
         """
         Import an user story and returns a :class:`UserStory` resource.
 
-        :param subject: subject of the :class:`UserStory`
-        :param status: status of the :class:`UserStory`
+        :param subject: subject of :class:`UserStory`
+        :param status: status of :class:`UserStory`
         :param attrs: optional :class:`UserStory` attributes
         """
         return UserStories(self.requester).import_(self.id, subject, status, **attrs)
 
-    def list_user_stories(self):
+    def list_user_stories(self, **queryparams):
         """
         Returns the :class:`UserStory` list of the project.
         """
-        return UserStories(self.requester).list(project=self.id)
+        return UserStories(self.requester).list(project=self.id, **queryparams)
 
     def add_issue(self, subject, priority, status, issue_type, severity, **attrs):
         """
         Adds a Issue and returns a :class:`Issue` resource.
 
-        :param subject: subject of the :class:`Issue`
-        :param priority: priority of the :class:`Issue`
-        :param priority: status of the :class:`Issue`
-        :param issue_type: type of the :class:`Issue`
-        :param severity: severity of the :class:`Issue`
+        :param subject: subject of :class:`Issue`
+        :param priority: priority of :class:`Issue`
+        :param priority: status of :class:`Issue`
+        :param issue_type: type of :class:`Issue`
+        :param severity: severity of :class:`Issue`
         :param attrs: other :class:`Issue` attributes
         """
         return Issues(self.requester).create(self.id, subject, priority, status, issue_type, severity, **attrs)
@@ -1353,7 +1365,7 @@ class Project(InstanceResource):
         """
         Add a Milestone to the project and returns a :class:`Milestone` object.
 
-        :param name: name of the :class:`Milestone`
+        :param name: name of :class:`Milestone`
         :param estimated_start: estimated start time of the
                                 :class:`Milestone`
         :param estimated_finish: estimated finish time of the
@@ -1366,7 +1378,7 @@ class Project(InstanceResource):
         """
         Import a Milestone and returns a :class:`Milestone` object.
 
-        :param name: name of the :class:`Milestone`
+        :param name: name of :class:`Milestone`
         :param estimated_start: estimated start time of the
                                 :class:`Milestone`
         :param estimated_finish: estimated finish time of the
@@ -1385,8 +1397,8 @@ class Project(InstanceResource):
         """
         Add a Point to the project and returns a :class:`Point` object.
 
-        :param name: name of the :class:`Point`
-        :param value: value of the :class:`Point`
+        :param name: name of :class:`Point`
+        :param value: value of :class:`Point`
         :param attrs: optional attributes for :class:`Point`
         """
         return Points(self.requester).create(self.id, name, value, **attrs)
@@ -1401,7 +1413,7 @@ class Project(InstanceResource):
         """
         Adds a :class:`UserStory` and returns a :class:`UserStory` resource.
 
-        :param subject: subject of the :class:`UserStory`
+        :param subject: subject of :class:`UserStory`
         :param attrs: other :class:`UserStory` attributes
         """
         return Epics(self.requester).create(self.id, subject, **attrs)
@@ -1417,7 +1429,7 @@ class Project(InstanceResource):
         Add a Task status to the project and returns a
         :class:`TaskStatus` object.
 
-        :param name: name of the :class:`TaskStatus`
+        :param name: name of :class:`TaskStatus`
         :param attrs: optional attributes for :class:`TaskStatus`
         """
         return TaskStatuses(self.requester).create(self.id, name, **attrs)
@@ -1432,8 +1444,8 @@ class Project(InstanceResource):
         """
         Import a Task and return a :class:`Task` object.
 
-        :param subject: subject of the :class:`Task`
-        :param status: status of the :class:`Task`
+        :param subject: subject of :class:`Task`
+        :param status: status of :class:`Task`
         :param attrs: optional attributes for :class:`Task`
         """
         return Tasks(self.requester).import_(self.id, subject, status, **attrs)
@@ -1443,7 +1455,7 @@ class Project(InstanceResource):
         Add a UserStory status to the project and returns a
         :class:`UserStoryStatus` object.
 
-        :param name: name of the :class:`UserStoryStatus`
+        :param name: name of :class:`UserStoryStatus`
         :param attrs: optional attributes for :class:`UserStoryStatus`
         """
         return UserStoryStatuses(self.requester).create(self.id, name, **attrs)
@@ -1459,7 +1471,7 @@ class Project(InstanceResource):
         Add a Issue type to the project and returns a
         :class:`IssueType` object.
 
-        :param name: name of the :class:`IssueType`
+        :param name: name of :class:`IssueType`
         :param attrs: optional attributes for :class:`IssueType`
         """
         return IssueTypes(self.requester).create(self.id, name, **attrs)
@@ -1474,7 +1486,7 @@ class Project(InstanceResource):
         """
         Add a Severity to the project and returns a :class:`Severity` object.
 
-        :param name: name of the :class:`Severity`
+        :param name: name of :class:`Severity`
         :param attrs: optional attributes for :class:`Severity`
         """
         return Severities(self.requester).create(self.id, name, **attrs)
@@ -1489,7 +1501,7 @@ class Project(InstanceResource):
         """
         Add a Role to the project and returns a :class:`Role` object.
 
-        :param name: name of the :class:`Role`
+        :param name: name of :class:`Role`
         :param attrs: optional attributes for :class:`Role`
         """
         return Roles(self.requester).create(self.id, name, **attrs)
@@ -1504,7 +1516,7 @@ class Project(InstanceResource):
         """
         Add a Priority to the project and returns a :class:`Priority` object.
 
-        :param name: name of the :class:`Priority`
+        :param name: name of :class:`Priority`
         :param attrs: optional attributes for :class:`Priority`
         """
         return Priorities(self.requester).create(self.id, name, **attrs)
@@ -1520,7 +1532,7 @@ class Project(InstanceResource):
         Add a Issue status to the project and returns a
         :class:`IssueStatus` object.
 
-        :param name: name of the :class:`IssueStatus`
+        :param name: name of :class:`IssueStatus`
         :param attrs: optional attributes for :class:`IssueStatus`
         """
         return IssueStatuses(self.requester).create(self.id, name, **attrs)
@@ -1535,7 +1547,7 @@ class Project(InstanceResource):
         """
         Add a Wiki page to the project and returns a :class:`WikiPage` object.
 
-        :param name: name of the :class:`WikiPage`
+        :param name: name of :class:`WikiPage`
         :param attrs: optional attributes for :class:`WikiPage`
         """
         return WikiPages(self.requester).create(self.id, slug, content, **attrs)
@@ -1544,8 +1556,8 @@ class Project(InstanceResource):
         """
         Import a Wiki page and return a :class:`WikiPage` object.
 
-        :param slug: slug of the :class:`WikiPage`
-        :param content: content of the :class:`WikiPage`
+        :param slug: slug of :class:`WikiPage`
+        :param content: content of :class:`WikiPage`
         :param attrs: optional attributes for :class:`Task`
         """
         return WikiPages(self.requester).import_(self.id, slug, content, **attrs)
@@ -1560,8 +1572,8 @@ class Project(InstanceResource):
         """
         Add a Wiki link to the project and returns a :class:`WikiLink` object.
 
-        :param title: title of the :class:`WikiLink`
-        :param href: href of the :class:`WikiLink`
+        :param title: title of :class:`WikiLink`
+        :param href: href of :class:`WikiLink`
         :param attrs: optional attributes for :class:`WikiLink`
         """
         return WikiLinks(self.requester).create(self.id, title, href, **attrs)
@@ -1570,8 +1582,8 @@ class Project(InstanceResource):
         """
         Import a Wiki link and return a :class:`WikiLink` object.
 
-        :param title: title of the :class:`WikiLink`
-        :param href: href of the :class:`WikiLink`
+        :param title: title of :class:`WikiLink`
+        :param href: href of :class:`WikiLink`
         :param attrs: optional attributes for :class:`WikiLink`
         """
         return WikiLinks(self.requester).import_(self.id, title, href, **attrs)
@@ -1586,7 +1598,7 @@ class Project(InstanceResource):
         """
         Add a new Issue attribute and return a :class:`IssueAttribute` object.
 
-        :param name: name of the :class:`IssueAttribute`
+        :param name: name of :class:`IssueAttribute`
         :param attrs: optional attributes for :class:`IssueAttribute`
         """
         return IssueAttributes(self.requester).create(self.id, name, **attrs)
@@ -1601,7 +1613,7 @@ class Project(InstanceResource):
         """
         Add a new Task attribute and return a :class:`TaskAttribute` object.
 
-        :param name: name of the :class:`TaskAttribute`
+        :param name: name of :class:`TaskAttribute`
         :param attrs: optional attributes for :class:`TaskAttribute`
         """
         return TaskAttributes(self.requester).create(self.id, name, **attrs)
@@ -1617,7 +1629,7 @@ class Project(InstanceResource):
         Add a new User Story attribute and return a
         :class:`UserStoryAttribute` object.
 
-        :param name: name of the :class:`UserStoryAttribute`
+        :param name: name of :class:`UserStoryAttribute`
         :param attrs: optional attributes for :class:`UserStoryAttribute`
         """
         return UserStoryAttributes(self.requester).create(self.id, name, **attrs)
@@ -1628,13 +1640,19 @@ class Project(InstanceResource):
         """
         return UserStoryAttributes(self.requester).list(project=self.id)
 
+    def list_epic_attributes(self):
+        """
+        Get the list of :class:`EpicAttribute` resources for the project.
+        """
+        return EpicAttributes(self.requester).list(project=self.id)
+
     def add_webhook(self, name, url, key, **attrs):
         """
         Add a new Webhook and return a :class:`Webhook` object.
 
-        :param name: name of the :class:`Webhook`
-        :param url: payload url of the :class:`Webhook`
-        :param key: secret key of the :class:`Webhook`
+        :param name: name of :class:`Webhook`
+        :param url: payload url of :class:`Webhook`
+        :param key: secret key of :class:`Webhook`
         :param attrs: optional attributes for :class:`Webhook`
         """
         return Webhooks(self.requester).create(self.id, name, url, key, **attrs)
@@ -1677,8 +1695,8 @@ class Projects(ListResource):
         """
         Create a new :class:`Project`
 
-        :param name: name of the :class:`Project`
-        :param description: description of the :class:`Project`
+        :param name: name of :class:`Project`
+        :param description: description of :class:`Project`
         :param attrs: optional attributes for :class:`Project`
         """
         attrs.update({"name": name, "description": description})
@@ -1693,7 +1711,7 @@ class Projects(ListResource):
         """
         Get a :class:`Project` by slug
 
-        :param slug: the slug of the :class:`Project`
+        :param slug: the slug of :class:`Project`
         """
         response = self.requester.get("/{endpoint}/by_slug?slug={slug}", endpoint=self.instance.endpoint, slug=slug)
         return self.instance.parse(self.requester, response.json())
@@ -1933,9 +1951,9 @@ class Webhook(InstanceResource):
     Webhook model
 
     :param requester: :class:`Requester` instance
-    :param name: name of the :class:`Webhook`
-    :param url: payload url of the :class:`Webhook`
-    :param key: secret key of the :class:`Webhook`
+    :param name: name of :class:`Webhook`
+    :param url: payload url of :class:`Webhook`
+    :param key: secret key of :class:`Webhook`
 
     """
 
@@ -1956,9 +1974,9 @@ class Webhooks(ListResource):
         Create a new :class:`Webhook`
 
         :param project: :class:`Project` id
-        :param name: name of the :class:`Webhook`
-        :param url: payload url of the :class:`Webhook`
-        :param key: secret key of the :class:`Webhook`
+        :param name: name of :class:`Webhook`
+        :param url: payload url of :class:`Webhook`
+        :param key: secret key of :class:`Webhook`
         :param attrs: optional attributes for :class:`Webhook`
         """
         attrs.update({"project": project, "name": name, "url": url, "key": key})

@@ -22,6 +22,33 @@ class TestUserStories(unittest.TestCase):
         mock_requestmaker_get.assert_called_with("userstories/attachments", query={"object_id": 1}, paginate=True)
 
     @patch("taiga.requestmaker.RequestMaker.get")
+    def test_list_userstories_page_2(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/userstories_list_success.json")
+        )
+        api = TaigaAPI(token="f4k3")
+        api.user_stories.list(page=1, page_size=2)
+        mock_requestmaker_get.assert_called_with("userstories", query={"page_size": 2, "page": 1}, paginate=True)
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    def test_list_userstories_page_1(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/userstories_list_success.json")
+        )
+        api = TaigaAPI(token="f4k3")
+        api.user_stories.list(page_size=2)
+        mock_requestmaker_get.assert_called_with("userstories", query={"page_size": 2}, paginate=True)
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    def test_list_userstories_no_pagination(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/userstories_list_success.json")
+        )
+        api = TaigaAPI(token="f4k3")
+        api.user_stories.list(pagination=False, page=2, page_size=3)
+        mock_requestmaker_get.assert_called_with("userstories", query={}, paginate=False)
+
+    @patch("taiga.requestmaker.RequestMaker.get")
     def test_single_userstory_parsing(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(
             200, create_mock_json("tests/resources/userstory_details_success.json")

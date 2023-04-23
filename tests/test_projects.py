@@ -447,6 +447,13 @@ class TestProjects(unittest.TestCase):
         project.list_user_story_attributes()
         mock_list_us_attr.assert_called_with(project=1)
 
+    @patch("taiga.models.EpicAttributes.list")
+    def test_list_epic_attributes(self, mock_list_epic_attr):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        project = Project(rm, id=1)
+        project.list_epic_attributes()
+        mock_list_epic_attr.assert_called_with(project=1)
+
     @patch("taiga.models.Memberships.create")
     def test_add_membership(self, mock_new_membership):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")

@@ -29,6 +29,13 @@ class Resource:
 
 
 class ListResource(Resource):
+    """ListResource model
+
+    Base class for methods that operates on a list of resources (:py:meth:`list`, :py:meth:`get`, :py:meth:`delete`).
+
+    :param requester: :class:`Requester` instance
+    """
+
     def list(self, pagination=True, page_size=None, page=None, **queryparams):  # noqa: A003
         """
         Retrieves a list of objects.
@@ -58,6 +65,8 @@ class ListResource(Resource):
             except (ValueError, TypeError):
                 page_size = 100
             queryparams["page_size"] = page_size
+        if page and pagination:
+            queryparams["page"] = page
         result = self.requester.get(self.instance.endpoint, query=queryparams, paginate=pagination)
         objects = SearchableList()
         objects.extend(self.parse_list(result.json()))
@@ -109,6 +118,8 @@ class ListResource(Resource):
 
 class InstanceResource(Resource):
     """InstanceResource model
+
+    Base class for methods that operates on a single resource (:py:meth:`update`, :py:meth:`patch`, :py:meth:`delete`).
 
     :param requester: :class:`Requester` instance
     :param params: :various parameters
@@ -181,7 +192,7 @@ class InstanceResource(Resource):
         """
         Turns a JSON object into a model instance.
         """
-        if not type(entry) is dict:
+        if type(entry) is not dict:
             return entry
         for key_to_parse, cls_to_parse in cls.parser.items():
             if key_to_parse in entry:

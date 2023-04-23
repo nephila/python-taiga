@@ -56,7 +56,7 @@ You can also specify a different host if you use Taiga somewhere else
         host='http://taiga.my.host.org'
     )
 
-To use LDAP or other authentication backends, user ``auth_type`` argumento
+To use LDAP or other authentication backends, use ``auth_type`` argument
 
 .. code:: python
 

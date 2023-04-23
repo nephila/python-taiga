@@ -39,7 +39,6 @@ from .requestmaker import RequestMaker
 
 
 class SearchResult:
-
     count = 0
     tasks = []
     issues = []
