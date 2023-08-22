@@ -5,6 +5,8 @@ from taiga.exceptions import TaigaException
 from taiga.models import WikiPage, WikiPages
 from taiga.requestmaker import RequestMaker
 
+from .tools import MockResponse, create_mock_json
+
 import_open = "builtins.open"
 
 
@@ -57,3 +59,14 @@ class TestWikiPages(unittest.TestCase):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
         wikipage = WikiPage(rm, id=1, project=1)
         self.assertRaises(TaigaException, wikipage.attach, 4)
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    def test_list_attachments(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issues_list_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        WikiPage(rm, id=1, project=1).list_attachments()
+        mock_requestmaker_get.assert_called_with(
+            "wiki/attachments", query={"object_id": 1, "project": 1}, paginate=True
+        )
