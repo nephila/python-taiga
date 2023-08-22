@@ -6,6 +6,24 @@ from .. import exceptions
 from .base import InstanceResource, ListResource
 
 
+class MoveOnDestroyMixinList:
+    """
+    Mixin that define a delete method with moveTo parameter
+    """
+
+    def delete(self, resource_id, move_to_id):
+        return super().delete(resource_id=resource_id, query={"moveTo": move_to_id})
+
+
+class MoveOnDestroyMixinObject:
+    """
+    Mixin that define a delete method with moveTo parameter
+    """
+
+    def delete(self, move_to_id):
+        return super().delete(query={"moveTo": move_to_id})
+
+
 class CommentableResource(InstanceResource):
     """
     CommentableResource base class
@@ -155,7 +173,7 @@ class Memberships(ListResource):
         return self._new_resource(payload=attrs)
 
 
-class Priority(InstanceResource):
+class Priority(MoveOnDestroyMixinObject, InstanceResource):
     """
     Priority model
 
@@ -172,7 +190,7 @@ class Priority(InstanceResource):
     repr_attribute = "name"
 
 
-class Priorities(ListResource):
+class Priorities(MoveOnDestroyMixinList, ListResource):
     """
     Priorities factory class
     """
@@ -345,7 +363,7 @@ class Epics(ListResource):
         return self._new_resource(payload=attrs)
 
 
-class EpicStatus(InstanceResource):
+class EpicStatus(MoveOnDestroyMixinObject, InstanceResource):
     """
     Taiga Epic Status model
 
@@ -364,7 +382,7 @@ class EpicStatus(InstanceResource):
     allowed_params = ["color", "is_closed", "name", "order", "project", "slug`"]
 
 
-class EpicStatuses(ListResource):
+class EpicStatuses(MoveOnDestroyMixinList, ListResource):
     instance = EpicStatus
 
     def create(self, project, name, **attrs):
@@ -495,7 +513,7 @@ class UserStories(ListResource):
         return self.instance.parse(self.requester, response.json())
 
 
-class UserStoryStatus(InstanceResource):
+class UserStoryStatus(MoveOnDestroyMixinObject, InstanceResource):
     """
     Taiga User Story Status model
 
@@ -514,7 +532,7 @@ class UserStoryStatus(InstanceResource):
     allowed_params = ["color", "is_closed", "name", "order", "project", "wip_limit"]
 
 
-class UserStoryStatuses(ListResource):
+class UserStoryStatuses(MoveOnDestroyMixinList, ListResource):
     instance = UserStoryStatus
 
     def create(self, project, name, **attrs):
@@ -529,7 +547,7 @@ class UserStoryStatuses(ListResource):
         return self._new_resource(payload=attrs)
 
 
-class Point(InstanceResource):
+class Point(MoveOnDestroyMixinObject, InstanceResource):
     """
     Taiga Point model
 
@@ -547,7 +565,7 @@ class Point(InstanceResource):
     allowed_params = ["color", "value", "name", "order", "project"]
 
 
-class Points(ListResource):
+class Points(MoveOnDestroyMixinList, ListResource):
     """
     Points factory
     """
@@ -653,7 +671,7 @@ class Milestones(ListResource):
         return self.instance.parse(self.requester, response.json())
 
 
-class TaskStatus(InstanceResource):
+class TaskStatus(MoveOnDestroyMixinObject, InstanceResource):
     """
     Task Status model
 
@@ -669,7 +687,7 @@ class TaskStatus(InstanceResource):
     allowed_params = ["name", "color", "order", "project", "is_closed"]
 
 
-class TaskStatuses(ListResource):
+class TaskStatuses(MoveOnDestroyMixinList, ListResource):
     instance = TaskStatus
 
     def create(self, project, name, **attrs):
@@ -792,7 +810,7 @@ class Tasks(ListResource):
         return self.instance.parse(self.requester, response.json())
 
 
-class IssueType(InstanceResource):
+class IssueType(MoveOnDestroyMixinObject, InstanceResource):
     """
     IssueType model
 
@@ -807,7 +825,7 @@ class IssueType(InstanceResource):
     allowed_params = ["name", "color", "order", "project"]
 
 
-class IssueTypes(ListResource):
+class IssueTypes(MoveOnDestroyMixinList, ListResource):
     """
     IssueTypes factory
     """
@@ -819,7 +837,7 @@ class IssueTypes(ListResource):
         return self._new_resource(payload=attrs)
 
 
-class IssueStatus(InstanceResource):
+class IssueStatus(MoveOnDestroyMixinObject, InstanceResource):
     """
     Issue Status model
 
@@ -835,7 +853,7 @@ class IssueStatus(InstanceResource):
     allowed_params = ["name", "color", "order", "project", "is_closed"]
 
 
-class IssueStatuses(ListResource):
+class IssueStatuses(MoveOnDestroyMixinList, ListResource):
     """
     IssueStatuses factory
     """
@@ -1044,7 +1062,7 @@ class EpicAttributes(CustomAttributes):
     instance = EpicAttribute
 
 
-class Severity(InstanceResource):
+class Severity(MoveOnDestroyMixinObject, InstanceResource):
     """
     Severity model
 
@@ -1059,7 +1077,7 @@ class Severity(InstanceResource):
     allowed_params = ["name", "color", "order", "project"]
 
 
-class Severities(ListResource):
+class Severities(MoveOnDestroyMixinList, ListResource):
     """
     Severities factory
     """

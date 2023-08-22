@@ -114,7 +114,14 @@ class TestModelBase(unittest.TestCase):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
         fake = Fake(rm, id=1, param1="one", param2="two")
         fake.delete()
-        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1)
+        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1, query=None)
+
+    @patch("taiga.requestmaker.RequestMaker.delete")
+    def test_call_model_base_delete_with_query(self, mock_requestmaker_delete):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        fake = Fake(rm, id=1, param1="one", param2="two")
+        fake.delete(2)
+        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1, query=2)
 
     @patch("taiga.requestmaker.RequestMaker.get")
     def test_call_model_base_get_element(self, mock_requestmaker_get):
@@ -128,14 +135,28 @@ class TestModelBase(unittest.TestCase):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
         fake = Fake(rm, id=1, param1="one", param2="two")
         fake.delete()
-        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1)
+        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1, query=None)
+
+    @patch("taiga.requestmaker.RequestMaker.delete")
+    def test_call_model_base_delete_element_with_query(self, mock_requestmaker_delete):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        fake = Fake(rm, id=1, param1="one", param2="two")
+        fake.delete(1)
+        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1, query=1)
 
     @patch("taiga.requestmaker.RequestMaker.delete")
     def test_call_model_base_delete_element_from_list(self, mock_requestmaker_delete):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
         fakes = Fakes(rm)
         fakes.delete(1)
-        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1)
+        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1, query=None)
+
+    @patch("taiga.requestmaker.RequestMaker.delete")
+    def test_call_model_base_delete_element_from_list_with_query(self, mock_requestmaker_delete):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        fakes = Fakes(rm)
+        fakes.delete(1, 2)
+        mock_requestmaker_delete.assert_called_once_with("/{endpoint}/{id}", endpoint="fakes", id=1, query=2)
 
     @patch("taiga.requestmaker.RequestMaker.get")
     def test_call_model_base_list_elements(self, mock_requestmaker_get):
