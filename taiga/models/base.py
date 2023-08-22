@@ -192,7 +192,7 @@ class InstanceResource(Resource):
         """
         Turns a JSON object into a model instance.
         """
-        if type(entry) is not dict:
+        if not isinstance(entry, dict):
             return entry
         for key_to_parse, cls_to_parse in cls.parser.items():
             if key_to_parse in entry:
