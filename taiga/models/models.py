@@ -1758,6 +1758,12 @@ class WikiPage(InstanceResource):
         """
         return WikiAttachments(self.requester).create(self.project, self.id, attached_file, **attrs)
 
+    def list_attachments(self):
+        """
+        Get a list of :class:`WikiAttachment`.
+        """
+        return WikiAttachments(self.requester).list(object_id=self.id, project=self.project)
+
 
 class WikiPages(ListResource):
     """
