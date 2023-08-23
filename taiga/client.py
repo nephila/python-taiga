@@ -63,6 +63,7 @@ class TaigaAPI:
     ):
         self.host = host
         self.token = token
+        self.token_refresh = None
         self.token_type = token_type
         self.tls_verify = tls_verify
         self.auth_type = auth_type
@@ -183,4 +184,31 @@ class TaigaAPI:
             raise exceptions.TaigaRestException(full_url, 400, "INVALID TOKEN", "POST")
 
         self.raw_request = RequestMaker("/api/v1", self.host, self.token, "Application", self.tls_verify)
+        self._init_resources()
+
+    def refresh_token(self, token_refresh=""):
+        """
+        Refresh auth token.
+
+        Passing a token_refresh will use passed token, otherwise it will try to use self.token_refresh.
+
+        :param token_refresh: the refresh token to be used to refresh api token
+        """
+        if not token_refresh:
+            if self.token_refresh:
+                token_refresh = self.token_refresh
+            else:
+                raise ValueError("Refresh token not set")
+        headers = {"Content-type": "application/json"}
+        payload = {"refresh": token_refresh}
+        try:
+            full_url = utils.urljoin(self.host, "/api/v1/auth/refresh")
+            response = requests.post(full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify)
+        except RequestException:
+            raise exceptions.TaigaRestException(full_url, 400, "NETWORK ERROR", "POST")
+        if response.status_code != 200:
+            raise exceptions.TaigaRestException(full_url, response.status_code, response.text, "POST")
+        self.token = response.json()["auth_token"]
+        self.token_refresh = response.json()["refresh"]
+        self.raw_request = RequestMaker("/api/v1", self.host, self.token, "Bearer", self.tls_verify)
         self._init_resources()
