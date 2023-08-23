@@ -92,8 +92,8 @@ class ListResource(Resource):
         response = self.requester.get("/{endpoint}/{id}", endpoint=self.instance.endpoint, id=resource_id)
         return self.instance.parse(self.requester, response.json())
 
-    def delete(self, resource_id):
-        self.requester.delete("/{endpoint}/{id}", endpoint=self.instance.endpoint, id=resource_id)
+    def delete(self, resource_id, query=None):
+        self.requester.delete("/{endpoint}/{id}", endpoint=self.instance.endpoint, id=resource_id, query=query)
         return self
 
     def _new_resource(self, **attrs):
@@ -170,11 +170,11 @@ class InstanceResource(Resource):
             self.__dict__["version"] = obj_json["version"]
         return self
 
-    def delete(self):
+    def delete(self, query=None):
         """
         Delete the current :class:`InstanceResource`
         """
-        self.requester.delete("/{endpoint}/{id}", endpoint=self.endpoint, id=self.id)
+        self.requester.delete("/{endpoint}/{id}", endpoint=self.endpoint, id=self.id, query=query)
         return self
 
     def to_dict(self):
