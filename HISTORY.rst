@@ -6,6 +6,24 @@ History
 
 .. towncrier release notes start
 
+1.2.0 (2023-08-23)
+==================
+
+Features
+--------
+
+- Add list_attachments on WikiPage (#100)
+- Add refresh_token API call (#131)
+
+
+Bugfixes
+--------
+
+- Add count to SearchResult object, fix wikipages attribute name in SearchResult object (#111)
+- Add moveTo parameter in delete methods when needed by Taiga API (#130)
+- Fix ruff linting error (#134)
+
+
 1.1.0 (2023-04-23)
 ==================
 
