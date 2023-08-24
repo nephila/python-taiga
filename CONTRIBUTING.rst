@@ -153,15 +153,17 @@ Release a version
 
 #. Update authors file
 #. Merge ``develop`` on ``master`` branch
-#. Bump release via task: ``inv tag-release (major|minor|patch)``
+#. Bump release via task: ``inv tag-release --level=(major|minor|patch)``
 #. Update changelog via towncrier: ``towncrier --yes``
-#. Commit changelog with ``git commit --amend`` to merge with bumpversion commit
+#. Commit changelog with ``git commit --amend`` to merge with bump-my-version commit
 #. Create tag ``git tag <version>``
 #. Push tag to github
 #. Publish the release from the tags page
 #. If pipeline succeeds, push ``master``
 #. Merge ``master`` back on ``develop``
-#. Bump developement version via task: ``inv tag-dev -l (major|minor|patch)``
+#. Bump developement version via task: ``inv tag-dev --level=release``
 #. Push ``develop``
+
+To increment dev version use ``inv tag-dev --level=relver``` (e.g. to pass from ``1.2.0.dev1`` to ``1.2.0.dev2``)
 
 .. _towncrier: https://pypi.org/project/towncrier/#news-fragments
