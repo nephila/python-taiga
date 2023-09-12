@@ -143,3 +143,9 @@ def docserve(c):
     server.watch("CONTRIBUTING.rst", lambda: docbuild(c))
     server.watch("docs/*.rst", lambda: docbuild(c))
     server.serve(port=DOCS_PORT, root="_build/html")
+
+
+@task
+def deb(c):
+    """Build debian package."""
+    c.run("debuild -us -uc -b")
