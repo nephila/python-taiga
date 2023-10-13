@@ -1765,7 +1765,7 @@ class WikiPage(InstanceResource):
 
     repr_attribute = "slug"
 
-    allowed_params = ["project", "slug", "content", "watchers"]
+    allowed_params = ["project", "slug", "content", "watchers", "version"]
 
     def attach(self, attached_file, **attrs):
         """
