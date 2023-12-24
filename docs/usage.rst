@@ -101,6 +101,18 @@ Create a project
     new_project = api.projects.create('TEST PROJECT', 'TESTING API')
 
 ******************************************************
+Duplicate an existing project
+******************************************************
+
+If you have a project, you can duplicate it (duplicates most of the settings,
+but not the user stories or tasks)
+
+.. code:: python
+
+    old_project = api.projects.get_by_slug('nephila')
+    new_project = old_project.duplicate('TEST PROJECT', 'TESTING API')
+
+******************************************************
 Create a new user story
 ******************************************************
 
