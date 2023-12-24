@@ -22,6 +22,7 @@ from .models import (
     Projects,
     Roles,
     Severities,
+    SwimLanes,
     TaskAttachments,
     TaskAttributes,
     Tasks,
@@ -78,6 +79,7 @@ class TaigaAPI:
         self.user_stories = UserStories(self.raw_request)
         self.user_story_attachments = UserStoryAttachments(self.raw_request)
         self.users = Users(self.raw_request)
+        self.swimlanes = SwimLanes(self.raw_request)
         self.issues = Issues(self.raw_request)
         self.issue_attachments = IssueAttachments(self.raw_request)
         self.tasks = Tasks(self.raw_request)
