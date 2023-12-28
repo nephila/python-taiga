@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from taiga import TaigaAPI
-from taiga.models import Point, Project, Projects, Severity, User, UserStoryStatus
+from taiga.models import Point, Project, Projects, Severity, SwimLane, User, UserStoryStatus
 from taiga.requestmaker import RequestMaker
 
 from .tools import MockResponse, create_mock_json
@@ -21,6 +21,7 @@ class TestProjects(unittest.TestCase):
         self.assertEqual(len(project.members), 11)
         self.assertTrue(isinstance(project.members[0], User))
         self.assertTrue(isinstance(project.points[0], Point))
+        self.assertTrue(isinstance(project.swimlanes[0], SwimLane))
         self.assertTrue(isinstance(project.us_statuses[0], UserStoryStatus))
         self.assertTrue(isinstance(project.severities[0], Severity))
 
@@ -286,6 +287,20 @@ class TestProjects(unittest.TestCase):
         project = Project(rm, id=1)
         project.list_task_statuses()
         mock_list_task_statuses.assert_called_with(project=1)
+
+    @patch("taiga.models.SwimLanes.create")
+    def test_add_swimlane(self, mock_new_swimlane):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        project = Project(rm, id=1)
+        project.add_swimlane("SwimLane 1")
+        mock_new_swimlane.assert_called_with(1, "SwimLane 1")
+
+    @patch("taiga.models.SwimLanes.list")
+    def test_list_swimlanes(self, mock_list_swimlanes):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        project = Project(rm, id=1)
+        project.list_swimlanes()
+        mock_list_swimlanes.assert_called_with(project=1)
 
     @patch("taiga.models.Points.create")
     def test_add_point(self, mock_new_point):

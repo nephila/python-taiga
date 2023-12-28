@@ -547,6 +547,42 @@ class UserStoryStatuses(MoveOnDestroyMixinList, ListResource):
         return self._new_resource(payload=attrs)
 
 
+class SwimLane(MoveOnDestroyMixinObject, InstanceResource):
+    """
+    Taiga Swimlane model
+
+    :param name: The name of :class:`SwimLane`
+    :param order: the order of :class:`SwimLane`
+    :param project: the project of :class:`SwimLane`
+    :param statuses: the statuses of :class:`SwimLane`
+    """
+
+    repr_attribute = "name"
+
+    endpoint = "swimlanes"
+
+    allowed_params = ["name", "order", "project", "statuses"]
+
+    parser = {
+        "statuses": UserStoryStatuses,
+    }
+
+
+class SwimLanes(MoveOnDestroyMixinList, ListResource):
+    instance = SwimLane
+
+    def create(self, project, name, **attrs):
+        """
+        Create a new :class:`SwimLane`.
+
+        :param project: :class:`Project` id
+        :param name: name of :class:`SwimLane`
+        :param attrs: optional attributes of :class:`SwimLane`
+        """
+        attrs.update({"project": project, "name": name})
+        return self._new_resource(payload=attrs)
+
+
 class Point(MoveOnDestroyMixinObject, InstanceResource):
     """
     Taiga Point model
@@ -1179,6 +1215,7 @@ class Project(InstanceResource):
         "points": Points,
         "us_statuses": UserStoryStatuses,
         "milestones": Milestones,
+        "swimlanes": SwimLanes,
     }
 
     def get_item_by_ref(self, ref):
@@ -1346,6 +1383,21 @@ class Project(InstanceResource):
         Returns the :class:`UserStory` list of the project.
         """
         return UserStories(self.requester).list(project=self.id, **queryparams)
+
+    def add_swimlane(self, name, **attrs):
+        """
+        Adds a :class:`SwimLane` and returns a :class:`SwimLane` resource.
+
+        :param name: name of :class:`SwimLane`
+        :param attrs: other :class:`SwimLane` attributes
+        """
+        return SwimLanes(self.requester).create(self.id, name, **attrs)
+
+    def list_swimlanes(self, **queryparams):
+        """
+        Returns the :class:`SwimLane` list of the project.
+        """
+        return SwimLanes(self.requester).list(project=self.id, **queryparams)
 
     def add_issue(self, subject, priority, status, issue_type, severity, **attrs):
         """
