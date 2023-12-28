@@ -177,6 +177,18 @@ class TestProjects(unittest.TestCase):
             endpoint="importer",
         )
 
+    @patch("taiga.requestmaker.RequestMaker.post")
+    def test_duplicate_project(self, mock_requestmaker_post):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        project = Project(rm, id=1)
+        project.duplicate("PR 1 1", "PR 1 desc 1")
+        mock_requestmaker_post.assert_called_with(
+            "/{endpoint}/{id}/duplicate",
+            payload={"name": "PR 1 1", "description": "PR 1 desc 1", "is_private": False, "users": []},
+            endpoint="projects",
+            id=project.id,
+        )
+
     @patch("taiga.models.IssueStatuses.create")
     def test_add_issue_status(self, mock_new_issue_status):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")

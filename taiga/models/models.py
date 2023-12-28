@@ -1701,6 +1701,20 @@ class Project(InstanceResource):
         response = self.requester.get("/{}/{}/tags_colors".format(self.endpoint, self.id))
         return response.json()
 
+    def duplicate(self, name, description, is_private=False, users=[], **attrs):
+        """
+        Duplicate a :class:`Project`
+
+        :param name: name of new :class:`Project`
+        :param description: description of new :class:`Project`
+        :param is_private: determines if the project is private or not
+        :param users: users of the new :class:`Project`
+        :param attrs: optional attributes for the new :class:`Project`
+        """
+        attrs.update({"name": name, "description": description, "is_private": is_private, "users": users})
+        response = self.requester.post("/{endpoint}/{id}/duplicate", payload=attrs, endpoint=self.endpoint, id=self.id)
+        return self.parse(self.requester, response.json())
+
 
 class Projects(ListResource):
     """
