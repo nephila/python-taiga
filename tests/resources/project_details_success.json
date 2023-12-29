@@ -809,6 +809,7 @@
     "default_task_status": 1,
     "default_priority": 2,
     "default_severity": 3,
+    "default_swimlane": 1,
     "default_issue_status": 429,
     "default_issue_type": 1,
     "name": "Project Example 0",
