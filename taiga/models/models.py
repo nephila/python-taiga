@@ -1192,6 +1192,7 @@ class Project(InstanceResource):
     allowed_params = [
         "name",
         "description",
+        "default_swimlane",
         "creation_template",
         "is_backlog_activated",
         "is_issues_activated",
