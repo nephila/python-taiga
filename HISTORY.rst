@@ -6,6 +6,25 @@ History
 
 .. towncrier release notes start
 
+1.3.0 (2024-01-02)
+==================
+
+Features
+--------
+
+- Switch to bump-my-version (#140)
+- Switch to Coveralls Github action (#155)
+- Add a duplicate() method to Project. (#161)
+- Adds SwimLane/SwimLanes models and support to add/list in Project. (#162)
+- Adds the ability to read/write the default_swimlane attribute in Project. (#166)
+
+
+Bugfixes
+--------
+
+- Add the version parameter to the alloed parameter so the requester can acess it. (#149)
+
+
 1.2.0 (2023-08-23)
 ==================
 
