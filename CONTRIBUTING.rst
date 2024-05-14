@@ -119,7 +119,7 @@ For example ``tox -epy37`` runs the tests on python 3.7.
 Pull Request Guidelines
 =======================
 
-BBefore you submit a pull request, check that it meets these guidelines:
+Before you submit a pull request, check that it meets these guidelines:
 
 #. Pull request must be named with the following naming scheme:
 
