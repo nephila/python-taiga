@@ -32,8 +32,8 @@ from .models import (
     UserStoryAttachments,
     UserStoryAttributes,
     UserStoryStatuses,
-    Webhooks,
     WebhookLogs,
+    Webhooks,
     WikiLinks,
     WikiPages,
 )
