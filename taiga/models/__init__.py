@@ -52,6 +52,8 @@ from .models import (
     UserStoryStatuses,
     Webhook,
     Webhooks,
+    WebhookLog,
+    WebhookLogs,
     WikiLink,
     WikiLinks,
     WikiPage,
@@ -116,4 +118,6 @@ __all__ = [
     "IssueTypes",
     "Webhook",
     "Webhooks",
+    "WebhookLog",
+    "WebhookLogs",
 ]

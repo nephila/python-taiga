@@ -1732,7 +1732,7 @@ class Project(InstanceResource):
         """
         Get the list of :class:`Webhook` resources for the project.
         """
-        return Webhooks(self.requester).list(project=self.id)
+        return Webhooks(self.requester).list(project=self.id, pagination=False)
 
     def add_tag(self, tag, color=None):
         """
@@ -2052,6 +2052,12 @@ class Webhook(InstanceResource):
 
     allowed_params = ["name", "url", "key"]
 
+    def list_logs(self):
+        """
+        Get the list of :class:`Webhook` resources for the project.
+        """
+        return WebhookLogs(self.requester).list(webhook=self.id, pagination=False)
+
 
 class Webhooks(ListResource):
     """
@@ -2072,3 +2078,26 @@ class Webhooks(ListResource):
         """
         attrs.update({"project": project, "name": name, "url": url, "key": key})
         return self._new_resource(payload=attrs)
+
+
+class WebhookLog(InstanceResource):
+    """
+    WebhookLog model
+    """
+
+    endpoint = "webhooklogs"
+
+    def resend(self) -> "WebhookLog":
+        """
+        Resend the webhook
+        """
+        response = self.requester.post("/{endpoint}/{id}/resend", endpoint=self.endpoint, id=self.id)
+        return WebhookLog.parse(self.requester, response.json())
+
+
+class WebhookLogs(ListResource):
+    """
+    WebhookLogs factory
+    """
+
+    instance = WebhookLog
