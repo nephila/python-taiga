@@ -196,6 +196,8 @@ class InstanceResource(Resource):
             return entry
         for key_to_parse, cls_to_parse in cls.parser.items():
             if key_to_parse in entry:
+                if entry[key_to_parse] is None:
+                    continue
                 entry[key_to_parse] = cls_to_parse.parse(requester, entry[key_to_parse])
         return cls(requester, **entry)
 
