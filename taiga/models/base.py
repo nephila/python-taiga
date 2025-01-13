@@ -104,15 +104,17 @@ class ListResource(Resource):
     def parse(cls, requester, entries):
         """Parse a JSON array into a list of model instances."""
         result_entries = SearchableList()
-        for entry in entries:
-            result_entries.append(cls.instance.parse(requester, entry))
+        if entries:
+            for entry in entries:
+                result_entries.append(cls.instance.parse(requester, entry))
         return result_entries
 
     def parse_list(self, entries):
         """Parse a JSON array into a list of model instances."""
         result_entries = SearchableList()
-        for entry in entries:
-            result_entries.append(self.instance.parse(self.requester, entry))
+        if entries:
+            for entry in entries:
+                result_entries.append(self.instance.parse(self.requester, entry))
         return result_entries
 
 

@@ -49,6 +49,19 @@ class TestProjects(unittest.TestCase):
         )
 
     @patch("taiga.requestmaker.RequestMaker.get")
+    def test_get_project_by_slug_no_swimlanes(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/project_details_success_no_swimlanes.json")
+        )
+        api = TaigaAPI(token="f4k3")
+        project = api.projects.get_by_slug("my_slug")
+        self.assertTrue(isinstance(project, Project))
+        self.assertEqual(project.name, "Project Example 0")
+        mock_requestmaker_get.assert_called_with(
+            "/{endpoint}/by_slug?slug={slug}", endpoint="projects", slug="my_slug"
+        )
+
+    @patch("taiga.requestmaker.RequestMaker.get")
     def test_get_item_by_ref(self, mock_requestmaker_get):
         mock_requestmaker_get.return_value = MockResponse(
             200, create_mock_json("tests/resources/project_details_success.json")
