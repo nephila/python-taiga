@@ -6,6 +6,17 @@ History
 
 .. towncrier release notes start
 
+1.3.1 (2025-01-13)
+==================
+
+Bugfixes
+--------
+
+- Fix parser when entries is None (#169)
+- Add missing swimlane to user story allowed_params (#185)
+- Use pytest for tests (#190)
+
+
 1.3.0 (2024-01-02)
 ==================
 
