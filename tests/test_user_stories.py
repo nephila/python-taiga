@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from taiga import TaigaAPI
 from taiga.exceptions import TaigaException
-from taiga.models import Task, UserStories, UserStory
+from taiga.models import Project, SwimLane, Task, UserStories, UserStory, UserStoryStatus
 from taiga.requestmaker import RequestMaker
 
 from .tools import MockResponse, create_mock_json
@@ -140,3 +140,20 @@ class TestUserStories(unittest.TestCase):
         user_story = UserStory(rm, id=1)
         user_story.add_comment("hola")
         mock_update.assert_called_with(comment="hola")
+
+    @patch("taiga.requestmaker.RequestMaker.put")
+    def test_swimlane_is_in_userstory_update_payload(self, mock_update):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        swimlane = SwimLane(rm, id=1)
+        project = Project(rm, id=1)
+        status_1 = UserStoryStatus(rm, id=1, project=project)
+        status_2 = UserStoryStatus(rm, id=2, project=project)
+        user_story = UserStory(rm, id=1, project=project.id, swimlane=swimlane.id, status=status_1)
+        user_story.status = 2
+        user_story.update()
+        mock_update.assert_called_with(
+            "/{endpoint}/{id}",
+            endpoint=UserStory.endpoint,
+            id=user_story.id,
+            payload={"project": project.id, "swimlane": swimlane.id, "status": status_2.id},
+        )

@@ -453,6 +453,7 @@ class UserStory(CustomAttributeResource, CommentableResource):
         "due_date",
         "generated_from_issue",
         "generated_from_task",
+        "swimlane",
     ]
 
     def add_task(self, subject, status, **attrs):
