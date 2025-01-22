@@ -6,6 +6,15 @@ History
 
 .. towncrier release notes start
 
+1.3.2 (2025-01-22)
+==================
+
+Bugfixes
+--------
+
+- Add missing due_date to Issue allowed_params (#196)
+
+
 1.3.1 (2025-01-13)
 ==================
 
