@@ -959,6 +959,7 @@ class Issue(CustomAttributeResource, CommentableResource):
         "subject",
         "tags",
         "watchers",
+        "due_date",
     ]
 
     def list_attachments(self):
