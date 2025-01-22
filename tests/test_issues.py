@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from taiga.exceptions import TaigaException
-from taiga.models import Issue, Issues
+from taiga.models import Issue, Issues, Project
 from taiga.requestmaker import RequestMaker
 
 from .tools import MockResponse, create_mock_json
@@ -96,3 +96,17 @@ class TestIssues(unittest.TestCase):
         issue = Issue(rm, id=1)
         issue.add_comment("hola")
         mock_update.assert_called_with(comment="hola")
+
+    @patch("taiga.requestmaker.RequestMaker.put")
+    def test_due_date_is_in_issue_update_payload(self, mock_update):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        project = Project(rm, id=1)
+        issue = Issue(rm, id=1, project=project.id)
+        issue.due_date = "2025-01-22"
+        issue.update()
+        mock_update.assert_called_with(
+            "/{endpoint}/{id}",
+            endpoint=Issue.endpoint,
+            id=issue.id,
+            payload={"project": project.id, "due_date": issue.due_date},
+        )
