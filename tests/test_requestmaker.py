@@ -37,6 +37,7 @@ class TestRequestMaker(unittest.TestCase):
             data=None,
             params={},
             headers={"Authorization": "Bearer f4k3", "x-disable-pagination": "True"},
+            proxies=None,
         )
 
     @patch("taiga.requestmaker.requests.put")
