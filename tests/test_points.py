@@ -25,6 +25,7 @@ class TestPoints(unittest.TestCase):
             headers={"Content-type": "application/json", "Authorization": "Bearer f4k3", "x-lazy-pagination": "True"},
             params={"moveTo": 2},
             verify=True,
+            proxies=None,
         )
 
     @patch("taiga.requestmaker.requests.delete")
@@ -37,4 +38,5 @@ class TestPoints(unittest.TestCase):
             headers={"Content-type": "application/json", "Authorization": "Bearer f4k3", "x-lazy-pagination": "True"},
             params={"moveTo": 2},
             verify=True,
+            proxies=None,
         )

@@ -6,6 +6,15 @@ History
 
 .. towncrier release notes start
 
+1.4.0 (2025-08-07)
+==================
+
+Features
+--------
+
+- Add proxies parameter to taiga client (#55)
+
+
 1.3.2 (2025-01-22)
 ==================
 

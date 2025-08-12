@@ -67,6 +67,7 @@ class TestAuth(unittest.TestCase):
             data='{"refresh": "testToken"}',
             headers={"Content-type": "application/json"},
             verify=True,
+            proxies=None,
         )
 
     @patch("taiga.client.requests.post")
