@@ -232,6 +232,7 @@ class TestModelBase(unittest.TestCase):
                 "Content-type": "application/json",
                 "Authorization": "Bearer faketoken",
             },
+            proxies=None,
         )
         self.assertEqual(len(f_list), 9)
 
@@ -253,6 +254,7 @@ class TestModelBase(unittest.TestCase):
                 "Content-type": "application/json",
                 "Authorization": "Bearer faketoken",
             },
+            proxies=None,
         )
         self.assertEqual(len(f_list), 9)
 

@@ -49,13 +49,16 @@ class RequestMakerException(Exception):  # noqa: N818
 
 
 class RequestMaker:
-    def __init__(self, api_path, host, token, token_type="Bearer", tls_verify=True, enable_pagination=True):
+    def __init__(
+        self, api_path, host, token, token_type="Bearer", tls_verify=True, enable_pagination=True, proxies=None
+    ):
         self.api_path = api_path
         self.host = host
         self.token = token
         self.token_type = token_type
         self.tls_verify = tls_verify
         self.enable_pagination = enable_pagination
+        self.proxies = proxies
         self._cache = RequestCache()
         if not self.tls_verify:
             requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -99,7 +102,11 @@ class RequestMaker:
 
             if not result:
                 result = requests.get(
-                    full_url, headers=self.headers(paginate), params=query or {}, verify=self.tls_verify
+                    full_url,
+                    headers=self.headers(paginate),
+                    params=query or {},
+                    verify=self.tls_verify,
+                    proxies=self.proxies,
                 )
             if cache:
                 self._cache.put(full_url, result)
@@ -124,7 +131,13 @@ class RequestMaker:
         try:
             full_url = self.urljoin(self.host, self.api_path, uri.format(**parameters))
             result = requests.post(
-                full_url, headers=headers, data=data, params=query or {}, files=files, verify=self.tls_verify
+                full_url,
+                headers=headers,
+                data=data,
+                params=query or {},
+                files=files,
+                verify=self.tls_verify,
+                proxies=self.proxies,
             )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "Network error!", "POST")
@@ -136,7 +149,9 @@ class RequestMaker:
     def delete(self, uri, query=None, **parameters):
         try:
             full_url = self.urljoin(self.host, self.api_path, uri.format(**parameters))
-            result = requests.delete(full_url, headers=self.headers(), params=query or {}, verify=self.tls_verify)
+            result = requests.delete(
+                full_url, headers=self.headers(), params=query or {}, verify=self.tls_verify, proxies=self.proxies
+            )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "Network error!", "DELETE")
         if not self.is_bad_response(result):
@@ -148,7 +163,12 @@ class RequestMaker:
         try:
             full_url = self.urljoin(self.host, self.api_path, uri.format(**parameters))
             result = requests.put(
-                full_url, headers=self.headers(), data=json.dumps(payload), params=query or {}, verify=self.tls_verify
+                full_url,
+                headers=self.headers(),
+                data=json.dumps(payload),
+                params=query or {},
+                verify=self.tls_verify,
+                proxies=self.proxies,
             )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "Network error!", "PUT")
@@ -161,7 +181,12 @@ class RequestMaker:
         try:
             full_url = self.urljoin(self.host, self.api_path, uri.format(**parameters))
             result = requests.patch(
-                full_url, headers=self.headers(), data=json.dumps(payload), params=query or {}, verify=self.tls_verify
+                full_url,
+                headers=self.headers(),
+                data=json.dumps(payload),
+                params=query or {},
+                verify=self.tls_verify,
+                proxies=self.proxies,
             )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "Network error!", "PATCH")

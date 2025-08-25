@@ -57,10 +57,17 @@ class TaigaAPI:
     :param token_type: the token type
     :param tls_verify: verify server certificate
     :param auth_type: authentication type identifier
+    :param proxies: a dictionary of proxies to use for requests
     """
 
     def __init__(
-        self, host="https://api.taiga.io", token=None, token_type="Bearer", tls_verify=True, auth_type="normal"
+        self,
+        host="https://api.taiga.io",
+        token=None,
+        token_type="Bearer",
+        tls_verify=True,
+        auth_type="normal",
+        proxies=None,
     ):
         self.host = host
         self.token = token
@@ -68,10 +75,13 @@ class TaigaAPI:
         self.token_type = token_type
         self.tls_verify = tls_verify
         self.auth_type = auth_type
+        self.proxies = proxies
         if not self.tls_verify:
             requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         if token:
-            self.raw_request = RequestMaker("/api/v1", self.host, self.token, self.token_type, self.tls_verify)
+            self.raw_request = RequestMaker(
+                "/api/v1", self.host, self.token, self.token_type, self.tls_verify, proxies=proxies
+            )
             self._init_resources()
 
     def _init_resources(self):
@@ -137,14 +147,18 @@ class TaigaAPI:
         payload = {"type": self.auth_type, "username": username, "password": password}
         try:
             full_url = utils.urljoin(self.host, "/api/v1/auth")
-            response = requests.post(full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify)
+            response = requests.post(
+                full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify, proxies=self.proxies
+            )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "NETWORK ERROR", "POST")
         if response.status_code != 200:
             raise exceptions.TaigaRestException(full_url, response.status_code, response.text, "POST")
         self.token = response.json()["auth_token"]
         self.token_refresh = response.json()["refresh"]
-        self.raw_request = RequestMaker("/api/v1", self.host, self.token, "Bearer", self.tls_verify)
+        self.raw_request = RequestMaker(
+            "/api/v1", self.host, self.token, "Bearer", self.tls_verify, proxies=self.proxies
+        )
         self._init_resources()
 
     def auth_app(self, app_id, app_secret, auth_code, state=""):
@@ -159,7 +173,9 @@ class TaigaAPI:
         payload = {"application": app_id, "auth_code": auth_code, "state": state}
         try:
             full_url = utils.urljoin(self.host, "/api/v1/application-tokens/validate")
-            response = requests.post(full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify)
+            response = requests.post(
+                full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify, proxies=self.proxies
+            )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "NETWORK ERROR", "POST")
         if response.status_code != 200:
@@ -185,7 +201,9 @@ class TaigaAPI:
         if self.token is None:
             raise exceptions.TaigaRestException(full_url, 400, "INVALID TOKEN", "POST")
 
-        self.raw_request = RequestMaker("/api/v1", self.host, self.token, "Application", self.tls_verify)
+        self.raw_request = RequestMaker(
+            "/api/v1", self.host, self.token, "Application", self.tls_verify, proxies=self.proxies
+        )
         self._init_resources()
 
     def refresh_token(self, token_refresh=""):
@@ -205,12 +223,16 @@ class TaigaAPI:
         payload = {"refresh": token_refresh}
         try:
             full_url = utils.urljoin(self.host, "/api/v1/auth/refresh")
-            response = requests.post(full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify)
+            response = requests.post(
+                full_url, data=json.dumps(payload), headers=headers, verify=self.tls_verify, proxies=self.proxies
+            )
         except RequestException:
             raise exceptions.TaigaRestException(full_url, 400, "NETWORK ERROR", "POST")
         if response.status_code != 200:
             raise exceptions.TaigaRestException(full_url, response.status_code, response.text, "POST")
         self.token = response.json()["auth_token"]
         self.token_refresh = response.json()["refresh"]
-        self.raw_request = RequestMaker("/api/v1", self.host, self.token, "Bearer", self.tls_verify)
+        self.raw_request = RequestMaker(
+            "/api/v1", self.host, self.token, "Bearer", self.tls_verify, proxies=self.proxies
+        )
         self._init_resources()
