@@ -1,0 +1,1 @@
+Fix auth_app method to work with Taiga versions >= 3.1.0

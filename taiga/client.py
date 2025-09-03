@@ -161,13 +161,19 @@ class TaigaAPI:
         )
         self._init_resources()
 
-    def auth_app(self, app_id, app_secret, auth_code, state=""):
+    def auth_app(self, app_id, auth_code, state):
         """
-        Authenticate an app
+        Retrieve an application token.
+        This only works once per token; in order to reset it, the auth code needs
+        to be set again in the Taiga admin UI.
+
+        In order to use the token, initialize TaigaAPI with token_type="Application"
+        and token="token from this function".
 
         :param app_id: the app id
-        :param app_secret: the app secret
-        :param auth_code: the app auth code
+        :param auth_code: app auth code as specified in Taiga
+        :param state: state as specified in Taiga (any string; must not be empty)
+        :return: token string
         """
         headers = {"Content-type": "application/json"}
         payload = {"application": app_id, "auth_code": auth_code, "state": state}
@@ -180,31 +186,12 @@ class TaigaAPI:
             raise exceptions.TaigaRestException(full_url, 400, "NETWORK ERROR", "POST")
         if response.status_code != 200:
             raise exceptions.TaigaRestException(full_url, response.status_code, response.text, "POST")
-        cyphered_token = response.json().get("cyphered_token", "")
-        if cyphered_token:
-            from jwkest.jwe import JWE
-            from jwkest.jwk import SYMKey
+        token = response.json().get("token", None)
 
-            sym_key = SYMKey(key=app_secret, alg="A128KW")
-            data, success = JWE().decrypt(cyphered_token, keys=[sym_key]), True
-            if isinstance(data, tuple):
-                data, success = data
-            try:
-                self.token = json.loads(data.decode("utf-8")).get("token", None)
-            except ValueError:  # pragma: no cover
-                self.token = None
-            if not success:
-                self.token = None
-        else:
-            self.token = None
-
-        if self.token is None:
+        if token is None:
             raise exceptions.TaigaRestException(full_url, 400, "INVALID TOKEN", "POST")
 
-        self.raw_request = RequestMaker(
-            "/api/v1", self.host, self.token, "Application", self.tls_verify, proxies=self.proxies
-        )
-        self._init_resources()
+        return token
 
     def refresh_token(self, token_refresh=""):
         """
