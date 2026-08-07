@@ -47,7 +47,7 @@ globally" / "add it to my user-wide config", follow this procedure:
    ```
 
 3. **Collect credentials.** Ask the user for:
-   - `TAIGA_HOST` — the Taiga site root, e.g. `https://taiga.nephila.it`.
+   - `TAIGA_HOST` — the Taiga site root, e.g. `https://my.taiga.com`.
      For self-hosted instances this is *not* an `api.` subdomain and has no
      `/api` suffix — the client appends `/api/v1` itself.
    - Either `TAIGA_TOKEN` (pre-issued API token), or both
@@ -61,7 +61,7 @@ globally" / "add it to my user-wide config", follow this procedure:
 
    **Default to username/password over a token, unless the instance has a
    real personal-access-token feature.** Stock Taiga (checked against
-   `https://taiga.nephila.it`) has no self-service PAT: the only tokens it
+   `https://my.taiga.com`) has no self-service PAT: the only tokens it
    issues are (a) short-lived JWTs from `POST /api/v1/auth` — on that
    instance, a 24h access token / 8-day refresh token — and (b) OAuth-style
    "Application" tokens, which require an admin-registered app and a
@@ -79,7 +79,7 @@ globally" / "add it to my user-wide config", follow this procedure:
    step 2:
    ```bash
    claude mcp add --scope user taiga \
-     -e TAIGA_HOST=https://taiga.nephila.it \
+     -e TAIGA_HOST=https://my.taiga.com \
      -e TAIGA_USERNAME=<username> \
      -e TAIGA_PASSWORD=<password> \
      -- /absolute/path/to/taiga-mcp-server
@@ -87,7 +87,7 @@ globally" / "add it to my user-wide config", follow this procedure:
    or, with a token instead of username/password:
    ```bash
    claude mcp add --scope user taiga \
-     -e TAIGA_HOST=https://taiga.nephila.it \
+     -e TAIGA_HOST=https://my.taiga.com \
      -e TAIGA_TOKEN=<token> \
      -- /absolute/path/to/taiga-mcp-server
    ```
@@ -95,7 +95,7 @@ globally" / "add it to my user-wide config", follow this procedure:
    as the command:
    ```bash
    claude mcp add --scope user taiga \
-     -e TAIGA_HOST=https://taiga.nephila.it \
+     -e TAIGA_HOST=https://my.taiga.com \
      -e TAIGA_TOKEN=<token> \
      -- uvx --from "python-taiga[mcp]" taiga-mcp-server
    ```
