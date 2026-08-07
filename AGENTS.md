@@ -59,6 +59,21 @@ globally" / "add it to my user-wide config", follow this procedure:
    Never pass `--token`/`--password` as CLI arguments — they'd be visible in
    the process list. Always pass credentials as environment variables.
 
+   **Default to username/password over a token, unless the instance has a
+   real personal-access-token feature.** Stock Taiga (checked against
+   `https://taiga.nephila.it`) has no self-service PAT: the only tokens it
+   issues are (a) short-lived JWTs from `POST /api/v1/auth` — on that
+   instance, a 24h access token / 8-day refresh token — and (b) OAuth-style
+   "Application" tokens, which require an admin-registered app and a
+   consent/`auth_code` flow (`client.auth_app()`), not something a regular
+   user can self-serve. This server's `auth.py`/CLI has no refresh-token
+   support, so a manually-generated `TAIGA_TOKEN` will just silently stop
+   working after ~24h with no renewal — worse than username/password, which
+   re-authenticates fresh on every server start. Only reach for `TAIGA_TOKEN`
+   when the target instance genuinely offers a durable personal token (e.g.
+   a Taiga Enterprise/hosted deployment with PAT support) — verify that
+   before recommending it, don't assume it exists.
+
 4. **Register at user scope** with `claude mcp add`, using `-e` for every
    credential env var and the resolved binary (or `uvx` invocation) from
    step 2:
