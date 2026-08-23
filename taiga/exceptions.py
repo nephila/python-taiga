@@ -17,5 +17,5 @@ class TaigaRestException(TaigaException):  # noqa: N818
         except ValueError:
             pass
         if not message:
-            message = "Status: {} on URI: {}".format(status_code, uri)
+            message = f"Status: {status_code} on URI: {uri}"
         super().__init__(message)
