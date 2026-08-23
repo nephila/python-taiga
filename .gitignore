@@ -46,3 +46,4 @@ debian/python3-taiga*
 .ruff_cache
 .venv
 *.egg-link
+.superpowers

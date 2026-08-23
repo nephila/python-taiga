@@ -86,6 +86,22 @@ def add_comment(
     return to_jsonable(resource.add_comment(comment))
 
 
+_HISTORY_ENTITY_TYPES = ("user_story", "task", "issue", "epic", "wiki")
+
+
+@mcp.tool
+def get_history(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"], id: int  # noqa: A002
+) -> list[dict[str, Any]]:
+    """Get the full change/comment history of a user story, task, issue, epic or wiki page.
+
+    Each entry has a `comment` field (empty string for pure field-change events, non-empty
+    for an actual comment) and `delete_comment_date` (non-null if the comment was deleted).
+    """
+    client = get_client()
+    return to_jsonable(getattr(client.history, entity_type).get(id))
+
+
 # --- User stories -----------------------------------------------------------------
 
 

@@ -143,6 +143,12 @@ Available tools
 ``add_comment``
     Add a comment to a user story, task, issue or epic.
 
+``get_history``
+    Get the full change/comment history of a user story, task, issue, epic or
+    wiki page. Each entry's `comment` field is empty for plain field-change
+    events and non-empty for an actual comment; `delete_comment_date` is
+    non-null if that comment was later deleted.
+
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
 
