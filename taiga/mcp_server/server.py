@@ -37,6 +37,23 @@ def _resolve_project_id(project: str | int) -> int:
     return client.projects.get_by_slug(str(project)).id
 
 
+DEFAULT_PAGE_SIZE = 100
+
+
+def _paginated(query: dict[str, Any]) -> dict[str, Any]:
+    """Default a list query to a single bounded page.
+
+    The underlying client only stops auto-fetching subsequent pages once an explicit
+    `page` is given — `page_size` alone does not limit it — so a caller that omits
+    `page` would otherwise silently walk and return the *entire* remote collection,
+    which for large projects can mean tens of thousands of records in one response.
+    Pass `page`/`page_size` inside `filters` to move through further pages.
+    """
+    query.setdefault("page", 1)
+    query.setdefault("page_size", DEFAULT_PAGE_SIZE)
+    return query
+
+
 @mcp.tool
 def whoami() -> dict[str, Any]:
     """Return the Taiga user currently authenticated."""
@@ -45,11 +62,15 @@ def whoami() -> dict[str, Any]:
 
 @mcp.tool
 def list_projects(member: int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List projects visible to the authenticated user, optionally filtered by member id."""
+    """List projects visible to the authenticated user, optionally filtered by member id.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     query = dict(filters or {})
     if member is not None:
         query["member"] = member
-    return to_jsonable(get_client().projects.list(**query))
+    return to_jsonable(get_client().projects.list(**_paginated(query)))
 
 
 @mcp.tool
@@ -86,16 +107,36 @@ def add_comment(
     return to_jsonable(resource.add_comment(comment))
 
 
+_HISTORY_ENTITY_TYPES = ("user_story", "task", "issue", "epic", "wiki")
+
+
+@mcp.tool
+def get_history(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"], id: int  # noqa: A002
+) -> list[dict[str, Any]]:
+    """Get the full change/comment history of a user story, task, issue, epic or wiki page.
+
+    Each entry has a `comment` field (empty string for pure field-change events, non-empty
+    for an actual comment) and `delete_comment_date` (non-null if the comment was deleted).
+    """
+    client = get_client()
+    return to_jsonable(getattr(client.history, entity_type).get(id))
+
+
 # --- User stories -----------------------------------------------------------------
 
 
 @mcp.tool
 def list_user_stories(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List user stories, optionally scoped to a project and/or filtered by extra query params."""
+    """List user stories, optionally scoped to a project and/or filtered by extra query params.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().user_stories.list(**query))
+    return to_jsonable(get_client().user_stories.list(**_paginated(query)))
 
 
 @mcp.tool
@@ -132,13 +173,17 @@ def delete_user_story(id: int) -> dict[str, str]:  # noqa: A002
 def list_tasks(
     project: str | int | None = None, user_story: int | None = None, filters: dict[str, Any] | None = None
 ) -> list[dict[str, Any]]:
-    """List tasks, optionally scoped to a project and/or a user story."""
+    """List tasks, optionally scoped to a project and/or a user story.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
     if user_story is not None:
         query["user_story"] = user_story
-    return to_jsonable(get_client().tasks.list(**query))
+    return to_jsonable(get_client().tasks.list(**_paginated(query)))
 
 
 @mcp.tool
@@ -173,11 +218,15 @@ def delete_task(id: int) -> dict[str, str]:  # noqa: A002
 
 @mcp.tool
 def list_issues(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List issues, optionally scoped to a project."""
+    """List issues, optionally scoped to a project.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().issues.list(**query))
+    return to_jsonable(get_client().issues.list(**_paginated(query)))
 
 
 @mcp.tool
@@ -222,11 +271,15 @@ def delete_issue(id: int) -> dict[str, str]:  # noqa: A002
 
 @mcp.tool
 def list_epics(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List epics, optionally scoped to a project."""
+    """List epics, optionally scoped to a project.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().epics.list(**query))
+    return to_jsonable(get_client().epics.list(**_paginated(query)))
 
 
 @mcp.tool
@@ -261,11 +314,15 @@ def delete_epic(id: int) -> dict[str, str]:  # noqa: A002
 
 @mcp.tool
 def list_milestones(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List milestones (sprints) of a project."""
+    """List milestones (sprints) of a project.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     pid = _resolve_project_id(project)
     query = dict(filters or {})
     query["project"] = pid
-    return to_jsonable(get_client().milestones.list(**query))
+    return to_jsonable(get_client().milestones.list(**_paginated(query)))
 
 
 @mcp.tool
@@ -299,11 +356,15 @@ def delete_milestone(id: int) -> dict[str, str]:  # noqa: A002
 
 @mcp.tool
 def list_wiki_pages(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List wiki pages of a project."""
+    """List wiki pages of a project.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    """
     pid = _resolve_project_id(project)
     query = dict(filters or {})
     query["project"] = pid
-    return to_jsonable(get_client().wikipages.list(**query))
+    return to_jsonable(get_client().wikipages.list(**_paginated(query)))
 
 
 @mcp.tool

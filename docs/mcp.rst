@@ -143,6 +143,12 @@ Available tools
 ``add_comment``
     Add a comment to a user story, task, issue or epic.
 
+``get_history``
+    Get the full change/comment history of a user story, task, issue, epic or
+    wiki page. Each entry's `comment` field is empty for plain field-change
+    events and non-empty for an actual comment; `delete_comment_date` is
+    non-null if that comment was later deleted.
+
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
 
@@ -164,6 +170,11 @@ Available tools
 .. tip:: Call ``get_project`` first when creating or updating an entity - it
          returns every status/priority/severity/points id valid for that
          project, which the ``create_*``/``update_*`` tools expect.
+
+.. tip:: Every ``list_*`` tool is paginated and defaults to page 1 of up to
+         100 results. Pass ``page``/``page_size`` in ``filters`` to move
+         through further pages, and ``order_by`` (e.g. ``-created_date``) to
+         control ordering - for example to fetch the most recent items first.
 
 ****************
 Security notes
