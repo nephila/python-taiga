@@ -52,7 +52,7 @@ class CustomAttributeResource(InstanceResource):
         :param version: version of the attribute (default = 1)
         """
         attributes = self._get_attributes(cache=True)
-        formatted_id = "{}".format(id)
+        formatted_id = f"{id}"
         attributes["attributes_values"][formatted_id] = value
         response = self.requester.patch(
             "/{endpoint}/custom-attributes-values/{id}",
@@ -1746,14 +1746,14 @@ class Project(InstanceResource):
         attrs = {"tag": tag}
         if color:
             attrs["color"] = color
-        response = self.requester.post("/{}/{}/create_tag".format(self.endpoint, self.id), payload=attrs)
+        response = self.requester.post(f"/{self.endpoint}/{self.id}/create_tag", payload=attrs)
         return response
 
     def list_tags(self):
         """
         Get the list of tags for the project.
         """
-        response = self.requester.get("/{}/{}/tags_colors".format(self.endpoint, self.id))
+        response = self.requester.get(f"/{self.endpoint}/{self.id}/tags_colors")
         return response.json()
 
     def duplicate(self, name, description, is_private=False, users=[], **attrs):

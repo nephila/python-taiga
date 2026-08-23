@@ -203,9 +203,9 @@ class InstanceResource(Resource):
 
     def __repr__(self):
         try:
-            return "{}({})".format(self.__class__.__name__, self.id)
+            return f"{self.__class__.__name__}({self.id})"
         except AttributeError:
-            return "{}({})".format(self.__class__.__name__, id(self))
+            return f"{self.__class__.__name__}({id(self)})"
 
     def __str__(self):
         return self._rp()
@@ -213,6 +213,6 @@ class InstanceResource(Resource):
     def _rp(self):
         attr = getattr(self, self.repr_attribute, None)
         if attr:
-            return "{}".format(attr)
+            return f"{attr}"
         else:
             return repr(self)

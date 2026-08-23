@@ -73,7 +73,7 @@ class RequestMaker:
     def headers(self, paginate=True):
         headers = {
             "Content-type": "application/json",
-            "Authorization": "{} {}".format(self.token_type, self.token),
+            "Authorization": f"{self.token_type} {self.token}",
         }
         if self.enable_pagination and paginate:
             headers["x-lazy-pagination"] = "True"
@@ -120,7 +120,7 @@ class RequestMaker:
     def post(self, uri, payload=None, query=None, files=None, **parameters):
         if files:
             headers = {
-                "Authorization": "{} {}".format(self.token_type, self.token),
+                "Authorization": f"{self.token_type} {self.token}",
                 "x-disable-pagination": "True",
             }
             data = payload

@@ -31,16 +31,7 @@ repos:
     hooks:
       - id: pyupgrade
         args:
-          - --py3-plus
-  - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.31.1"
-    hooks:
-      - id: django-upgrade
-        args: [--target-version, "3.2"]
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.2
-    hooks:
-      - id: pyupgrade
+          - --py311-plus
   - repo: local
     hooks:
       - id: towncrier

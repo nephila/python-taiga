@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 119
-target-version = ["py310"]
+target-version = ["py311"]
 
 [tool.towncrier]
 package = "taiga"
@@ -40,11 +40,13 @@ multi_line_output = 3
 use_parentheses = true
 
 [tool.ruff]
-ignore = []
 line-length = 119
-target-version = "py310"
+target-version = "py311"
 
-[tool.ruff.mccabe]
+[tool.ruff.lint]
+ignore = []
+
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
 [tool.bumpversion]

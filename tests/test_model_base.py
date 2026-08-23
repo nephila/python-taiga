@@ -339,4 +339,4 @@ class TestModelBase(unittest.TestCase):
         self.assertEqual(fake._rp(), str(fake))
         fake.repr_attribute = "notexisting"
         rep = fake._rp()
-        self.assertEqual(rep, "{}({})".format(fake.__class__.__name__, fake.id))
+        self.assertEqual(rep, f"{fake.__class__.__name__}({fake.id})")
