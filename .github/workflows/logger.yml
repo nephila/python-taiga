@@ -8,4 +8,4 @@ jobs:
     steps:
       - name: Logging
         run: |
-          echo '${{toJSON(github.event)}}'
+          printf '%s\n' "${{ toJSON(github.event) }}"
