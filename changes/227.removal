@@ -1,0 +1,12 @@
+``auth_app()`` now works with Taiga >= 3.1.0 (2016), which stopped returning a
+``cyphered_token``. This is a breaking change:
+
+* the ``app_secret`` argument has been removed and ``state`` is now required;
+* the method no longer sets ``self.token``/reinitializes the client, it returns
+  the plain token string instead - reuse it by passing it to the ``TaigaAPI``
+  constructor as ``token=<value>, token_type="Application"``;
+* the unmaintained ``pyjwkest`` dependency (and its vulnerable transitive
+  dependency ``future``, `GHSA-xqrq-4mgf-ff32
+  <https://github.com/advisories/GHSA-xqrq-4mgf-ff32>`_) is no longer required.
+
+See :ref:`Application authentication` in the usage docs for the updated flow.

@@ -78,6 +78,41 @@ To ignore SSL certificate verification (use at your own risk!) use ``tls_verify`
         tls_verify=False
     )
 
+.. _Application authentication:
+
+Application authentication
+===========================
+
+To authenticate as a Taiga application (as opposed to a user), exchange the
+``auth_code`` configured in the Taiga admin UI for a token with ``auth_app()``,
+then reuse that token to build the client:
+
+.. code:: python
+
+    from taiga import TaigaAPI
+
+    api = TaigaAPI(host='http://taiga.my.host.org')
+    token = api.auth_app(
+        app_id='app-id',
+        auth_code='auth-code',
+        state='some-state',
+    )
+
+    # store `token` and reuse it - the auth_code is invalidated by Taiga
+    # after this call, and the token itself does not expire
+    api = TaigaAPI(
+        host='http://taiga.my.host.org',
+        token=token,
+        token_type='Application',
+    )
+
+.. versionchanged:: 2.0.0
+   Prior to this version ``auth_app()`` relied on the ``app_secret``/
+   ``cyphered_token`` flow removed from Taiga since 3.1.0 (2016), and set
+   ``self.token`` directly instead of returning it. Update any code calling
+   ``auth_app()`` to drop ``app_secret``, pass ``state`` explicitly, and use
+   the returned token as shown above.
+
 ******************************************************
 Get projects, user stories, task and issues
 ******************************************************
