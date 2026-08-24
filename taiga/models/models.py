@@ -456,6 +456,46 @@ class UserStory(CustomAttributeResource, CommentableResource):
         "swimlane",
     ]
 
+    # Attribute declarations for static type checkers (see #254). These are
+    # not defaults: the actual values are set dynamically in
+    # InstanceResource.__init__() from the API response, and some of them
+    # may be absent depending on the endpoint (e.g. ``description`` is not
+    # returned by UserStories.list()).
+    ref: int
+    subject: str
+    project: int
+    status: int
+    owner: int
+    is_closed: bool
+    is_blocked: bool
+    blocked_note: str
+    blocked_note_html: str
+    description: str
+    description_html: str
+    assigned_to: int | None
+    assigned_users: list[int]
+    points: dict
+    backlog_order: int
+    sprint_order: int
+    kanban_order: int
+    milestone: int | None
+    milestone_name: str | None
+    milestone_slug: str | None
+    finish_date: str | None
+    client_requirement: bool
+    team_requirement: bool
+    tags: list
+    watchers: list
+    comment: str
+    total_points: float | None
+    generated_from_issue: int | None
+    generated_from_task: int | None
+    origin_issue: int | None
+    external_reference: list | None
+    due_date: str | None
+    swimlane: int | None
+    neighbors: dict
+
     def add_task(self, subject, status, **attrs):
         """
         Add a :class:`Task` to the current :class:`UserStory` and return it.

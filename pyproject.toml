@@ -49,6 +49,20 @@ ignore = []
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
+[tool.mypy]
+ignore_missing_imports = true
+
+# Not yet type-annotated; tracked by #254. Silence pre-existing findings
+# unrelated to the current typing pilot (taiga.models.base/models) so the
+# `typing` tox env stays actionable rather than noisy.
+[[tool.mypy.overrides]]
+module = "taiga.client"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "taiga.models.models"
+disable_error_code = ["misc"]
+
 [tool.bumpversion]
 allow_dirty = false
 commit = true

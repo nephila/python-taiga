@@ -1,3 +1,4 @@
+import datetime
 import re
 
 
@@ -129,11 +130,21 @@ class InstanceResource(Resource):
 
     endpoint = ""
 
-    parser = {}
+    parser: dict = {}
 
-    allowed_params = []
+    allowed_params: list = []
 
     repr_attribute = "name"
+
+    #: attributes present on (almost) every Taiga resource; not part of
+    #: ``allowed_params`` because they are read-only and never sent back
+    #: to the API. Declared here (without a default) purely so static
+    #: type checkers know these attributes exist - they are still set
+    #: dynamically in :py:meth:`__init__` from the API response.
+    id: int
+    version: int
+    created_date: str | datetime.datetime
+    modified_date: str | datetime.datetime
 
     def __init__(self, requester, **params):
         import dateutil.parser

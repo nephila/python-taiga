@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.14.x"]
-        toxenv: [ruff, isort, black, pypi-description, docs, towncrier]
+        toxenv: [ruff, isort, black, pypi-description, docs, towncrier, typing]
     steps:
     - uses: actions/checkout@v7
       with:
