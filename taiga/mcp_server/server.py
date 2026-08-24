@@ -6,12 +6,12 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from .auth import get_client
 from .serialize import to_jsonable
 
-mcp = FastMCP(
+mcp = MCPServer(
     name="taiga",
     instructions=(
         "Tools to read and manage Taiga projects: user stories, tasks, issues, epics, "
@@ -54,13 +54,13 @@ def _paginated(query: dict[str, Any]) -> dict[str, Any]:
     return query
 
 
-@mcp.tool
+@mcp.tool()
 def whoami() -> dict[str, Any]:
     """Return the Taiga user currently authenticated."""
     return to_jsonable(get_client().me())
 
 
-@mcp.tool
+@mcp.tool()
 def list_projects(member: int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """List projects visible to the authenticated user, optionally filtered by member id.
 
@@ -73,7 +73,7 @@ def list_projects(member: int | None = None, filters: dict[str, Any] | None = No
     return to_jsonable(get_client().projects.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_project(project: str | int) -> dict[str, Any]:
     """Get full project detail by numeric id or slug, including statuses/priorities/severities/points."""
     client = get_client()
@@ -82,7 +82,7 @@ def get_project(project: str | int) -> dict[str, Any]:
     return to_jsonable(client.projects.get_by_slug(str(project)))
 
 
-@mcp.tool
+@mcp.tool()
 def search(project: str | int, text: str = "") -> dict[str, Any]:
     """Search user stories, tasks, issues, epics and wiki pages in a project."""
     client = get_client()
@@ -97,7 +97,7 @@ def search(project: str | int, text: str = "") -> dict[str, Any]:
     }
 
 
-@mcp.tool
+@mcp.tool()
 def add_comment(
     entity_type: Literal["user_story", "task", "issue", "epic"], id: int, comment: str
 ) -> dict[str, Any]:  # noqa: A002
@@ -110,7 +110,7 @@ def add_comment(
 _HISTORY_ENTITY_TYPES = ("user_story", "task", "issue", "epic", "wiki")
 
 
-@mcp.tool
+@mcp.tool()
 def get_history(
     entity_type: Literal["user_story", "task", "issue", "epic", "wiki"], id: int  # noqa: A002
 ) -> list[dict[str, Any]]:
@@ -126,7 +126,7 @@ def get_history(
 # --- User stories -----------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool()
 def list_user_stories(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """List user stories, optionally scoped to a project and/or filtered by extra query params.
 
@@ -139,27 +139,27 @@ def list_user_stories(project: str | int | None = None, filters: dict[str, Any] 
     return to_jsonable(get_client().user_stories.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_user_story(id: int) -> dict[str, Any]:  # noqa: A002
     """Get a user story by id."""
     return to_jsonable(get_client().user_stories.get(id))
 
 
-@mcp.tool
+@mcp.tool()
 def create_user_story(project: str | int, subject: str, fields: dict[str, Any] | None = None) -> dict[str, Any]:
     """Create a user story. `fields` may set status, points, milestone, description, tags, etc."""
     pid = _resolve_project_id(project)
     return to_jsonable(get_client().user_stories.create(pid, subject, **(fields or {})))
 
 
-@mcp.tool
+@mcp.tool()
 def update_user_story(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update a user story. `fields` is a dict of the attributes to change."""
     resource = get_client().user_stories.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
-@mcp.tool
+@mcp.tool()
 def delete_user_story(id: int) -> dict[str, str]:  # noqa: A002
     """Delete a user story by id."""
     get_client().user_stories.delete(id)
@@ -169,7 +169,7 @@ def delete_user_story(id: int) -> dict[str, str]:  # noqa: A002
 # --- Tasks --------------------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool()
 def list_tasks(
     project: str | int | None = None, user_story: int | None = None, filters: dict[str, Any] | None = None
 ) -> list[dict[str, Any]]:
@@ -186,27 +186,27 @@ def list_tasks(
     return to_jsonable(get_client().tasks.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_task(id: int) -> dict[str, Any]:  # noqa: A002
     """Get a task by id."""
     return to_jsonable(get_client().tasks.get(id))
 
 
-@mcp.tool
+@mcp.tool()
 def create_task(project: str | int, subject: str, status: int, fields: dict[str, Any] | None = None) -> dict[str, Any]:
     """Create a task. `status` is the numeric task-status id (see get_project). `fields` may set user_story, etc."""
     pid = _resolve_project_id(project)
     return to_jsonable(get_client().tasks.create(pid, subject, status, **(fields or {})))
 
 
-@mcp.tool
+@mcp.tool()
 def update_task(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update a task. `fields` is a dict of the attributes to change."""
     resource = get_client().tasks.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
-@mcp.tool
+@mcp.tool()
 def delete_task(id: int) -> dict[str, str]:  # noqa: A002
     """Delete a task by id."""
     get_client().tasks.delete(id)
@@ -216,7 +216,7 @@ def delete_task(id: int) -> dict[str, str]:  # noqa: A002
 # --- Issues ---------------------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool()
 def list_issues(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """List issues, optionally scoped to a project.
 
@@ -229,13 +229,13 @@ def list_issues(project: str | int | None = None, filters: dict[str, Any] | None
     return to_jsonable(get_client().issues.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_issue(id: int) -> dict[str, Any]:  # noqa: A002
     """Get an issue by id."""
     return to_jsonable(get_client().issues.get(id))
 
 
-@mcp.tool
+@mcp.tool()
 def create_issue(
     project: str | int,
     subject: str,
@@ -252,14 +252,14 @@ def create_issue(
     )
 
 
-@mcp.tool
+@mcp.tool()
 def update_issue(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update an issue. `fields` is a dict of the attributes to change."""
     resource = get_client().issues.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
-@mcp.tool
+@mcp.tool()
 def delete_issue(id: int) -> dict[str, str]:  # noqa: A002
     """Delete an issue by id."""
     get_client().issues.delete(id)
@@ -269,7 +269,7 @@ def delete_issue(id: int) -> dict[str, str]:  # noqa: A002
 # --- Epics ------------------------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool()
 def list_epics(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """List epics, optionally scoped to a project.
 
@@ -282,27 +282,27 @@ def list_epics(project: str | int | None = None, filters: dict[str, Any] | None 
     return to_jsonable(get_client().epics.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_epic(id: int) -> dict[str, Any]:  # noqa: A002
     """Get an epic by id."""
     return to_jsonable(get_client().epics.get(id))
 
 
-@mcp.tool
+@mcp.tool()
 def create_epic(project: str | int, subject: str, fields: dict[str, Any] | None = None) -> dict[str, Any]:
     """Create an epic."""
     pid = _resolve_project_id(project)
     return to_jsonable(get_client().epics.create(pid, subject, **(fields or {})))
 
 
-@mcp.tool
+@mcp.tool()
 def update_epic(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update an epic. `fields` is a dict of the attributes to change."""
     resource = get_client().epics.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
-@mcp.tool
+@mcp.tool()
 def delete_epic(id: int) -> dict[str, str]:  # noqa: A002
     """Delete an epic by id."""
     get_client().epics.delete(id)
@@ -312,7 +312,7 @@ def delete_epic(id: int) -> dict[str, str]:  # noqa: A002
 # --- Milestones (sprints) -----------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool()
 def list_milestones(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """List milestones (sprints) of a project.
 
@@ -325,13 +325,13 @@ def list_milestones(project: str | int, filters: dict[str, Any] | None = None) -
     return to_jsonable(get_client().milestones.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_milestone(id: int) -> dict[str, Any]:  # noqa: A002
     """Get a milestone by id."""
     return to_jsonable(get_client().milestones.get(id))
 
 
-@mcp.tool
+@mcp.tool()
 def create_milestone(
     project: str | int,
     name: str,
@@ -344,7 +344,7 @@ def create_milestone(
     return to_jsonable(get_client().milestones.create(pid, name, estimated_start, estimated_finish, **(fields or {})))
 
 
-@mcp.tool
+@mcp.tool()
 def delete_milestone(id: int) -> dict[str, str]:  # noqa: A002
     """Delete a milestone by id."""
     get_client().milestones.delete(id)
@@ -354,7 +354,7 @@ def delete_milestone(id: int) -> dict[str, str]:  # noqa: A002
 # --- Wiki pages -----------------------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool()
 def list_wiki_pages(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """List wiki pages of a project.
 
@@ -367,13 +367,13 @@ def list_wiki_pages(project: str | int, filters: dict[str, Any] | None = None) -
     return to_jsonable(get_client().wikipages.list(**_paginated(query)))
 
 
-@mcp.tool
+@mcp.tool()
 def get_wiki_page(id: int) -> dict[str, Any]:  # noqa: A002
     """Get a wiki page by id."""
     return to_jsonable(get_client().wikipages.get(id))
 
 
-@mcp.tool
+@mcp.tool()
 def create_wiki_page(
     project: str | int, slug: str, content: str, fields: dict[str, Any] | None = None
 ) -> dict[str, Any]:
@@ -382,7 +382,7 @@ def create_wiki_page(
     return to_jsonable(get_client().wikipages.create(pid, slug, content, **(fields or {})))
 
 
-@mcp.tool
+@mcp.tool()
 def update_wiki_page(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update a wiki page. `fields` is a dict of the attributes to change."""
     resource = get_client().wikipages.get(id)

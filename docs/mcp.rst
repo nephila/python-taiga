@@ -21,8 +21,8 @@ code.
 Installation
 ****************
 
-The server is an optional extra, since it pulls in `fastmcp
-<https://pypi.org/project/fastmcp/>`_ as a dependency:
+The server is an optional extra, since it pulls in the official `MCP Python SDK
+<https://github.com/modelcontextprotocol/python-sdk>`_ (``mcp``) as a dependency:
 
 .. code:: shell
 
