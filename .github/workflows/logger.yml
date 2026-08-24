@@ -7,5 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Logging
+        env:
+          EVENT_JSON: ${{ toJSON(github.event) }}
         run: |
-          echo '${{toJSON(github.event)}}'
+          printf '%s\n' "$EVENT_JSON"
