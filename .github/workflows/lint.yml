@@ -30,9 +30,12 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .tox
+        # No restore-keys fallback: a partial match would restore a .tox env built
+        # against an older setup.cfg, whose dependencies tox won't re-resolve on a
+        # plain run (it only reinstalls deps when their own declaration text changes,
+        # not when setup.cfg's extras do) - a cache miss should mean a clean install,
+        # not a stale/broken one.
         key: ${{ runner.os }}-lint-${{ matrix.toxenv }}-${{ hashFiles('setup.cfg') }}
-        restore-keys: |
-          ${{ runner.os }}-lint-${{ matrix.toxenv }}-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools tox>4
