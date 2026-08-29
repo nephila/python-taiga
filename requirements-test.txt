@@ -3,3 +3,4 @@ coverage
 coveralls>=2.0
 pytest-runner
 pytest
+fastmcp>=3.0; python_version >= "3.10"

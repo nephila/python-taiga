@@ -51,3 +51,43 @@ class TestCustomAttributes(unittest.TestCase):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
         issue_attribute = IssueAttributes(rm).create(1, "new attribute")
         self.assertTrue(isinstance(issue_attribute, IssueAttribute))
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    @patch("taiga.requestmaker.RequestMaker.patch")
+    def test_set_issue_custom_attributes(self, mock_requestmaker_patch, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        mock_requestmaker_patch.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        issue = Issue(rm, id=1, project=1)
+        new_attributes = issue.set_attributes({2: "13", "3": "x"})
+        self.assertTrue("attributes_values" in new_attributes)
+        # the untouched attribute 1 is preserved, and the version is the one the server reports
+        mock_requestmaker_patch.assert_called_with(
+            "/{endpoint}/custom-attributes-values/{id}",
+            endpoint=Issue.endpoint,
+            id=issue.id,
+            payload={"attributes_values": {"1": "240 minutes", "2": "13", "3": "x"}, "version": 2},
+        )
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    @patch("taiga.requestmaker.RequestMaker.patch")
+    def test_set_issue_custom_attributes_explicit_version(self, mock_requestmaker_patch, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        mock_requestmaker_patch.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        issue = Issue(rm, id=1, project=1)
+        issue.set_attributes({1: "5 minutes"}, version=7)
+        mock_requestmaker_patch.assert_called_with(
+            "/{endpoint}/custom-attributes-values/{id}",
+            endpoint=Issue.endpoint,
+            id=issue.id,
+            payload={"attributes_values": {"1": "5 minutes"}, "version": 7},
+        )

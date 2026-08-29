@@ -149,6 +149,13 @@ Available tools
     events and non-empty for an actual comment; `delete_comment_date` is
     non-null if that comment was later deleted.
 
+``list_custom_attributes``, ``get_custom_attributes``, ``set_custom_attributes``
+    Read a project's custom field definitions, and read or write the custom
+    field values of a user story, task, issue or epic. Custom fields live
+    outside the entity itself, so ``update_*`` cannot reach them.
+    ``set_custom_attributes`` accepts either the field ids or their names as
+    keys, and leaves any field it isn't given untouched.
+
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
 
@@ -160,6 +167,12 @@ Available tools
 
 ``list_epics``, ``get_epic``, ``create_epic``, ``update_epic``, ``delete_epic``
     Manage epics.
+
+``list_epic_user_stories``, ``add_user_story_to_epic``, ``remove_user_story_from_epic``
+    Link existing user stories to an epic, or unlink them. The link is a
+    relation of its own rather than a user story field, so it cannot be set
+    through ``create_user_story``/``update_user_story``. Unlinking leaves the
+    user story itself in place.
 
 ``list_milestones``, ``get_milestone``, ``create_milestone``, ``delete_milestone``
     Manage milestones (sprints).

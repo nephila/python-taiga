@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from taiga import TaigaAPI
 from taiga.exceptions import TaigaException
-from taiga.models import Epic, Epics
+from taiga.models import Epic, Epics, UserStory
 from taiga.requestmaker import RequestMaker
 
 from .tools import MockResponse, create_mock_json
@@ -83,3 +83,55 @@ class TestEpics(unittest.TestCase):
         epic = Epic(rm, id=1)
         epic.add_comment("hola")
         mock_update.assert_called_with(comment="hola")
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    def test_list_related_user_stories(self, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/epic_related_userstories_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        relations = Epic(rm, id=1, project=1).list_related_user_stories()
+        self.assertEqual([relation["user_story"] for relation in relations], [7, 8])
+        mock_requestmaker_get.assert_called_with(
+            "/{endpoint}/{id}/related_userstories", endpoint=Epic.endpoint, id=1, query={}
+        )
+
+    @patch("taiga.requestmaker.RequestMaker.post")
+    def test_add_user_story(self, mock_requestmaker_post):
+        mock_requestmaker_post.return_value = MockResponse(
+            200, create_mock_json("tests/resources/epic_related_userstory_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        relation = Epic(rm, id=1, project=1).add_user_story(7)
+        self.assertEqual(relation["user_story"], 7)
+        mock_requestmaker_post.assert_called_with(
+            "/{endpoint}/{id}/related_userstories",
+            endpoint=Epic.endpoint,
+            id=1,
+            payload={"epic": 1, "user_story": 7},
+        )
+
+    @patch("taiga.requestmaker.RequestMaker.post")
+    def test_add_user_story_instance(self, mock_requestmaker_post):
+        mock_requestmaker_post.return_value = MockResponse(
+            200, create_mock_json("tests/resources/epic_related_userstory_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        Epic(rm, id=1, project=1).add_user_story(UserStory(rm, id=7), order=3)
+        mock_requestmaker_post.assert_called_with(
+            "/{endpoint}/{id}/related_userstories",
+            endpoint=Epic.endpoint,
+            id=1,
+            payload={"order": 3, "epic": 1, "user_story": 7},
+        )
+
+    @patch("taiga.requestmaker.RequestMaker.delete")
+    def test_remove_user_story(self, mock_requestmaker_delete):
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        Epic(rm, id=1, project=1).remove_user_story(7)
+        mock_requestmaker_delete.assert_called_with(
+            "/{endpoint}/{id}/related_userstories/{user_story}",
+            endpoint=Epic.endpoint,
+            id=1,
+            user_story=7,
+        )

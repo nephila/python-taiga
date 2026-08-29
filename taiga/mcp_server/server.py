@@ -18,7 +18,8 @@ mcp = FastMCP(
         "milestones and wiki pages. Configure credentials via the TAIGA_HOST/TAIGA_TOKEN "
         "or TAIGA_HOST/TAIGA_USERNAME/TAIGA_PASSWORD environment variables. "
         "`get_project` returns the full set of statuses/priorities/severities/points ids "
-        "needed to create or update entities in that project."
+        "needed to create or update entities in that project, and `list_custom_attributes` "
+        "the ids of its custom fields."
     ),
 )
 
@@ -29,12 +30,45 @@ _ENTITY_ATTR = {
     "epic": "epics",
 }
 
+_CUSTOM_ATTRIBUTES_ATTR = {
+    "user_story": "userstory_custom_attributes",
+    "task": "task_custom_attributes",
+    "issue": "issue_custom_attributes",
+    "epic": "epic_custom_attributes",
+}
+
+
+def _get_project(project: str | int):
+    client = get_client()
+    if isinstance(project, int) or str(project).isdigit():
+        return client.projects.get(int(project))
+    return client.projects.get_by_slug(str(project))
+
 
 def _resolve_project_id(project: str | int) -> int:
     if isinstance(project, int) or str(project).isdigit():
         return int(project)
     client = get_client()
     return client.projects.get_by_slug(str(project)).id
+
+
+def _custom_attributes(project: str | int, entity_type: str) -> list[dict[str, Any]]:
+    return getattr(_get_project(project), _CUSTOM_ATTRIBUTES_ATTR[entity_type], None) or []
+
+
+def _resolve_custom_attribute_ids(project: str | int, entity_type: str, values: dict[str, Any]) -> dict[str, Any]:
+    if all(str(key).isdigit() for key in values):
+        return values
+    by_name = {attribute["name"]: attribute["id"] for attribute in _custom_attributes(project, entity_type)}
+    resolved: dict[str, Any] = {}
+    for key, value in values.items():
+        if str(key).isdigit():
+            resolved[key] = value
+        elif key in by_name:
+            resolved[by_name[key]] = value
+        else:
+            raise ValueError(f"Unknown {entity_type} custom field {key!r}. Known fields: {sorted(by_name)}")
+    return resolved
 
 
 @mcp.tool
@@ -55,10 +89,7 @@ def list_projects(member: int | None = None, filters: dict[str, Any] | None = No
 @mcp.tool
 def get_project(project: str | int) -> dict[str, Any]:
     """Get full project detail by numeric id or slug, including statuses/priorities/severities/points."""
-    client = get_client()
-    if isinstance(project, int) or str(project).isdigit():
-        return to_jsonable(client.projects.get(int(project)))
-    return to_jsonable(client.projects.get_by_slug(str(project)))
+    return to_jsonable(_get_project(project))
 
 
 @mcp.tool
@@ -100,6 +131,41 @@ def get_history(
     """
     client = get_client()
     return to_jsonable(getattr(client.history, entity_type).get(id))
+
+
+# --- Custom fields ----------------------------------------------------------------
+
+
+@mcp.tool
+def list_custom_attributes(
+    project: str | int, entity_type: Literal["user_story", "task", "issue", "epic"]
+) -> list[dict[str, Any]]:
+    """List the custom fields a project defines for user stories, tasks, issues or epics, with their ids."""
+    return to_jsonable(_custom_attributes(project, entity_type))
+
+
+@mcp.tool
+def get_custom_attributes(
+    entity_type: Literal["user_story", "task", "issue", "epic"], id: int
+) -> dict[str, Any]:  # noqa: A002
+    """Get the custom field values of a user story, task, issue or epic, keyed by custom field id."""
+    resource = getattr(get_client(), _ENTITY_ATTR[entity_type]).get(id)
+    return to_jsonable(resource.get_attributes())
+
+
+@mcp.tool
+def set_custom_attributes(
+    entity_type: Literal["user_story", "task", "issue", "epic"], id: int, values: dict[str, Any]
+) -> dict[str, Any]:  # noqa: A002
+    """
+    Set custom field values on a user story, task, issue or epic.
+
+    `values` keys are either custom field ids or their names (see `list_custom_attributes`). Only the
+    given fields are changed, any other custom field keeps its current value.
+    """
+    resource = getattr(get_client(), _ENTITY_ATTR[entity_type]).get(id)
+    values = _resolve_custom_attribute_ids(resource.project, entity_type, values)
+    return to_jsonable(resource.set_attributes(values))
 
 
 # --- User stories -----------------------------------------------------------------
@@ -270,6 +336,25 @@ def delete_epic(id: int) -> dict[str, str]:  # noqa: A002
     """Delete an epic by id."""
     get_client().epics.delete(id)
     return {"status": "deleted", "id": str(id)}
+
+
+@mcp.tool
+def list_epic_user_stories(epic: int) -> list[dict[str, Any]]:
+    """List the user stories linked to an epic, in their epic ordering."""
+    return to_jsonable(get_client().epics.get(epic).list_related_user_stories())
+
+
+@mcp.tool
+def add_user_story_to_epic(epic: int, user_story: int) -> dict[str, Any]:
+    """Link an existing user story to an epic. Both ids are numeric ids, not refs."""
+    return to_jsonable(get_client().epics.get(epic).add_user_story(user_story))
+
+
+@mcp.tool
+def remove_user_story_from_epic(epic: int, user_story: int) -> dict[str, str]:
+    """Unlink a user story from an epic. The user story itself is not deleted."""
+    get_client().epics.get(epic).remove_user_story(user_story)
+    return {"status": "removed", "epic": str(epic), "user_story": str(user_story)}
 
 
 # --- Milestones (sprints) -----------------------------------------------------------------

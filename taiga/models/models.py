@@ -66,6 +66,34 @@ class CustomAttributeResource(InstanceResource):
         self.requester.cache.put(cache_key, response)
         return response.json()
 
+    def set_attributes(self, values, version=None):
+        """
+        Set several attributes at once
+
+        Unlike :py:meth:`set_attribute`, the version of the custom attributes values record is read
+        back from the server when not given explicitly, so repeated calls keep working.
+
+        :param values: dict mapping attribute ids to their new value
+        :param version: version of the attributes (read from the server when not given)
+        """
+        attributes = self._get_attributes()
+        attributes_values = attributes["attributes_values"]
+        for id, value in values.items():  # noqa: A001
+            attributes_values["{}".format(id)] = value
+        if version is None:
+            version = attributes.get("version", 1)
+        response = self.requester.patch(
+            "/{endpoint}/custom-attributes-values/{id}",
+            endpoint=self.endpoint,
+            id=self.id,
+            payload={"attributes_values": attributes_values, "version": version},
+        )
+        cache_key = self.requester.get_full_url(
+            "/{endpoint}/custom-attributes-values/{id}", endpoint=self.endpoint, id=self.id
+        )
+        self.requester.cache.put(cache_key, response)
+        return response.json()
+
     def _get_attributes(self, cache=False):
         response = self.requester.get(
             "/{endpoint}/custom-attributes-values/{id}", endpoint=self.endpoint, id=self.id, cache=cache
@@ -327,6 +355,46 @@ class Epic(CustomAttributeResource, CommentableResource):
         Returns the :class:`UserStory` list of the project.
         """
         return UserStories(self.requester).list(epic=self.id, **queryparams)
+
+    def list_related_user_stories(self, **queryparams):
+        """
+        Returns the raw list of the relations between the :class:`Epic` and its user stories.
+
+        Unlike :py:meth:`list_user_stories`, each entry describes the relation itself, and so carries
+        its ``order`` inside the epic.
+        """
+        response = self.requester.get(
+            "/{endpoint}/{id}/related_userstories", endpoint=self.endpoint, id=self.id, query=queryparams
+        )
+        return response.json()
+
+    def add_user_story(self, user_story, **attrs):
+        """
+        Link an existing :class:`UserStory` to the :class:`Epic`.
+
+        :param user_story: :class:`UserStory` instance or id
+        :param attrs: optional attributes of the relation, such as ``order``
+        """
+        attrs.update({"epic": self.id, "user_story": getattr(user_story, "id", user_story)})
+        response = self.requester.post(
+            "/{endpoint}/{id}/related_userstories", endpoint=self.endpoint, id=self.id, payload=attrs
+        )
+        return response.json()
+
+    def remove_user_story(self, user_story):
+        """
+        Unlink a :class:`UserStory` from the :class:`Epic`.
+
+        The user story itself is not deleted, only its relation to the epic.
+
+        :param user_story: :class:`UserStory` instance or id
+        """
+        self.requester.delete(
+            "/{endpoint}/{id}/related_userstories/{user_story}",
+            endpoint=self.endpoint,
+            id=self.id,
+            user_story=getattr(user_story, "id", user_story),
+        )
 
     def list_attachments(self):
         """
