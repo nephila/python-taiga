@@ -188,7 +188,7 @@ class TaigaAPI:
             raise exceptions.TaigaRestException(full_url, response.status_code, response.text, "POST")
         token = response.json().get("token", None)
 
-        if token is None:
+        if not token:
             raise exceptions.TaigaRestException(full_url, 400, "INVALID TOKEN", "POST")
 
         return token
