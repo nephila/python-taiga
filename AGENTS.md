@@ -82,14 +82,14 @@ globally" / "add it to my user-wide config", follow this procedure:
      -e TAIGA_HOST=https://my.taiga.com \
      -e TAIGA_USERNAME=<username> \
      -e TAIGA_PASSWORD=<password> \
-     -- /absolute/path/to/taiga-mcp-server
+     -- /absolute/path/to/taiga-mcp-server serve
    ```
    or, with a token instead of username/password:
    ```bash
    claude mcp add --scope user taiga \
      -e TAIGA_HOST=https://my.taiga.com \
      -e TAIGA_TOKEN=<token> \
-     -- /absolute/path/to/taiga-mcp-server
+     -- /absolute/path/to/taiga-mcp-server serve
    ```
    With `uvx` there's no path to resolve — pass the `uvx` invocation itself
    as the command:
@@ -97,7 +97,7 @@ globally" / "add it to my user-wide config", follow this procedure:
    claude mcp add --scope user taiga \
      -e TAIGA_HOST=https://my.taiga.com \
      -e TAIGA_TOKEN=<token> \
-     -- uvx --from "python-taiga[mcp]" taiga-mcp-server
+     -- uvx --from "python-taiga[mcp]" taiga-mcp-server serve
    ```
    `--scope user` (not `local`/`project`) is what makes it "user-wide" —
    available in every project for that user, stored outside this repo.

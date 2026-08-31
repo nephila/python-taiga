@@ -95,11 +95,39 @@ Running the server standalone
     TAIGA_HOST=https://taiga.example.com \
     TAIGA_USERNAME=myuser \
     TAIGA_PASSWORD=mypassword \
-    taiga-mcp-server
+    taiga-mcp-server serve
 
 The server speaks MCP over stdio and is meant to be launched by an MCP
 client, not used interactively - the command above will sit and wait for a
 client to connect over stdin/stdout.
+
+**********************************
+Listing and calling tools directly
+**********************************
+
+Outside of an MCP client, ``taiga-mcp-server`` also exposes its tool set
+directly from a shell:
+
+.. code:: shell
+
+    # list every tool, one per line
+    taiga-mcp-server list-tools
+
+    # ...with each tool's JSON input schema
+    taiga-mcp-server list-tools --verbose
+
+    # call a single tool by name, passing its arguments as a JSON object
+    TAIGA_HOST=https://taiga.example.com \
+    TAIGA_USERNAME=myuser \
+    TAIGA_PASSWORD=mypassword \
+    taiga-mcp-server call whoami --json '{}'
+
+    taiga-mcp-server call get_project --json '{"project": "myproject"}'
+
+On success, ``call`` prints the tool's JSON result to stdout. On failure
+(unknown tool name, invalid arguments, or an error from the underlying
+Taiga API call) it prints a message to stderr and exits with a non-zero
+status.
 
 *****************************
 Connecting an MCP client
@@ -116,7 +144,7 @@ available in every project:
       -e TAIGA_HOST=https://taiga.example.com \
       -e TAIGA_USERNAME=myuser \
       -e TAIGA_PASSWORD=mypassword \
-      -- taiga-mcp-server
+      -- taiga-mcp-server serve
 
 ``--scope user`` stores the registration in your own Claude configuration,
 not in any particular project. Check it went through with:
