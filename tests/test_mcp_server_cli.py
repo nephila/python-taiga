@@ -142,6 +142,47 @@ def test_call_success_prints_structured_json_result(monkeypatch):
     assert json.loads(result.output) == {"id": 1, "username": "demo"}
 
 
+# --- call: error matrix ---------------------------------------------------------------------
+
+
+def test_call_invalid_json_errors():
+    result = runner.invoke(cli.app, ["call", "whoami", "--json", "{not valid"])
+
+    assert result.exit_code == 1
+    assert "Invalid JSON in --json" in result.output
+
+
+@patch("taiga.mcp_server.auth._client", None)
+@patch("taiga.mcp_server.auth._credentials", None)
+def test_call_unknown_tool_errors():
+    result = runner.invoke(cli.app, ["call", "this_tool_does_not_exist", "--json", "{}"])
+
+    assert result.exit_code == 1
+    assert "Unknown tool: this_tool_does_not_exist" in result.output
+
+
+@patch("taiga.mcp_server.auth._client", None)
+@patch("taiga.mcp_server.auth._credentials", None)
+def test_call_missing_required_argument_errors():
+    result = runner.invoke(cli.app, ["call", "get_project", "--json", "{}"])
+
+    assert result.exit_code == 1
+    assert "Invalid arguments for get_project" in result.output
+
+
+@patch("taiga.mcp_server.auth._client", None)
+@patch("taiga.mcp_server.auth._credentials", None)
+def test_call_tool_internal_exception_errors(monkeypatch):
+    for var in ("TAIGA_TOKEN", "TAIGA_USERNAME", "TAIGA_PASSWORD"):
+        monkeypatch.delenv(var, raising=False)
+
+    result = runner.invoke(cli.app, ["call", "whoami", "--json", "{}"])
+
+    assert result.exit_code == 1
+    assert "Error calling whoami" in result.output
+    assert "credentials" in result.output
+
+
 # --- bare invocation (breaking change) ---------------------------------------------------
 
 
