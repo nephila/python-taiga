@@ -9,6 +9,9 @@ import json
 import os
 
 import typer
+from mcp.server.mcpserver.exceptions import ToolError
+from mcp.shared.exceptions import MCPError
+from pydantic_core import ValidationError as PydanticValidationError
 
 from .. import __version__
 from .auth import DEFAULT_HOST, DEFAULT_TOKEN_TYPE, Credentials, configure
@@ -136,7 +139,21 @@ def call(
 
     from .server import mcp
 
-    result = asyncio.run(mcp.call_tool(tool_name, parsed_arguments))
+    try:
+        result = asyncio.run(mcp.call_tool(tool_name, parsed_arguments))
+    except ToolError as exc:
+        cause = exc.__cause__
+        message = str(exc)
+        if message.startswith("Unknown tool: "):
+            typer.echo(message, err=True)
+        elif isinstance(cause, PydanticValidationError):
+            typer.echo(f"Invalid arguments for {tool_name}: {cause}", err=True)
+        else:
+            typer.echo(f"Error calling {tool_name}: {cause if cause is not None else exc}", err=True)
+        raise typer.Exit(1) from exc
+    except MCPError as exc:
+        typer.echo(f"Error calling {tool_name}: {exc}", err=True)
+        raise typer.Exit(1) from exc
 
     payload = result.structured_content if result.structured_content is not None else result.content
     typer.echo(json.dumps(payload, indent=2, default=str))
