@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from unittest.mock import patch
 
@@ -121,6 +122,24 @@ def test_list_tools_verbose_includes_schema():
 
     assert result.exit_code == 0
     assert '"properties"' in result.output
+
+
+# --- call: success path --------------------------------------------------------------------
+
+
+@patch("taiga.mcp_server.auth._client", None)
+@patch("taiga.mcp_server.auth._credentials", None)
+def test_call_success_prints_structured_json_result(monkeypatch):
+    import taiga.mcp_server.server as server_mod
+
+    monkeypatch.setattr(
+        server_mod, "get_client", lambda: type("C", (), {"me": lambda self: {"id": 1, "username": "demo"}})()
+    )
+
+    result = runner.invoke(cli.app, ["call", "whoami", "--json", "{}"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.output) == {"id": 1, "username": "demo"}
 
 
 # --- bare invocation (breaking change) ---------------------------------------------------

@@ -114,6 +114,34 @@ def list_tools(
             typer.echo(json.dumps(dumped["inputSchema"], indent=2))
 
 
+@app.command()
+def call(
+    tool_name: str = typer.Argument(..., help="Tool name, as shown by list-tools."),
+    arguments: str = typer.Option("{}", "--json", "-j", help="JSON object of arguments for the tool."),
+    host: str | None = HostOption,
+    token: str | None = TokenOption,
+    token_type: str | None = TokenTypeOption,
+    username: str | None = UsernameOption,
+    password: str | None = PasswordOption,
+    tls_verify: bool | None = TlsVerifyOption,
+) -> None:
+    """Call a single tool directly, bypassing an MCP client."""
+    try:
+        parsed_arguments = json.loads(arguments)
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Invalid JSON in --json: {exc}", err=True)
+        raise typer.Exit(1) from exc
+
+    configure(_resolve_credentials(host, token, token_type, username, password, tls_verify))
+
+    from .server import mcp
+
+    result = asyncio.run(mcp.call_tool(tool_name, parsed_arguments))
+
+    payload = result.structured_content if result.structured_content is not None else result.content
+    typer.echo(json.dumps(payload, indent=2, default=str))
+
+
 def main() -> None:
     """Entry point for the ``taiga-mcp-server`` console script."""
     app()
