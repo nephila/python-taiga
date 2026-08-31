@@ -164,8 +164,8 @@ class TaigaAPI:
     def auth_app(self, app_id, auth_code, state):
         """
         Retrieve an application token.
-        This only works once per token; in order to reset it, the auth code needs
-        to be set again in the Taiga admin UI.
+        Each auth code can be exchanged only once; to retrieve another token, the
+        auth code must be reset in the Taiga admin UI.
 
         In order to use the token, initialize TaigaAPI with token_type="Application"
         and token="token from this function".
