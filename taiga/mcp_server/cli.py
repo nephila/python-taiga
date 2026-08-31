@@ -4,12 +4,29 @@
 
 from __future__ import annotations
 
-import argparse
 import os
-import sys
+
+import typer
 
 from .. import __version__
 from .auth import DEFAULT_HOST, DEFAULT_TOKEN_TYPE, Credentials, configure
+
+app = typer.Typer(add_completion=False, no_args_is_help=True, help="Taiga MCP server & CLI.")
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"taiga-mcp-server (python-taiga {__version__})")
+        raise typer.Exit()
+
+
+@app.callback()
+def _main(
+    version: bool | None = typer.Option(
+        None, "--version", callback=_version_callback, is_eager=True, help="Show the version and exit."
+    ),
+) -> None:
+    """Taiga MCP server & CLI."""
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -19,57 +36,63 @@ def _env_bool(name: str, default: bool) -> bool:
     return value.strip().lower() not in ("0", "false", "no", "off")
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``taiga-mcp-server`` console script."""
-    parser = argparse.ArgumentParser(
-        prog="taiga-mcp-server",
-        description=(
-            "Run a Model Context Protocol server exposing python-taiga over stdio. "
-            "Credentials can be passed as arguments or read from the TAIGA_HOST/TAIGA_TOKEN or "
-            "TAIGA_HOST/TAIGA_USERNAME/TAIGA_PASSWORD environment variables. "
-            "Passing --token/--password on the command line can expose them via the process list; "
-            "prefer the environment variables where possible."
-        ),
+def _resolve_credentials(
+    host: str | None,
+    token: str | None,
+    token_type: str | None,
+    username: str | None,
+    password: str | None,
+    tls_verify: bool | None,
+) -> Credentials:
+    return Credentials(
+        host=host or os.environ.get("TAIGA_HOST", DEFAULT_HOST),
+        tls_verify=_env_bool("TAIGA_TLS_VERIFY", True) if tls_verify is None else tls_verify,
+        token=token or os.environ.get("TAIGA_TOKEN"),
+        token_type=token_type or os.environ.get("TAIGA_TOKEN_TYPE", DEFAULT_TOKEN_TYPE),
+        username=username or os.environ.get("TAIGA_USERNAME"),
+        password=password or os.environ.get("TAIGA_PASSWORD"),
     )
-    parser.add_argument("--version", action="version", version=f"taiga-mcp-server (python-taiga {__version__})")
-    parser.add_argument(
-        "--host", default=os.environ.get("TAIGA_HOST", DEFAULT_HOST), help="Taiga instance host (default: %(default)s)"
-    )
-    parser.add_argument("--token", default=os.environ.get("TAIGA_TOKEN"), help="Taiga auth token")
-    parser.add_argument(
-        "--token-type",
-        default=os.environ.get("TAIGA_TOKEN_TYPE", DEFAULT_TOKEN_TYPE),
-        help="Type of the auth token (default: %(default)s)",
-    )
-    parser.add_argument("--username", default=os.environ.get("TAIGA_USERNAME"), help="Taiga username")
-    parser.add_argument("--password", default=os.environ.get("TAIGA_PASSWORD"), help="Taiga password")
-    tls_group = parser.add_mutually_exclusive_group()
-    tls_group.add_argument(
-        "--tls-verify", dest="tls_verify", action="store_true", default=None, help="Verify TLS certificates"
-    )
-    tls_group.add_argument(
-        "--no-tls-verify", dest="tls_verify", action="store_false", help="Do not verify TLS certificates"
-    )
-    args = parser.parse_args(argv)
 
-    tls_verify = _env_bool("TAIGA_TLS_VERIFY", True) if args.tls_verify is None else args.tls_verify
 
-    configure(
-        Credentials(
-            host=args.host,
-            tls_verify=tls_verify,
-            token=args.token,
-            token_type=args.token_type,
-            username=args.username,
-            password=args.password,
-        )
-    )
+HostOption = typer.Option(None, help="Taiga instance host (default: TAIGA_HOST env var, or https://api.taiga.io).")
+TokenOption = typer.Option(None, help="Taiga auth token (default: TAIGA_TOKEN env var).")
+TokenTypeOption = typer.Option(None, help="Type of the auth token (default: TAIGA_TOKEN_TYPE env var, or Bearer).")
+UsernameOption = typer.Option(None, help="Taiga username (default: TAIGA_USERNAME env var).")
+PasswordOption = typer.Option(None, help="Taiga password (default: TAIGA_PASSWORD env var).")
+TlsVerifyOption = typer.Option(
+    None,
+    "--tls-verify/--no-tls-verify",
+    help="Verify TLS certificates (default: TAIGA_TLS_VERIFY env var, or true).",
+)
+
+
+@app.command()
+def serve(
+    host: str | None = HostOption,
+    token: str | None = TokenOption,
+    token_type: str | None = TokenTypeOption,
+    username: str | None = UsernameOption,
+    password: str | None = PasswordOption,
+    tls_verify: bool | None = TlsVerifyOption,
+) -> None:
+    """Run the MCP server over stdio.
+
+    Credentials can be passed as flags or read from the TAIGA_HOST/TAIGA_TOKEN
+    or TAIGA_HOST/TAIGA_USERNAME/TAIGA_PASSWORD environment variables. Passing
+    --token/--password on the command line can expose them via the process
+    list; prefer the environment variables where possible.
+    """
+    configure(_resolve_credentials(host, token, token_type, username, password, tls_verify))
 
     from .server import mcp
 
     mcp.run(transport="stdio")
-    return 0
+
+
+def main() -> None:
+    """Entry point for the ``taiga-mcp-server`` console script."""
+    app()
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
