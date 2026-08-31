@@ -32,6 +32,7 @@ from .models import (
     UserStoryAttachments,
     UserStoryAttributes,
     UserStoryStatuses,
+    WebhookLogs,
     Webhooks,
     WikiLinks,
     WikiPages,
@@ -110,6 +111,7 @@ class TaigaAPI:
         self.wikilinks = WikiLinks(self.raw_request)
         self.history = History(self.raw_request)
         self.webhooks = Webhooks(self.raw_request)
+        self.webhook_logs = WebhookLogs(self.raw_request)
         self.epics = Epics(self.raw_request)
 
     def me(self):
