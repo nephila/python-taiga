@@ -59,9 +59,13 @@ function; no dynamic generation is introduced).
 ## Breaking change (must be called out prominently)
 
 Today, bare `taiga-mcp-server` (no arguments) always starts the MCP stdio
-server. **This design makes `serve` an explicit, required subcommand** —
-bare invocation becomes a Typer usage error. This was a deliberate choice
-(matching ring's shape exactly) made during design, not a byproduct.
+server. **This design makes `serve` an explicit, required subcommand** — bare
+invocation no longer starts the server. With Typer's `no_args_is_help=True`
+(the same setting ring-mcp-server's own CLI uses), it shows the command
+list/help and exits 0, rather than becoming a hard usage error — the
+compatibility break is that it no longer silently defaults to `serve`, not
+the exact exit code. This was a deliberate choice (matching ring's shape
+exactly) made during design, not a byproduct.
 
 Impact: every existing MCP client config that invokes the binary with no
 arguments (e.g. the `claude mcp add --scope user taiga ... -- taiga-mcp-server`
