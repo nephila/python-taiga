@@ -140,14 +140,18 @@ Available tools
 ``search``
     Search user stories, tasks, issues, epics and wiki pages in a project.
 
-``add_comment``
-    Add a comment to a user story, task, issue or epic.
+``add_comment`` / ``add_comment_by_id``
+    Add a comment to a user story, task, issue or epic, identified by
+    ``project`` + ``ref`` (primary) or by database ``id`` (secondary, see
+    below).
 
-``get_history``
+``get_history`` / ``get_history_by_id``
     Get the full change/comment history of a user story, task, issue, epic or
     wiki page. Each entry's `comment` field is empty for plain field-change
     events and non-empty for an actual comment; `delete_comment_date` is
-    non-null if that comment was later deleted.
+    non-null if that comment was later deleted. Wiki pages have no ref number
+    in Taiga, so for ``entity_type="wiki"`` pass the page's database id as
+    ``ref`` and omit ``project``.
 
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
@@ -160,6 +164,24 @@ Available tools
 
 ``list_epics``, ``get_epic``, ``create_epic``, ``update_epic``, ``delete_epic``
     Manage epics.
+
+.. important:: ``get_user_story``/``get_task``/``get_issue``/``get_epic`` and
+         their ``update_*``/``delete_*`` counterparts take a ``project`` (id
+         or slug) and a ``ref`` - the per-project sequential number Taiga
+         shows in its UI and URLs (e.g. the ``45634`` in
+         ``.../issues/45634``). That ref is **not** the database id used
+         internally for updates/deletes - it's only unique within a project,
+         so it must be resolved together with ``project``. This is the
+         primary, recommended way to address an entity, since numbers a user
+         pastes from a Taiga URL or mentions in conversation are almost
+         always refs.
+
+         Each of these tools also has a ``_by_id`` counterpart (e.g.
+         ``get_issue_by_id``, ``update_task_by_id``, ``delete_epic_by_id``,
+         ``add_comment_by_id``) that takes the raw database ``id`` instead.
+         These are a secondary, non-default lookup path - use them only when
+         you already hold the database id (for example from a prior tool
+         response), not a ref.
 
 ``list_milestones``, ``get_milestone``, ``create_milestone``, ``delete_milestone``
     Manage milestones (sprints).

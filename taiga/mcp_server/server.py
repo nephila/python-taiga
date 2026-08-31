@@ -29,12 +29,42 @@ _ENTITY_ATTR = {
     "epic": "epics",
 }
 
+_REF_METHOD = {
+    "user_story": "get_userstory_by_ref",
+    "task": "get_task_by_ref",
+    "issue": "get_issue_by_ref",
+    "epic": "get_epic_by_ref",
+}
+
 
 def _resolve_project_id(project: str | int) -> int:
     if isinstance(project, int) or str(project).isdigit():
         return int(project)
     client = get_client()
     return client.projects.get_by_slug(str(project)).id
+
+
+def _resolve_project(project: str | int) -> Any:
+    """Fetch the full Project resource.
+
+    Ref-based lookups need the project's id *and* slug, so (unlike
+    `_resolve_project_id`) this always fetches the project even when given a
+    numeric id.
+    """
+    client = get_client()
+    if isinstance(project, int) or str(project).isdigit():
+        return client.projects.get(int(project))
+    return client.projects.get_by_slug(str(project))
+
+
+def _get_by_ref(entity_type: str, project: str | int, ref: int) -> Any:
+    """Resolve a user_story/task/issue/epic to its resource via its per-project ref number.
+
+    `ref` is the sequential number Taiga shows per project - e.g. the 45634 in
+    `.../issues/45634` - not the database id used internally for update/delete.
+    """
+    proj = _resolve_project(project)
+    return getattr(proj, _REF_METHOD[entity_type])(ref)
 
 
 DEFAULT_PAGE_SIZE = 100
@@ -99,9 +129,22 @@ def search(project: str | int, text: str = "") -> dict[str, Any]:
 
 @mcp.tool()
 def add_comment(
+    entity_type: Literal["user_story", "task", "issue", "epic"], project: str | int, ref: int, comment: str
+) -> dict[str, Any]:
+    """Add a comment to a user story, task, issue or epic identified by its per-project ref number."""
+    resource = _get_by_ref(entity_type, project, ref)
+    return to_jsonable(resource.add_comment(comment))
+
+
+@mcp.tool()
+def add_comment_by_id(
     entity_type: Literal["user_story", "task", "issue", "epic"], id: int, comment: str
 ) -> dict[str, Any]:  # noqa: A002
-    """Add a comment to a user story, task, issue or epic."""
+    """Add a comment by database id.
+
+    Secondary lookup: prefer `add_comment` with a project + ref (the number shown in the
+    Taiga UI/URL). Use this only when you already hold the raw database id.
+    """
     client = get_client()
     resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
     return to_jsonable(resource.add_comment(comment))
@@ -112,12 +155,37 @@ _HISTORY_ENTITY_TYPES = ("user_story", "task", "issue", "epic", "wiki")
 
 @mcp.tool()
 def get_history(
-    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"], id: int  # noqa: A002
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"],
+    project: str | int | None,
+    ref: int,
 ) -> list[dict[str, Any]]:
     """Get the full change/comment history of a user story, task, issue, epic or wiki page.
 
+    For entity_type in user_story/task/issue/epic, identify the entity by its per-project
+    `ref` number (the one shown in the Taiga UI/URL) plus `project`. Wiki pages have no ref
+    number in Taiga - for entity_type="wiki", pass the page's database id as `ref` and omit
+    `project`.
+
     Each entry has a `comment` field (empty string for pure field-change events, non-empty
     for an actual comment) and `delete_comment_date` (non-null if the comment was deleted).
+    """
+    if entity_type != "wiki" and project is None:
+        raise ValueError("project is required unless entity_type is 'wiki'")
+    client = get_client()
+    if entity_type == "wiki":
+        return to_jsonable(client.history.wiki.get(ref))
+    resource = _get_by_ref(entity_type, project, ref)
+    return to_jsonable(getattr(client.history, entity_type).get(resource.id))
+
+
+@mcp.tool()
+def get_history_by_id(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"], id: int  # noqa: A002
+) -> list[dict[str, Any]]:
+    """Get history by database id.
+
+    Secondary lookup: prefer `get_history` with a project + ref (the number shown in the
+    Taiga UI/URL). Use this only when you already hold the raw database id.
     """
     client = get_client()
     return to_jsonable(getattr(client.history, entity_type).get(id))
@@ -140,8 +208,18 @@ def list_user_stories(project: str | int | None = None, filters: dict[str, Any] 
 
 
 @mcp.tool()
-def get_user_story(id: int) -> dict[str, Any]:  # noqa: A002
-    """Get a user story by id."""
+def get_user_story(project: str | int, ref: int) -> dict[str, Any]:
+    """Get a user story by its per-project ref number (the number shown in the Taiga UI/URL)."""
+    return to_jsonable(_get_by_ref("user_story", project, ref))
+
+
+@mcp.tool()
+def get_user_story_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+    """Get a user story by its database id.
+
+    Secondary lookup: prefer `get_user_story` with a project + ref. Use this only when you
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    """
     return to_jsonable(get_client().user_stories.get(id))
 
 
@@ -153,15 +231,30 @@ def create_user_story(project: str | int, subject: str, fields: dict[str, Any] |
 
 
 @mcp.tool()
-def update_user_story(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update a user story. `fields` is a dict of the attributes to change."""
+def update_user_story(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
+    """Update a user story identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    resource = _get_by_ref("user_story", project, ref)
+    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+
+
+@mcp.tool()
+def update_user_story_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
+    """Update a user story by its database id. Secondary lookup - prefer `update_user_story` with a project + ref."""
     resource = get_client().user_stories.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
 @mcp.tool()
-def delete_user_story(id: int) -> dict[str, str]:  # noqa: A002
-    """Delete a user story by id."""
+def delete_user_story(project: str | int, ref: int) -> dict[str, str]:
+    """Delete a user story identified by its per-project ref number."""
+    resource = _get_by_ref("user_story", project, ref)
+    resource.delete()
+    return {"status": "deleted", "ref": str(ref)}
+
+
+@mcp.tool()
+def delete_user_story_by_id(id: int) -> dict[str, str]:  # noqa: A002
+    """Delete a user story by its database id. Secondary lookup - prefer `delete_user_story` with a project + ref."""
     get_client().user_stories.delete(id)
     return {"status": "deleted", "id": str(id)}
 
@@ -187,8 +280,18 @@ def list_tasks(
 
 
 @mcp.tool()
-def get_task(id: int) -> dict[str, Any]:  # noqa: A002
-    """Get a task by id."""
+def get_task(project: str | int, ref: int) -> dict[str, Any]:
+    """Get a task by its per-project ref number (the number shown in the Taiga UI/URL)."""
+    return to_jsonable(_get_by_ref("task", project, ref))
+
+
+@mcp.tool()
+def get_task_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+    """Get a task by its database id.
+
+    Secondary lookup: prefer `get_task` with a project + ref. Use this only when you
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    """
     return to_jsonable(get_client().tasks.get(id))
 
 
@@ -200,15 +303,30 @@ def create_task(project: str | int, subject: str, status: int, fields: dict[str,
 
 
 @mcp.tool()
-def update_task(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update a task. `fields` is a dict of the attributes to change."""
+def update_task(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
+    """Update a task identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    resource = _get_by_ref("task", project, ref)
+    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+
+
+@mcp.tool()
+def update_task_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
+    """Update a task by its database id. Secondary lookup - prefer `update_task` with a project + ref."""
     resource = get_client().tasks.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
 @mcp.tool()
-def delete_task(id: int) -> dict[str, str]:  # noqa: A002
-    """Delete a task by id."""
+def delete_task(project: str | int, ref: int) -> dict[str, str]:
+    """Delete a task identified by its per-project ref number."""
+    resource = _get_by_ref("task", project, ref)
+    resource.delete()
+    return {"status": "deleted", "ref": str(ref)}
+
+
+@mcp.tool()
+def delete_task_by_id(id: int) -> dict[str, str]:  # noqa: A002
+    """Delete a task by its database id. Secondary lookup - prefer `delete_task` with a project + ref."""
     get_client().tasks.delete(id)
     return {"status": "deleted", "id": str(id)}
 
@@ -230,8 +348,18 @@ def list_issues(project: str | int | None = None, filters: dict[str, Any] | None
 
 
 @mcp.tool()
-def get_issue(id: int) -> dict[str, Any]:  # noqa: A002
-    """Get an issue by id."""
+def get_issue(project: str | int, ref: int) -> dict[str, Any]:
+    """Get an issue by its per-project ref number (the number shown in the Taiga UI/URL, e.g. .../issues/45634)."""
+    return to_jsonable(_get_by_ref("issue", project, ref))
+
+
+@mcp.tool()
+def get_issue_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+    """Get an issue by its database id.
+
+    Secondary lookup: prefer `get_issue` with a project + ref. Use this only when you
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    """
     return to_jsonable(get_client().issues.get(id))
 
 
@@ -253,15 +381,30 @@ def create_issue(
 
 
 @mcp.tool()
-def update_issue(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update an issue. `fields` is a dict of the attributes to change."""
+def update_issue(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
+    """Update an issue identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    resource = _get_by_ref("issue", project, ref)
+    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+
+
+@mcp.tool()
+def update_issue_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
+    """Update an issue by its database id. Secondary lookup - prefer `update_issue` with a project + ref."""
     resource = get_client().issues.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
 @mcp.tool()
-def delete_issue(id: int) -> dict[str, str]:  # noqa: A002
-    """Delete an issue by id."""
+def delete_issue(project: str | int, ref: int) -> dict[str, str]:
+    """Delete an issue identified by its per-project ref number."""
+    resource = _get_by_ref("issue", project, ref)
+    resource.delete()
+    return {"status": "deleted", "ref": str(ref)}
+
+
+@mcp.tool()
+def delete_issue_by_id(id: int) -> dict[str, str]:  # noqa: A002
+    """Delete an issue by its database id. Secondary lookup - prefer `delete_issue` with a project + ref."""
     get_client().issues.delete(id)
     return {"status": "deleted", "id": str(id)}
 
@@ -283,8 +426,18 @@ def list_epics(project: str | int | None = None, filters: dict[str, Any] | None 
 
 
 @mcp.tool()
-def get_epic(id: int) -> dict[str, Any]:  # noqa: A002
-    """Get an epic by id."""
+def get_epic(project: str | int, ref: int) -> dict[str, Any]:
+    """Get an epic by its per-project ref number (the number shown in the Taiga UI/URL)."""
+    return to_jsonable(_get_by_ref("epic", project, ref))
+
+
+@mcp.tool()
+def get_epic_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+    """Get an epic by its database id.
+
+    Secondary lookup: prefer `get_epic` with a project + ref. Use this only when you
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    """
     return to_jsonable(get_client().epics.get(id))
 
 
@@ -296,15 +449,30 @@ def create_epic(project: str | int, subject: str, fields: dict[str, Any] | None 
 
 
 @mcp.tool()
-def update_epic(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update an epic. `fields` is a dict of the attributes to change."""
+def update_epic(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
+    """Update an epic identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    resource = _get_by_ref("epic", project, ref)
+    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+
+
+@mcp.tool()
+def update_epic_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
+    """Update an epic by its database id. Secondary lookup - prefer `update_epic` with a project + ref."""
     resource = get_client().epics.get(id)
     return to_jsonable(resource.patch(list(fields.keys()), **fields))
 
 
 @mcp.tool()
-def delete_epic(id: int) -> dict[str, str]:  # noqa: A002
-    """Delete an epic by id."""
+def delete_epic(project: str | int, ref: int) -> dict[str, str]:
+    """Delete an epic identified by its per-project ref number."""
+    resource = _get_by_ref("epic", project, ref)
+    resource.delete()
+    return {"status": "deleted", "ref": str(ref)}
+
+
+@mcp.tool()
+def delete_epic_by_id(id: int) -> dict[str, str]:  # noqa: A002
+    """Delete an epic by its database id. Secondary lookup - prefer `delete_epic` with a project + ref."""
     get_client().epics.delete(id)
     return {"status": "deleted", "id": str(id)}
 
