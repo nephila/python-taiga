@@ -178,6 +178,18 @@ def test_bare_invocation_no_longer_serves(mock_configure, mock_mcp):
     assert "serve" in result.output
     mock_configure.assert_not_called()
     mock_mcp.run.assert_not_called()
+
+
+# --- --version --------------------------------------------------------------------------
+
+
+def test_version_flag_prints_version_and_exits():
+    from taiga import __version__
+
+    result = runner.invoke(cli.app, ["--version"])
+
+    assert result.exit_code == 0
+    assert __version__ in result.output
 ```
 
 Delete the old `test_main_*` tests they replace (the argparse-specific ones: `test_main_configures_from_token_argv`, `test_main_configures_from_username_password_argv`, `test_main_reads_credentials_from_env`, `test_main_falls_back_to_tls_verify_env_var`, `test_main_defaults_tls_verify_true_without_env_or_flag`).
@@ -205,6 +217,21 @@ from .. import __version__
 from .auth import DEFAULT_HOST, DEFAULT_TOKEN_TYPE, Credentials, configure
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="Taiga MCP server & CLI.")
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"taiga-mcp-server (python-taiga {__version__})")
+        raise typer.Exit()
+
+
+@app.callback()
+def _main(
+    version: Optional[bool] = typer.Option(
+        None, "--version", callback=_version_callback, is_eager=True, help="Show the version and exit."
+    ),
+) -> None:
+    """Taiga MCP server & CLI."""
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -276,7 +303,7 @@ if __name__ == "__main__":
     main()
 ```
 
-Note: `--version` (previously `argparse`'s `action="version"`) is intentionally dropped from this step — Typer's idiom is a callback-based `--version` on the app itself, added in Task 3 alongside `list-tools` so it doesn't block this task's `serve`-only scope. If `--version` is needed sooner, it can be added here instead — not a hard dependency either way.
+This preserves the previous argparse CLI's `--version` flag (`action="version"`) via Typer's standard eager-callback idiom (`_main`'s `@app.callback()`), applying to the whole `app`, not just `serve`.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
