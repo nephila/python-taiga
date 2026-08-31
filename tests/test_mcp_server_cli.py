@@ -97,6 +97,32 @@ def test_serve_defaults_tls_verify_true_without_env_or_flag(mock_configure, mock
     assert mock_configure.call_args.args[0].tls_verify is True
 
 
+# --- list-tools ---------------------------------------------------------------------------
+
+
+def test_list_tools_lists_all_tool_names():
+    result = runner.invoke(cli.app, ["list-tools"])
+
+    assert result.exit_code == 0
+    assert "whoami" in result.output
+    assert "list_user_stories" in result.output
+    assert "create_issue" in result.output
+
+
+def test_list_tools_default_excludes_schema():
+    result = runner.invoke(cli.app, ["list-tools"])
+
+    assert result.exit_code == 0
+    assert '"properties"' not in result.output
+
+
+def test_list_tools_verbose_includes_schema():
+    result = runner.invoke(cli.app, ["list-tools", "--verbose"])
+
+    assert result.exit_code == 0
+    assert '"properties"' in result.output
+
+
 # --- bare invocation (breaking change) ---------------------------------------------------
 
 

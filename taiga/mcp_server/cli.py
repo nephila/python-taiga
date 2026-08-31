@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 import os
 
 import typer
@@ -87,6 +89,29 @@ def serve(
     from .server import mcp
 
     mcp.run(transport="stdio")
+
+
+@app.command("list-tools")
+def list_tools(
+    host: str | None = HostOption,
+    token: str | None = TokenOption,
+    token_type: str | None = TokenTypeOption,
+    username: str | None = UsernameOption,
+    password: str | None = PasswordOption,
+    tls_verify: bool | None = TlsVerifyOption,
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Include each tool's JSON input schema."),
+) -> None:
+    """List every tool exposed by the MCP server."""
+    configure(_resolve_credentials(host, token, token_type, username, password, tls_verify))
+
+    from .server import mcp
+
+    tools = asyncio.run(mcp.list_tools())
+    for tool in sorted(tools, key=lambda t: t.name):
+        dumped = tool.model_dump(by_alias=True, exclude_none=True)
+        typer.echo(f"{dumped['name']}\t{dumped.get('description', '')}")
+        if verbose:
+            typer.echo(json.dumps(dumped["inputSchema"], indent=2))
 
 
 def main() -> None:
