@@ -192,6 +192,7 @@ def test_bare_invocation_no_longer_serves(mock_configure, mock_mcp):
     result = runner.invoke(cli.app, [])
 
     assert "serve" in result.output
+    assert result.exit_code != 0
     mock_configure.assert_not_called()
     mock_mcp.run.assert_not_called()
 

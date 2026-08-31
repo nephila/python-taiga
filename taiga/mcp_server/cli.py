@@ -11,12 +11,17 @@ import os
 import typer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.shared.exceptions import MCPError
-from pydantic_core import ValidationError as PydanticValidationError
+from pydantic import ValidationError as PydanticValidationError
 
 from .. import __version__
 from .auth import DEFAULT_HOST, DEFAULT_TOKEN_TYPE, Credentials, configure
 
-app = typer.Typer(add_completion=False, no_args_is_help=True, help="Taiga MCP server & CLI.")
+app = typer.Typer(
+    add_completion=False,
+    no_args_is_help=True,
+    help="Taiga MCP server & CLI. Prefer TAIGA_TOKEN/TAIGA_PASSWORD env vars over "
+    "--token/--password, which can be visible in the process list.",
+)
 
 
 def _version_callback(value: bool) -> None:
@@ -128,7 +133,11 @@ def call(
     password: str | None = PasswordOption,
     tls_verify: bool | None = TlsVerifyOption,
 ) -> None:
-    """Call a single tool directly, bypassing an MCP client."""
+    """Call a single tool directly, bypassing an MCP client.
+
+    Prefer the TAIGA_TOKEN/TAIGA_PASSWORD environment variables over
+    --token/--password, which can be visible in the process list.
+    """
     try:
         parsed_arguments = json.loads(arguments)
     except json.JSONDecodeError as exc:

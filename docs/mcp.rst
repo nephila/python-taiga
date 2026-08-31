@@ -34,7 +34,7 @@ Any of the following also work, depending on your toolchain:
 
     pip install --user "python-taiga[mcp]"   # no virtualenv management needed
     pipx install "python-taiga[mcp]"         # isolated venv, one command on PATH
-    uvx --from "python-taiga[mcp]" taiga-mcp-server   # no persistent install at all
+    uvx --from "python-taiga[mcp]" taiga-mcp-server --help   # no persistent install at all
 
 Any of these makes a ``taiga-mcp-server`` console script available.
 

@@ -47,3 +47,4 @@ debian/python3-taiga*
 .venv
 *.egg-link
 .superpowers
+artifacts
