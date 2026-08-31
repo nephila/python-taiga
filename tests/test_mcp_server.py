@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -118,6 +118,22 @@ def test_paginated_does_not_override_explicit_page_size():
     assert server._paginated({"page_size": 25}) == {"page": 1, "page_size": 25}
 
 
+def test_paginated_strips_pagination_override():
+    # `pagination=False` is a ListResource.list() kwarg that disables the bound entirely -
+    # a caller must not be able to pass it through `filters`.
+    assert server._paginated({"pagination": False}) == {"page": 1, "page_size": 100}
+
+
+def test_paginated_normalizes_falsy_page():
+    assert server._paginated({"page": None}) == {"page": 1, "page_size": 100}
+    assert server._paginated({"page": 0}) == {"page": 1, "page_size": 100}
+
+
+def test_paginated_normalizes_falsy_page_size():
+    assert server._paginated({"page_size": None}) == {"page": 1, "page_size": 100}
+    assert server._paginated({"page_size": 0}) == {"page": 1, "page_size": 100}
+
+
 # --- whoami / projects / search ----------------------------------------------------------
 
 
@@ -219,6 +235,9 @@ def test_search(mock_get_client):
 
 @patch("taiga.mcp_server.server.get_client")
 def test_add_comment_routes_every_entity_type(mock_get_client):
+    # CommentableResource.add_comment() delegates to update(), which returns the stale
+    # pre-comment resource (only `version` is refreshed) - not the new comment. The tool
+    # must not serialize that stale resource; it returns an explicit acknowledgement.
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
@@ -226,13 +245,12 @@ def test_add_comment_routes_every_entity_type(mock_get_client):
 
     for entity_type, method_name in server._REF_METHOD.items():
         resource = getattr(mock_project, method_name).return_value
-        resource.add_comment.return_value = {"comment": "hello"}
 
         result = server.add_comment(entity_type, 1, 45634, "hello")
 
         getattr(mock_project, method_name).assert_called_once_with(45634)
         resource.add_comment.assert_called_once_with("hello")
-        assert result == {"comment": "hello"}
+        assert result == {"status": "commented", "ref": "45634", "comment": "hello"}
 
 
 @patch("taiga.mcp_server.server.get_client")
@@ -242,13 +260,12 @@ def test_add_comment_by_id_routes_every_entity_type(mock_get_client):
 
     for entity_type, attr in server._ENTITY_ATTR.items():
         resource = getattr(mock_client, attr).get.return_value
-        resource.add_comment.return_value = {"comment": "hello"}
 
         result = server.add_comment_by_id(entity_type, 1, "hello")
 
         getattr(mock_client, attr).get.assert_called_once_with(1)
         resource.add_comment.assert_called_once_with("hello")
-        assert result == {"comment": "hello"}
+        assert result == {"status": "commented", "id": "1", "comment": "hello"}
 
 
 # --- get_history -----------------------------------------------------------------------
@@ -387,33 +404,35 @@ def test_create_user_story(mock_get_client):
 
 @patch("taiga.mcp_server.server.get_client")
 def test_update_user_story(mock_get_client):
+    # InstanceResource.patch() only refreshes `version` on the local object, not the other
+    # fields the server actually applied - the tool must re-fetch before serializing.
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
+    mock_resource = MagicMock(id=1)
     mock_project.get_userstory_by_ref.return_value = mock_resource
+    mock_client.user_stories.get.return_value = {"id": 1, "subject": "Updated"}
     mock_get_client.return_value = mock_client
 
     result = server.update_user_story(1, 45634, {"subject": "Updated"})
 
     mock_project.get_userstory_by_ref.assert_called_once_with(45634)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.user_stories.get.assert_called_once_with(1)
     assert result == {"id": 1, "subject": "Updated"}
 
 
 @patch("taiga.mcp_server.server.get_client")
 def test_update_user_story_by_id(mock_get_client):
     mock_client = MagicMock()
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
-    mock_client.user_stories.get.return_value = mock_resource
+    mock_resource = MagicMock(id=1)
+    mock_client.user_stories.get.side_effect = [mock_resource, {"id": 1, "subject": "Updated"}]
     mock_get_client.return_value = mock_client
 
     result = server.update_user_story_by_id(1, {"subject": "Updated"})
 
-    mock_client.user_stories.get.assert_called_once_with(1)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.user_stories.get.assert_has_calls([call(1), call(1)])
     assert result == {"id": 1, "subject": "Updated"}
 
 
@@ -513,30 +532,30 @@ def test_update_task(mock_get_client):
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
+    mock_resource = MagicMock(id=1)
     mock_project.get_task_by_ref.return_value = mock_resource
+    mock_client.tasks.get.return_value = {"id": 1, "subject": "Updated"}
     mock_get_client.return_value = mock_client
 
     result = server.update_task(1, 45634, {"subject": "Updated"})
 
     mock_project.get_task_by_ref.assert_called_once_with(45634)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.tasks.get.assert_called_once_with(1)
     assert result == {"id": 1, "subject": "Updated"}
 
 
 @patch("taiga.mcp_server.server.get_client")
 def test_update_task_by_id(mock_get_client):
     mock_client = MagicMock()
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
-    mock_client.tasks.get.return_value = mock_resource
+    mock_resource = MagicMock(id=1)
+    mock_client.tasks.get.side_effect = [mock_resource, {"id": 1, "subject": "Updated"}]
     mock_get_client.return_value = mock_client
 
     result = server.update_task_by_id(1, {"subject": "Updated"})
 
-    mock_client.tasks.get.assert_called_once_with(1)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.tasks.get.assert_has_calls([call(1), call(1)])
     assert result == {"id": 1, "subject": "Updated"}
 
 
@@ -647,30 +666,30 @@ def test_update_issue(mock_get_client):
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
+    mock_resource = MagicMock(id=1)
     mock_project.get_issue_by_ref.return_value = mock_resource
+    mock_client.issues.get.return_value = {"id": 1, "subject": "Updated"}
     mock_get_client.return_value = mock_client
 
     result = server.update_issue(1, 45634, {"subject": "Updated"})
 
     mock_project.get_issue_by_ref.assert_called_once_with(45634)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.issues.get.assert_called_once_with(1)
     assert result == {"id": 1, "subject": "Updated"}
 
 
 @patch("taiga.mcp_server.server.get_client")
 def test_update_issue_by_id(mock_get_client):
     mock_client = MagicMock()
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
-    mock_client.issues.get.return_value = mock_resource
+    mock_resource = MagicMock(id=1)
+    mock_client.issues.get.side_effect = [mock_resource, {"id": 1, "subject": "Updated"}]
     mock_get_client.return_value = mock_client
 
     result = server.update_issue_by_id(1, {"subject": "Updated"})
 
-    mock_client.issues.get.assert_called_once_with(1)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.issues.get.assert_has_calls([call(1), call(1)])
     assert result == {"id": 1, "subject": "Updated"}
 
 
@@ -770,30 +789,30 @@ def test_update_epic(mock_get_client):
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
+    mock_resource = MagicMock(id=1)
     mock_project.get_epic_by_ref.return_value = mock_resource
+    mock_client.epics.get.return_value = {"id": 1, "subject": "Updated"}
     mock_get_client.return_value = mock_client
 
     result = server.update_epic(1, 45634, {"subject": "Updated"})
 
     mock_project.get_epic_by_ref.assert_called_once_with(45634)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.epics.get.assert_called_once_with(1)
     assert result == {"id": 1, "subject": "Updated"}
 
 
 @patch("taiga.mcp_server.server.get_client")
 def test_update_epic_by_id(mock_get_client):
     mock_client = MagicMock()
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "subject": "Updated"}
-    mock_client.epics.get.return_value = mock_resource
+    mock_resource = MagicMock(id=1)
+    mock_client.epics.get.side_effect = [mock_resource, {"id": 1, "subject": "Updated"}]
     mock_get_client.return_value = mock_client
 
     result = server.update_epic_by_id(1, {"subject": "Updated"})
 
-    mock_client.epics.get.assert_called_once_with(1)
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.epics.get.assert_has_calls([call(1), call(1)])
     assert result == {"id": 1, "subject": "Updated"}
 
 
@@ -916,13 +935,12 @@ def test_create_wiki_page(mock_get_client):
 @patch("taiga.mcp_server.server.get_client")
 def test_update_wiki_page(mock_get_client):
     mock_client = MagicMock()
-    mock_resource = MagicMock()
-    mock_resource.patch.return_value = {"id": 1, "content": "Updated"}
-    mock_client.wikipages.get.return_value = mock_resource
+    mock_resource = MagicMock(id=1)
+    mock_client.wikipages.get.side_effect = [mock_resource, {"id": 1, "content": "Updated"}]
     mock_get_client.return_value = mock_client
 
     result = server.update_wiki_page(1, {"content": "Updated"})
 
-    mock_client.wikipages.get.assert_called_once_with(1)
+    mock_client.wikipages.get.assert_has_calls([call(1), call(1)])
     mock_resource.patch.assert_called_once_with(["content"], content="Updated")
     assert result == {"id": 1, "content": "Updated"}

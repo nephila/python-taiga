@@ -78,9 +78,17 @@ def _paginated(query: dict[str, Any]) -> dict[str, Any]:
     `page` would otherwise silently walk and return the *entire* remote collection,
     which for large projects can mean tens of thousands of records in one response.
     Pass `page`/`page_size` inside `filters` to move through further pages.
+
+    `filters` is forwarded straight into `ListResource.list()`, so a caller could
+    otherwise defeat this bound by passing `pagination=False` (a client-control kwarg,
+    stripped here) or an explicit but falsy `page`/`page_size` (e.g. `None` or `0`,
+    normalized here rather than left as-is like `dict.setdefault` would).
     """
-    query.setdefault("page", 1)
-    query.setdefault("page_size", DEFAULT_PAGE_SIZE)
+    query.pop("pagination", None)
+    if not query.get("page"):
+        query["page"] = 1
+    if not query.get("page_size"):
+        query["page_size"] = DEFAULT_PAGE_SIZE
     return query
 
 
@@ -132,8 +140,12 @@ def add_comment(
     entity_type: Literal["user_story", "task", "issue", "epic"], project: str | int, ref: int, comment: str
 ) -> dict[str, Any]:
     """Add a comment to a user story, task, issue or epic identified by its per-project ref number."""
+    # CommentableResource.add_comment() delegates to update(), which returns the stale
+    # pre-comment resource with only `version` refreshed - not the comment itself - so it
+    # must not be serialized as the result; return an explicit acknowledgement instead.
     resource = _get_by_ref(entity_type, project, ref)
-    return to_jsonable(resource.add_comment(comment))
+    resource.add_comment(comment)
+    return {"status": "commented", "ref": str(ref), "comment": comment}
 
 
 @mcp.tool()
@@ -147,7 +159,8 @@ def add_comment_by_id(
     """
     client = get_client()
     resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
-    return to_jsonable(resource.add_comment(comment))
+    resource.add_comment(comment)
+    return {"status": "commented", "id": str(id), "comment": comment}
 
 
 _HISTORY_ENTITY_TYPES = ("user_story", "task", "issue", "epic", "wiki")
@@ -233,15 +246,21 @@ def create_user_story(project: str | int, subject: str, fields: dict[str, Any] |
 @mcp.tool()
 def update_user_story(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
     """Update a user story identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    # InstanceResource.patch() only refreshes `version` on the local object, not the other
+    # fields the server actually applied, so the result must be re-fetched, not serialized
+    # from the patched object itself.
     resource = _get_by_ref("user_story", project, ref)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(get_client().user_stories.get(resource.id))
 
 
 @mcp.tool()
 def update_user_story_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update a user story by its database id. Secondary lookup - prefer `update_user_story` with a project + ref."""
-    resource = get_client().user_stories.get(id)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    client = get_client()
+    resource = client.user_stories.get(id)
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(client.user_stories.get(id))
 
 
 @mcp.tool()
@@ -305,15 +324,19 @@ def create_task(project: str | int, subject: str, status: int, fields: dict[str,
 @mcp.tool()
 def update_task(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
     """Update a task identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
     resource = _get_by_ref("task", project, ref)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(get_client().tasks.get(resource.id))
 
 
 @mcp.tool()
 def update_task_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update a task by its database id. Secondary lookup - prefer `update_task` with a project + ref."""
-    resource = get_client().tasks.get(id)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    client = get_client()
+    resource = client.tasks.get(id)
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(client.tasks.get(id))
 
 
 @mcp.tool()
@@ -383,15 +406,19 @@ def create_issue(
 @mcp.tool()
 def update_issue(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
     """Update an issue identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
     resource = _get_by_ref("issue", project, ref)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(get_client().issues.get(resource.id))
 
 
 @mcp.tool()
 def update_issue_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update an issue by its database id. Secondary lookup - prefer `update_issue` with a project + ref."""
-    resource = get_client().issues.get(id)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    client = get_client()
+    resource = client.issues.get(id)
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(client.issues.get(id))
 
 
 @mcp.tool()
@@ -451,15 +478,19 @@ def create_epic(project: str | int, subject: str, fields: dict[str, Any] | None 
 @mcp.tool()
 def update_epic(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
     """Update an epic identified by its per-project ref number. `fields` is a dict of the attributes to change."""
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
     resource = _get_by_ref("epic", project, ref)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(get_client().epics.get(resource.id))
 
 
 @mcp.tool()
 def update_epic_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update an epic by its database id. Secondary lookup - prefer `update_epic` with a project + ref."""
-    resource = get_client().epics.get(id)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    client = get_client()
+    resource = client.epics.get(id)
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(client.epics.get(id))
 
 
 @mcp.tool()
@@ -553,5 +584,8 @@ def create_wiki_page(
 @mcp.tool()
 def update_wiki_page(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
     """Update a wiki page. `fields` is a dict of the attributes to change."""
-    resource = get_client().wikipages.get(id)
-    return to_jsonable(resource.patch(list(fields.keys()), **fields))
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
+    client = get_client()
+    resource = client.wikipages.get(id)
+    resource.patch(list(fields.keys()), **fields)
+    return to_jsonable(client.wikipages.get(id))
