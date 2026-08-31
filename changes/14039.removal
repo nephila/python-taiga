@@ -1,0 +1,1 @@
+`taiga-mcp-server` now requires an explicit `serve` subcommand to start the MCP server. Running the bare command with no subcommand no longer starts it (it shows the command list instead) - update any MCP client configuration invoking it with no arguments to add ` serve`.
