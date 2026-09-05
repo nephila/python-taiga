@@ -26,12 +26,9 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .tox
-        # No restore-keys fallback: a partial match would restore a .tox env built
-        # against an older setup.cfg, whose dependencies tox won't re-resolve on a
-        # plain run (it only reinstalls deps when their own declaration text changes,
-        # not when setup.cfg's extras do) - a cache miss should mean a clean install,
-        # not a stale/broken one.
-        key: ${{ runner.os }}-tox-${{ format('{{py{0}}}', matrix.python-version) }}-${{ hashFiles('setup.cfg') }}
+        # Include every dependency declaration in the exact cache key so dependency
+        # changes produce a clean tox environment without relying on partial restores.
+        key: ${{ runner.os }}-tox-${{ format('{{py{0}}}', matrix.python-version) }}-${{ hashFiles('setup.cfg', 'tox.ini', 'requirements*.txt') }}
     - name: Install dependencies
       run: |
         sudo apt-get install gettext
