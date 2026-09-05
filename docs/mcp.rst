@@ -144,7 +144,7 @@ available in every project:
       -e TAIGA_HOST=https://taiga.example.com \
       -e TAIGA_USERNAME=myuser \
       -e TAIGA_PASSWORD=mypassword \
-      -- taiga-mcp-server serve
+      -- "$(command -v taiga-mcp-server)" serve
 
 ``--scope user`` stores the registration in your own Claude configuration,
 not in any particular project. Check it went through with:
