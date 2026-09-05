@@ -281,7 +281,7 @@ def test_get_history_resolves_ref_for_non_wiki_types(mock_get_client):
     mock_client.history.user_story.get.return_value = [_HISTORY_ENTRY]
     mock_get_client.return_value = mock_client
 
-    result = server.get_history("user_story", 1, 45634)
+    result = server.get_history("user_story", 45634, 1)
 
     mock_project.get_userstory_by_ref.assert_called_once_with(45634)
     mock_client.history.user_story.get.assert_called_once_with(99)
@@ -300,7 +300,7 @@ def test_get_history_routes_every_ref_entity_type(mock_get_client):
         getattr(mock_project, method_name).return_value = resolved
         getattr(mock_client.history, entity_type).get.return_value = []
 
-        result = server.get_history(entity_type, 1, 45634)
+        result = server.get_history(entity_type, 45634, 1)
 
         getattr(mock_project, method_name).assert_called_once_with(45634)
         getattr(mock_client.history, entity_type).get.assert_called_once_with(1)
@@ -313,7 +313,7 @@ def test_get_history_wiki_uses_literal_id(mock_get_client):
     mock_client.history.wiki.get.return_value = [_HISTORY_ENTRY]
     mock_get_client.return_value = mock_client
 
-    result = server.get_history("wiki", None, 1)
+    result = server.get_history("wiki", 1)
 
     mock_client.history.wiki.get.assert_called_once_with(1)
     mock_client.projects.get.assert_not_called()
@@ -322,7 +322,7 @@ def test_get_history_wiki_uses_literal_id(mock_get_client):
 
 def test_get_history_requires_project_for_non_wiki():
     with pytest.raises(ValueError, match="project"):
-        server.get_history("issue", None, 1)
+        server.get_history("issue", 1)
 
 
 @patch("taiga.mcp_server.server.get_client")

@@ -169,8 +169,8 @@ _HISTORY_ENTITY_TYPES = ("user_story", "task", "issue", "epic", "wiki")
 @mcp.tool()
 def get_history(
     entity_type: Literal["user_story", "task", "issue", "epic", "wiki"],
-    project: str | int | None,
     ref: int,
+    project: str | int | None = None,
 ) -> list[dict[str, Any]]:
     """Get the full change/comment history of a user story, task, issue, epic or wiki page.
 
