@@ -1,1 +1,1 @@
-Add MCP server exposing Taiga projects, user stories, tasks, issues, epics, milestones and wiki pages as tools for AI agents
+Add MCP server exposing Taiga projects, user stories, tasks, issues, epics, milestones and wiki pages as tools for AI agents. `taiga-mcp-server` also gains `list-tools` and `call` subcommands, letting tools be listed and invoked directly from a shell without an MCP client.
