@@ -939,6 +939,44 @@ def test_delete_epic_by_id(mock_get_client):
     assert result == {"status": "deleted", "id": "1"}
 
 
+# --- epic/user-story linking -----------------------------------------------------------
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_link_epic_user_story(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_epic = MagicMock(id=1)
+    mock_us = MagicMock(id=10)
+    mock_project.get_epic_by_ref.return_value = mock_epic
+    mock_project.get_userstory_by_ref.return_value = mock_us
+    mock_epic.add_related_user_story.return_value = {"id": 5, "epic": 1, "user_story": 10}
+    mock_get_client.return_value = mock_client
+
+    result = server.link_epic_user_story(1, 42, 45634)
+
+    mock_project.get_epic_by_ref.assert_called_once_with(42)
+    mock_project.get_userstory_by_ref.assert_called_once_with(45634)
+    mock_epic.add_related_user_story.assert_called_once_with(10)
+    assert result == {"id": 5, "epic": 1, "user_story": 10}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_link_epic_user_story_by_id(mock_get_client):
+    mock_client = MagicMock()
+    mock_epic = MagicMock()
+    mock_client.epics.get.return_value = mock_epic
+    mock_epic.add_related_user_story.return_value = {"id": 5, "epic": 1, "user_story": 10}
+    mock_get_client.return_value = mock_client
+
+    result = server.link_epic_user_story_by_id(1, 10)
+
+    mock_client.epics.get.assert_called_once_with(1)
+    mock_epic.add_related_user_story.assert_called_once_with(10)
+    assert result == {"id": 5, "epic": 1, "user_story": 10}
+
+
 # --- Milestones ------------------------------------------------------------------------
 
 

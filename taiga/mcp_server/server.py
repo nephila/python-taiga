@@ -591,6 +591,26 @@ def delete_epic_by_id(id: int) -> dict[str, str]:  # noqa: A002
     return {"status": "deleted", "id": str(id)}
 
 
+@mcp.tool()
+def link_epic_user_story(project: str | int, epic_ref: int, user_story_ref: int) -> dict[str, Any]:
+    """Link a user story to an epic, identifying both by their per-project ref numbers."""
+    proj = _resolve_project(project)
+    epic = proj.get_epic_by_ref(epic_ref)
+    user_story = proj.get_userstory_by_ref(user_story_ref)
+    return to_jsonable(epic.add_related_user_story(user_story.id))
+
+
+@mcp.tool()
+def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, Any]:
+    """Link a user story to an epic by their database ids.
+
+    Secondary lookup: prefer `link_epic_user_story` with a project + ref numbers.
+    """
+    client = get_client()
+    epic = client.epics.get(epic_id)
+    return to_jsonable(epic.add_related_user_story(user_story_id))
+
+
 # --- Milestones (sprints) -----------------------------------------------------------------
 
 
