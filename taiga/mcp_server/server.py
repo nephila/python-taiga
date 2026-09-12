@@ -204,6 +204,76 @@ def get_history_by_id(
     return to_jsonable(getattr(client.history, entity_type).get(id))
 
 
+@mcp.tool()
+def get_custom_attributes_values(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    project: str | int,
+    ref: int,
+) -> dict[str, Any]:
+    """Get the custom-attribute values of a user story, task, issue or epic,
+    identified by its per-project ref number. Keys of `attributes_values` are
+    attribute ids as strings - see get_project's `*_custom_attributes` lists
+    for id -> name. The returned `version` belongs to this custom-attributes-
+    values resource, a separate version sequence from the entity's own
+    `version` field - pass it back to `set_custom_attribute_value`, not the
+    entity's version.
+    """
+    resource = _get_by_ref(entity_type, project, ref)
+    return to_jsonable(resource.get_attributes())
+
+
+@mcp.tool()
+def get_custom_attributes_values_by_id(
+    entity_type: Literal["user_story", "task", "issue", "epic"], id: int  # noqa: A002
+) -> dict[str, Any]:
+    """Get custom-attribute values by database id.
+
+    Secondary lookup: prefer `get_custom_attributes_values` with a project + ref.
+    Use this only when you already hold the raw database id.
+    """
+    client = get_client()
+    resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
+    return to_jsonable(resource.get_attributes())
+
+
+@mcp.tool()
+def set_custom_attribute_value(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    project: str | int,
+    ref: int,
+    attribute_id: int,
+    value: Any,
+    version: int,
+) -> dict[str, Any]:
+    """Set one custom-attribute value on a user story, task, issue or epic,
+    identified by its per-project ref number. `attribute_id` is the numeric id
+    from get_project's `*_custom_attributes` list (e.g. the "Code" attribute).
+    `version` is the custom-attributes-values resource's own version (from a
+    prior get_custom_attributes_values call, or 1 if never set before) - not
+    the entity's own `version` field.
+    """
+    resource = _get_by_ref(entity_type, project, ref)
+    return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
+
+
+@mcp.tool()
+def set_custom_attribute_value_by_id(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    id: int,  # noqa: A002
+    attribute_id: int,
+    value: Any,
+    version: int,
+) -> dict[str, Any]:
+    """Set a custom-attribute value by database id.
+
+    Secondary lookup: prefer `set_custom_attribute_value` with a project + ref.
+    Use this only when you already hold the raw database id.
+    """
+    client = get_client()
+    resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
+    return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
+
+
 # --- User stories -----------------------------------------------------------------
 
 
