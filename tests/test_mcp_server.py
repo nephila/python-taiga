@@ -337,6 +337,76 @@ def test_get_history_by_id_routes_every_entity_type(mock_get_client):
         assert result == []
 
 
+# --- custom attribute values -------------------------------------------------------------
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_custom_attributes_values_routes_every_entity_type(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_get_client.return_value = mock_client
+
+    for entity_type, method_name in server._REF_METHOD.items():
+        resource = getattr(mock_project, method_name).return_value
+        resource.get_attributes.return_value = {"attributes_values": {"1": "x"}, "version": 1}
+
+        result = server.get_custom_attributes_values(entity_type, 1, 45634)
+
+        getattr(mock_project, method_name).assert_called_once_with(45634)
+        resource.get_attributes.assert_called_once_with()
+        assert result == {"attributes_values": {"1": "x"}, "version": 1}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_custom_attributes_values_by_id_routes_every_entity_type(mock_get_client):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+
+    for entity_type, attr in server._ENTITY_ATTR.items():
+        resource = getattr(mock_client, attr).get.return_value
+        resource.get_attributes.return_value = {"attributes_values": {"1": "x"}, "version": 1}
+
+        result = server.get_custom_attributes_values_by_id(entity_type, 1)
+
+        getattr(mock_client, attr).get.assert_called_once_with(1)
+        assert result == {"attributes_values": {"1": "x"}, "version": 1}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_set_custom_attribute_value_routes_every_entity_type(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_get_client.return_value = mock_client
+
+    for entity_type, method_name in server._REF_METHOD.items():
+        resource = getattr(mock_project, method_name).return_value
+        resource.set_attribute.return_value = {"attributes_values": {"10": "NPH-INT"}, "version": 2}
+
+        result = server.set_custom_attribute_value(entity_type, 1, 45634, 10, "NPH-INT", 1)
+
+        getattr(mock_project, method_name).assert_called_once_with(45634)
+        resource.set_attribute.assert_called_once_with(10, "NPH-INT", version=1)
+        assert result == {"attributes_values": {"10": "NPH-INT"}, "version": 2}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_set_custom_attribute_value_by_id_routes_every_entity_type(mock_get_client):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+
+    for entity_type, attr in server._ENTITY_ATTR.items():
+        resource = getattr(mock_client, attr).get.return_value
+        resource.set_attribute.return_value = {"attributes_values": {"10": "NPH-INT"}, "version": 2}
+
+        result = server.set_custom_attribute_value_by_id(entity_type, 1, 10, "NPH-INT", 1)
+
+        getattr(mock_client, attr).get.assert_called_once_with(1)
+        resource.set_attribute.assert_called_once_with(10, "NPH-INT", version=1)
+        assert result == {"attributes_values": {"10": "NPH-INT"}, "version": 2}
+
+
 # --- User stories -----------------------------------------------------------------------
 
 
