@@ -203,6 +203,15 @@ Create an issue
     )
 
 ******************************************************
+Link a user story to an epic
+******************************************************
+
+.. code:: python
+
+    epic = new_project.add_epic('New Epic')
+    epic.add_related_user_story(userstory.id)
+
+******************************************************
 Create a custom attribute
 ******************************************************
 
