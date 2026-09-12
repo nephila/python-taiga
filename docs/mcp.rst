@@ -168,6 +168,11 @@ Available tools
 ``search``
     Search user stories, tasks, issues, epics and wiki pages in a project.
 
+``list_memberships``
+    List a project's memberships (username, full_name, user_email, role_name,
+    etc.) - the pool of users assignable as owner/assigned_to/watcher on that
+    project's items.
+
 ``add_comment`` / ``add_comment_by_id``
     Add a comment to a user story, task, issue or epic, identified by
     ``project`` + ``ref`` (primary) or by database ``id`` (secondary, see
@@ -181,6 +186,23 @@ Available tools
     in Taiga, so for ``entity_type="wiki"`` pass the page's database id as
     ``ref`` and omit ``project``.
 
+``get_custom_attributes_values`` / ``get_custom_attributes_values_by_id``
+    Get the custom-attribute values of a user story, task, issue or epic.
+    Keys of ``attributes_values`` are attribute ids as strings - see
+    ``get_project``'s ``*_custom_attributes`` lists for id -> name.
+
+``set_custom_attribute_value`` / ``set_custom_attribute_value_by_id``
+    Set one custom-attribute value on a user story, task, issue or epic.
+    ``attribute_id`` is the numeric id from ``get_project``'s
+    ``*_custom_attributes`` list.
+
+.. important:: The ``version`` returned by ``get_custom_attributes_values``
+         (and expected by ``set_custom_attribute_value``) belongs to that
+         custom-attributes-values resource - a separate version sequence
+         from the entity's own ``version`` field. Always pass back the
+         version from a prior ``get_custom_attributes_values`` call (or
+         ``1`` if never set before), not the entity's own ``version``.
+
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
 
@@ -192,6 +214,10 @@ Available tools
 
 ``list_epics``, ``get_epic``, ``create_epic``, ``update_epic``, ``delete_epic``
     Manage epics.
+
+``link_epic_user_story`` / ``link_epic_user_story_by_id``
+    Link a user story to an epic, identifying both by their per-project ref
+    numbers (primary) or by database id (secondary, see below).
 
 .. important:: ``get_user_story``/``get_task``/``get_issue``/``get_epic`` and
          their ``update_*``/``delete_*`` counterparts take a ``project`` (id
@@ -236,3 +262,7 @@ with access to this server can create, modify or delete real data in your
 Taiga projects. Review what an MCP client proposes to do before approving
 write operations, and consider a dedicated Taiga account with restricted
 project membership if you want to limit the blast radius.
+
+``set_custom_attribute_value``/``set_custom_attribute_value_by_id`` and
+``link_epic_user_story``/``link_epic_user_story_by_id`` are also writes and
+fall under the same destructive-tools framing above.
