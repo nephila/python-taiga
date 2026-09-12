@@ -1356,11 +1356,13 @@ class Project(InstanceResource):
         """
         return Memberships(self.requester).create(self.id, email, role, **attrs)
 
-    def list_memberships(self):
+    def list_memberships(self, **queryparams):
         """
         Get the list of :class:`Membership` resources for the project.
+
+        :param queryparams: optional query parameters (e.g. `page`, `page_size`)
         """
-        return Memberships(self.requester).list(project=self.id)
+        return Memberships(self.requester).list(project=self.id, **queryparams)
 
     def add_user_story(self, subject, **attrs):
         """
