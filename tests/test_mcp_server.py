@@ -230,6 +230,32 @@ def test_search(mock_get_client):
     }
 
 
+# --- memberships --------------------------------------------------------------------------
+
+
+@patch("taiga.mcp_server.server._resolve_project")
+def test_list_memberships_no_filters(mock_resolve_project):
+    mock_project = MagicMock()
+    mock_project.list_memberships.return_value = [{"username": "yakky", "user_email": "i.spalletti@nephila.digital"}]
+    mock_resolve_project.return_value = mock_project
+
+    result = server.list_memberships(1)
+
+    mock_project.list_memberships.assert_called_once_with(page=1, page_size=100)
+    assert result == [{"username": "yakky", "user_email": "i.spalletti@nephila.digital"}]
+
+
+@patch("taiga.mcp_server.server._resolve_project")
+def test_list_memberships_with_filters(mock_resolve_project):
+    mock_project = MagicMock()
+    mock_project.list_memberships.return_value = []
+    mock_resolve_project.return_value = mock_project
+
+    server.list_memberships(1, filters={"page": 2})
+
+    mock_project.list_memberships.assert_called_once_with(page=2, page_size=100)
+
+
 # --- add_comment ---------------------------------------------------------------------------
 
 

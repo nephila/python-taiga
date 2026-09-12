@@ -136,6 +136,19 @@ def search(project: str | int, text: str = "") -> dict[str, Any]:
 
 
 @mcp.tool()
+def list_memberships(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """List a project's memberships (username, full_name, user_email, role_name, etc.) -
+    the pool of users assignable as owner/assigned_to/watcher on that project's items.
+
+    Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
+    `page_size` to page further.
+    """
+    proj = _resolve_project(project)
+    query = _paginated(dict(filters or {}))
+    return to_jsonable(proj.list_memberships(**query))
+
+
+@mcp.tool()
 def add_comment(
     entity_type: Literal["user_story", "task", "issue", "epic"], project: str | int, ref: int, comment: str
 ) -> dict[str, Any]:
