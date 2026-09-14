@@ -614,7 +614,9 @@ def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, An
 # --- Milestones (sprints) -----------------------------------------------------------------
 
 
-def _strip_user_stories(data: Any) -> Any:
+def _strip_user_stories(
+    data: dict[str, Any] | list[dict[str, Any]],
+) -> dict[str, Any] | list[dict[str, Any]]:
     """Drop the 'user_stories' key from one or more serialized milestone dicts."""
     for item in data if isinstance(data, list) else [data]:
         item.pop("user_stories", None)
