@@ -615,15 +615,15 @@ def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, An
 
 
 @mcp.tool()
-def list_milestones(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List milestones (sprints) of a project.
+def list_milestones(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """List milestones (sprints), optionally scoped to a project.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
     """
-    pid = _resolve_project_id(project)
     query = dict(filters or {})
-    query["project"] = pid
+    if project is not None:
+        query["project"] = _resolve_project_id(project)
     return to_jsonable(get_client().milestones.list(**_paginated(query)))
 
 
@@ -657,15 +657,15 @@ def delete_milestone(id: int) -> dict[str, str]:  # noqa: A002
 
 
 @mcp.tool()
-def list_wiki_pages(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """List wiki pages of a project.
+def list_wiki_pages(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """List wiki pages, optionally scoped to a project.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
     """
-    pid = _resolve_project_id(project)
     query = dict(filters or {})
-    query["project"] = pid
+    if project is not None:
+        query["project"] = _resolve_project_id(project)
     return to_jsonable(get_client().wikipages.list(**_paginated(query)))
 
 

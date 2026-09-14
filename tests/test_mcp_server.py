@@ -981,7 +981,19 @@ def test_link_epic_user_story_by_id(mock_get_client):
 
 
 @patch("taiga.mcp_server.server.get_client")
-def test_list_milestones(mock_get_client):
+def test_list_milestones_no_project(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.list.return_value = [{"id": 1}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_milestones()
+
+    mock_client.milestones.list.assert_called_once_with(page=1, page_size=100)
+    assert result == [{"id": 1}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_milestones_with_project(mock_get_client):
     mock_client = MagicMock()
     mock_client.milestones.list.return_value = [{"id": 1}]
     mock_get_client.return_value = mock_client
@@ -1031,7 +1043,19 @@ def test_delete_milestone(mock_get_client):
 
 
 @patch("taiga.mcp_server.server.get_client")
-def test_list_wiki_pages(mock_get_client):
+def test_list_wiki_pages_no_project(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.wikipages.list.return_value = [{"id": 1}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_wiki_pages()
+
+    mock_client.wikipages.list.assert_called_once_with(page=1, page_size=100)
+    assert result == [{"id": 1}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_wiki_pages_with_project(mock_get_client):
     mock_client = MagicMock()
     mock_client.wikipages.list.return_value = [{"id": 1}]
     mock_get_client.return_value = mock_client
