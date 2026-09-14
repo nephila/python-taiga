@@ -237,8 +237,14 @@ Available tools
          you already hold the database id (for example from a prior tool
          response), not a ref.
 
-``list_milestones``, ``get_milestone``, ``create_milestone``, ``delete_milestone``
-    Manage milestones (sprints), optionally scoped to a project.
+``list_milestones``, ``get_milestone``
+    List/get milestones (sprints), optionally scoped to a project (``list_milestones``
+    only). Each milestone embeds its full ``user_stories`` - pass
+    ``include_user_stories=False`` to strip that (potentially large) field from the
+    result.
+
+``create_milestone``, ``delete_milestone``
+    Create/delete milestones (sprints).
 
 ``list_wiki_pages``, ``get_wiki_page``, ``create_wiki_page``, ``update_wiki_page``
     Manage wiki pages, optionally scoped to a project.
