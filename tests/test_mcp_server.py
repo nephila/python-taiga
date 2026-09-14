@@ -1005,6 +1005,28 @@ def test_list_milestones_with_project(mock_get_client):
 
 
 @patch("taiga.mcp_server.server.get_client")
+def test_list_milestones_includes_user_stories_by_default(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.list.return_value = [{"id": 1, "user_stories": [{"id": 10}]}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_milestones()
+
+    assert result == [{"id": 1, "user_stories": [{"id": 10}]}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_milestones_excludes_user_stories_when_disabled(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.list.return_value = [{"id": 1, "user_stories": [{"id": 10}]}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_milestones(include_user_stories=False)
+
+    assert result == [{"id": 1}]
+
+
+@patch("taiga.mcp_server.server.get_client")
 def test_get_milestone(mock_get_client):
     mock_client = MagicMock()
     mock_client.milestones.get.return_value = {"id": 1}
@@ -1013,6 +1035,28 @@ def test_get_milestone(mock_get_client):
     result = server.get_milestone(1)
 
     mock_client.milestones.get.assert_called_once_with(1)
+    assert result == {"id": 1}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_milestone_includes_user_stories_by_default(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.get.return_value = {"id": 1, "user_stories": [{"id": 10}]}
+    mock_get_client.return_value = mock_client
+
+    result = server.get_milestone(1)
+
+    assert result == {"id": 1, "user_stories": [{"id": 10}]}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_milestone_excludes_user_stories_when_disabled(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.get.return_value = {"id": 1, "user_stories": [{"id": 10}]}
+    mock_get_client.return_value = mock_client
+
+    result = server.get_milestone(1, include_user_stories=False)
+
     assert result == {"id": 1}
 
 
