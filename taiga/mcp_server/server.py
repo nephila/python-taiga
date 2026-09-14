@@ -614,23 +614,42 @@ def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, An
 # --- Milestones (sprints) -----------------------------------------------------------------
 
 
+def _strip_user_stories(data: Any) -> Any:
+    """Drop the 'user_stories' key from one or more serialized milestone dicts."""
+    for item in data if isinstance(data, list) else [data]:
+        item.pop("user_stories", None)
+    return data
+
+
 @mcp.tool()
-def list_milestones(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def list_milestones(
+    project: str | int | None = None,
+    filters: dict[str, Any] | None = None,
+    include_user_stories: bool = True,
+) -> list[dict[str, Any]]:
     """List milestones (sprints), optionally scoped to a project.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+    Each milestone embeds its full `user_stories`; pass `include_user_stories=False`
+    to strip that (potentially large) field from every returned milestone.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().milestones.list(**_paginated(query)))
+    result = to_jsonable(get_client().milestones.list(**_paginated(query)))
+    return result if include_user_stories else _strip_user_stories(result)
 
 
 @mcp.tool()
-def get_milestone(id: int) -> dict[str, Any]:  # noqa: A002
-    """Get a milestone by id."""
-    return to_jsonable(get_client().milestones.get(id))
+def get_milestone(id: int, include_user_stories: bool = True) -> dict[str, Any]:  # noqa: A002
+    """Get a milestone by id.
+
+    The milestone embeds its full `user_stories`; pass `include_user_stories=False`
+    to strip that (potentially large) field from the returned milestone.
+    """
+    result = to_jsonable(get_client().milestones.get(id))
+    return result if include_user_stories else _strip_user_stories(result)
 
 
 @mcp.tool()
