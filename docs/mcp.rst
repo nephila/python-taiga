@@ -238,10 +238,10 @@ Available tools
          response), not a ref.
 
 ``list_milestones``, ``get_milestone``, ``create_milestone``, ``delete_milestone``
-    Manage milestones (sprints).
+    Manage milestones (sprints), optionally scoped to a project.
 
 ``list_wiki_pages``, ``get_wiki_page``, ``create_wiki_page``, ``update_wiki_page``
-    Manage wiki pages.
+    Manage wiki pages, optionally scoped to a project.
 
 .. tip:: Call ``get_project`` first when creating or updating an entity - it
          returns every status/priority/severity/points id valid for that
