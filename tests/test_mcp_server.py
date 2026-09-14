@@ -980,6 +980,19 @@ def test_link_epic_user_story_by_id(mock_get_client):
 # --- Milestones ------------------------------------------------------------------------
 
 
+def test_strip_user_stories_removes_key_from_dict():
+    assert server._strip_user_stories({"id": 1, "user_stories": [{"id": 10}]}) == {"id": 1}
+
+
+def test_strip_user_stories_removes_key_from_each_item_in_list():
+    data = [{"id": 1, "user_stories": []}, {"id": 2, "user_stories": [{"id": 10}]}]
+    assert server._strip_user_stories(data) == [{"id": 1}, {"id": 2}]
+
+
+def test_strip_user_stories_no_op_when_key_absent():
+    assert server._strip_user_stories({"id": 1}) == {"id": 1}
+
+
 @patch("taiga.mcp_server.server.get_client")
 def test_list_milestones_no_project(mock_get_client):
     mock_client = MagicMock()
