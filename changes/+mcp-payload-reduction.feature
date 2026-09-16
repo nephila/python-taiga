@@ -1,0 +1,1 @@
+Add opt-in payload-reduction parameters (`payload`, `fields`, `strip_media`, `expand`, `resolve_assigned_users`, `strict_filters`) to the MCP server's read tools, shrinking oversized responses on request while leaving default behaviour byte-for-byte unchanged.
