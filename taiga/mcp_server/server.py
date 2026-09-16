@@ -374,6 +374,7 @@ def list_user_stories(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    resolve_assigned_users: bool = False,
 ) -> list[dict[str, Any]]:
     """List user stories, optionally scoped to a project and/or filtered by extra query params.
 
@@ -387,12 +388,17 @@ def list_user_stories(
     paths, e.g. "status_extra_info.name") is an explicit allowlist overriding `payload`.
     `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
     of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    reduced `payload`. `assigned_users` is a bare id list with no names in the payload;
+    pass `resolve_assigned_users=True` to attach `assigned_users_extra_info` (id +
+    full_name_display) - costs one extra memberships call per distinct project in the
+    result, so it's opt-in.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
     result = to_jsonable(get_client().user_stories.list(**_paginated(query)))
+    if resolve_assigned_users:
+        result = _resolve_assigned_users(result)
     return apply_payload(result, "userstory", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
@@ -404,6 +410,7 @@ def get_user_story(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    resolve_assigned_users: bool = False,
 ) -> dict[str, Any]:
     """Get a user story by its per-project ref number (the number shown in the Taiga UI/URL).
 
@@ -411,8 +418,13 @@ def get_user_story(
     (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
     (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
     `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `assigned_users` is a bare id list with no names in the payload; pass
+    `resolve_assigned_users=True` to attach `assigned_users_extra_info` (id +
+    full_name_display) - costs one extra memberships call, so it's opt-in.
     """
     result = to_jsonable(_get_by_ref("user_story", project, ref))
+    if resolve_assigned_users:
+        result = _resolve_assigned_users(result)
     return apply_payload(result, "userstory", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
@@ -423,6 +435,7 @@ def get_user_story_by_id(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    resolve_assigned_users: bool = False,
 ) -> dict[str, Any]:
     """Get a user story by its database id.
 
@@ -431,9 +444,13 @@ def get_user_story_by_id(
     ("full" default / "compact" / "minimal") shrinks the response. `fields` (optionally
     dotted paths) is an explicit allowlist overriding `payload`. `strip_media` (True/False)
     overrides whether avatar/logo URLs are stripped. `expand` adds named top-level blocks
-    back at full detail on top of a reduced `payload`.
+    back at full detail on top of a reduced `payload`. Pass `resolve_assigned_users=True`
+    to attach `assigned_users_extra_info` (id + full_name_display) - costs one extra
+    memberships call.
     """
     result = to_jsonable(get_client().user_stories.get(id))
+    if resolve_assigned_users:
+        result = _resolve_assigned_users(result)
     return apply_payload(result, "userstory", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
