@@ -1276,3 +1276,16 @@ def test_get_user_story_expand_adds_full_block_back(mock_get_client):
     result = server.get_user_story(1, 45634, payload="minimal", expand=["assigned_to_extra_info"])
 
     assert result["assigned_to_extra_info"] == {"id": 5, "full_name_display": "Bob", "photo": "x"}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_tasks_payload_minimal_falls_back_to_compact(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.tasks.list.return_value = [
+        {"id": 1, "subject": "hello", "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "x"}}
+    ]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_tasks(payload="minimal")
+
+    assert result == [{"id": 1, "subject": "hello", "owner_extra_info": {"id": 9, "full_name_display": "Alice"}}]

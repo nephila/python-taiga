@@ -454,35 +454,77 @@ def delete_user_story_by_id(id: int) -> dict[str, str]:  # noqa: A002
 
 @mcp.tool()
 def list_tasks(
-    project: str | int | None = None, user_story: int | None = None, filters: dict[str, Any] | None = None
+    project: str | int | None = None,
+    user_story: int | None = None,
+    filters: dict[str, Any] | None = None,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """List tasks, optionally scoped to a project and/or a user story.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for tasks yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
     if user_story is not None:
         query["user_story"] = user_story
-    return to_jsonable(get_client().tasks.list(**_paginated(query)))
+    result = to_jsonable(get_client().tasks.list(**_paginated(query)))
+    return apply_payload(result, "task", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_task(project: str | int, ref: int) -> dict[str, Any]:
-    """Get a task by its per-project ref number (the number shown in the Taiga UI/URL)."""
-    return to_jsonable(_get_by_ref("task", project, ref))
+def get_task(
+    project: str | int,
+    ref: int,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
+    """Get a task by its per-project ref number (the number shown in the Taiga UI/URL).
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for tasks yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
+    """
+    result = to_jsonable(_get_by_ref("task", project, ref))
+    return apply_payload(result, "task", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_task_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+def get_task_by_id(
+    id: int,  # noqa: A002
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
     """Get a task by its database id.
 
     Secondary lookup: prefer `get_task` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
+    ("full" default / "compact" / "minimal" - "minimal" behaves the same as "compact" for
+    tasks) shrinks the response. `fields` (optionally dotted paths) is an explicit
+    allowlist overriding `payload`. `strip_media` (True/False) overrides whether
+    avatar/logo URLs are stripped. `expand` adds named top-level blocks back at full
+    detail on top of a reduced `payload`.
     """
-    return to_jsonable(get_client().tasks.get(id))
+    result = to_jsonable(get_client().tasks.get(id))
+    return apply_payload(result, "task", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
