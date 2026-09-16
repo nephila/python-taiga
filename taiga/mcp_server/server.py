@@ -838,6 +838,10 @@ def list_milestones(
     project: str | int | None = None,
     filters: dict[str, Any] | None = None,
     include_user_stories: bool = True,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """List milestones (sprints), optionally scoped to a project.
 
@@ -845,23 +849,46 @@ def list_milestones(
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
     Each milestone embeds its full `user_stories`; pass `include_user_stories=False`
     to strip that (potentially large) field from every returned milestone.
+
+    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
+    keeps only id/name/slug/project/estimated_start/estimated_finish/closed. `fields`
+    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
+    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
     result = to_jsonable(get_client().milestones.list(**_paginated(query)))
-    return result if include_user_stories else _strip_user_stories(result)
+    if not include_user_stories:
+        result = _strip_user_stories(result)
+    return apply_payload(result, "milestone", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_milestone(id: int, include_user_stories: bool = True) -> dict[str, Any]:  # noqa: A002
+def get_milestone(
+    id: int,  # noqa: A002
+    include_user_stories: bool = True,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
     """Get a milestone by id.
 
     The milestone embeds its full `user_stories`; pass `include_user_stories=False`
     to strip that (potentially large) field from the returned milestone.
+
+    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
+    keeps only id/name/slug/project/estimated_start/estimated_finish/closed. `fields`
+    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
+    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
     """
     result = to_jsonable(get_client().milestones.get(id))
-    return result if include_user_stories else _strip_user_stories(result)
+    if not include_user_stories:
+        result = _strip_user_stories(result)
+    return apply_payload(result, "milestone", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
