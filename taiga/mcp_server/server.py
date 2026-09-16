@@ -92,6 +92,30 @@ def _paginated(query: dict[str, Any]) -> dict[str, Any]:
     return query
 
 
+_FILTER_TRAP_KEYS = frozenset(
+    {"payload", "fields", "strip_media", "expand", "strict_filters", "include_user_stories", "resolve_assigned_users"}
+)
+
+
+def _check_strict_filters(filters: dict[str, Any] | None, strict_filters: bool) -> None:
+    """Raise if `filters` nests one of this server's own parameter names by mistake.
+
+    Taiga's REST backend silently ignores unknown query parameters, so a caller who nests
+    e.g. `filters={"include_user_stories": False}` instead of passing it top-level gets a
+    full, unfiltered response with no error - a measured 24x size regression with no
+    signal either way. Checked against a fixed set of this server's own parameter names,
+    not Taiga's full (and from this client, unknowable) set of real filterable fields, so
+    this can never false-positive on a genuine Taiga filter.
+    """
+    if not strict_filters or not filters:
+        return
+    trapped = _FILTER_TRAP_KEYS & filters.keys()
+    if trapped:
+        raise ValueError(
+            f"filters contains parameter name(s) meant to be passed top-level, not nested: {sorted(trapped)}"
+        )
+
+
 @mcp.tool()
 def whoami() -> dict[str, Any]:
     """Return the Taiga user currently authenticated."""
@@ -106,6 +130,7 @@ def list_projects(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List projects visible to the authenticated user, optionally filtered by member id.
 
@@ -117,8 +142,10 @@ def list_projects(
     `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
     `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
     of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
+    tool's own parameter names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if member is not None:
         query["member"] = member
@@ -174,6 +201,7 @@ def list_memberships(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List a project's memberships (username, full_name, user_email, role_name, etc.) -
     the pool of users assignable as owner/assigned_to/watcher on that project's items.
@@ -186,8 +214,10 @@ def list_memberships(
     `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
     `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
     of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
+    tool's own parameter names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     proj = _resolve_project(project)
     query = _paginated(dict(filters or {}))
     result = to_jsonable(proj.list_memberships(**query))
@@ -375,6 +405,7 @@ def list_user_stories(
     strip_media: bool | None = None,
     expand: list[str] | None = None,
     resolve_assigned_users: bool = False,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List user stories, optionally scoped to a project and/or filtered by extra query params.
 
@@ -391,8 +422,10 @@ def list_user_stories(
     reduced `payload`. `assigned_users` is a bare id list with no names in the payload;
     pass `resolve_assigned_users=True` to attach `assigned_users_extra_info` (id +
     full_name_display) - costs one extra memberships call per distinct project in the
-    result, so it's opt-in.
+    result, so it's opt-in. `strict_filters=True` raises if `filters` contains one of this
+    tool's own parameter names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
@@ -508,6 +541,7 @@ def list_tasks(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List tasks, optionally scoped to a project and/or a user story.
 
@@ -519,8 +553,10 @@ def list_tasks(
     `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
     `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
     of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
+    tool's own parameter names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
@@ -625,6 +661,7 @@ def list_issues(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List issues, optionally scoped to a project.
 
@@ -638,7 +675,10 @@ def list_issues(
     paths) is an explicit allowlist overriding `payload`. `strip_media` (True/False)
     overrides whether avatar/logo URLs are stripped, regardless of `payload`. `expand`
     adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `strict_filters=True` raises if `filters` contains one of this tool's own parameter
+    names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
@@ -748,6 +788,7 @@ def list_epics(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List epics, optionally scoped to a project.
 
@@ -759,7 +800,10 @@ def list_epics(
     dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
     (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
     `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `strict_filters=True` raises if `filters` contains one of this tool's own parameter
+    names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
@@ -889,6 +933,7 @@ def list_milestones(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List milestones (sprints), optionally scoped to a project.
 
@@ -902,7 +947,10 @@ def list_milestones(
     (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
     (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
     `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `strict_filters=True` raises if `filters` contains one of this tool's own parameter
+    names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
@@ -969,6 +1017,7 @@ def list_wiki_pages(
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
+    strict_filters: bool = False,
 ) -> list[dict[str, Any]]:
     """List wiki pages, optionally scoped to a project.
 
@@ -980,8 +1029,10 @@ def list_wiki_pages(
     `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
     `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
     of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
+    tool's own parameter names instead of silently ignoring it.
     """
+    _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)

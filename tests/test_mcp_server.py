@@ -1534,3 +1534,39 @@ def test_list_user_stories_resolve_assigned_users_defaults_false(mock_get_client
 
     assert "assigned_users_extra_info" not in result[0]
     mock_client.projects.get.assert_not_called()
+
+
+# --- _check_strict_filters --------------------------------------------------------------
+
+
+def test_check_strict_filters_no_op_when_disabled():
+    server._check_strict_filters({"include_user_stories": False}, strict_filters=False)
+
+
+def test_check_strict_filters_no_op_when_filters_none():
+    server._check_strict_filters(None, strict_filters=True)
+
+
+def test_check_strict_filters_no_op_when_filters_clean():
+    server._check_strict_filters({"closed": False, "project": 1}, strict_filters=True)
+
+
+def test_check_strict_filters_raises_naming_the_trapped_key():
+    with pytest.raises(ValueError, match="include_user_stories"):
+        server._check_strict_filters({"include_user_stories": False}, strict_filters=True)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_milestones_strict_filters_false_ignores_trap_key_silently(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.list.return_value = [{"id": 1}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_milestones(filters={"include_user_stories": False})
+
+    assert result == [{"id": 1}]
+
+
+def test_list_milestones_strict_filters_true_raises():
+    with pytest.raises(ValueError, match="include_user_stories"):
+        server.list_milestones(filters={"include_user_stories": False}, strict_filters=True)
