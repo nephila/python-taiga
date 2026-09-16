@@ -1349,6 +1349,51 @@ def test_list_epics_payload_minimal_uses_measured_field_set(mock_get_client):
 
     result = server.list_epics(payload="minimal")
 
-    assert result == [
-        {"id": 1, "ref": 7, "subject": "hello", "status_extra_info": {"name": "Done"}, "project": 5}
+    assert result == [{"id": 1, "ref": 7, "subject": "hello", "status_extra_info": {"name": "Done"}, "project": 5}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_milestones_include_user_stories_false_and_payload_compact_combine(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.list.return_value = [
+        {
+            "id": 1,
+            "name": "Sprint 1",
+            "user_stories": [{"id": 10}],
+            "project_extra_info": {"id": 5, "name": "Demo", "logo_small_url": "https://x/logo.png"},
+        }
     ]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_milestones(include_user_stories=False, payload="compact")
+
+    assert result == [{"id": 1, "name": "Sprint 1", "project_extra_info": {"id": 5, "name": "Demo"}}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_milestone_payload_minimal_uses_measured_field_set(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.milestones.get.return_value = {
+        "id": 1,
+        "name": "Sprint 1",
+        "slug": "sprint-1",
+        "project": 5,
+        "estimated_start": "2026-09-01",
+        "estimated_finish": "2026-09-14",
+        "closed": False,
+        "user_stories": [{"id": 10}],
+        "project_extra_info": {"id": 5, "name": "Demo", "logo_small_url": "https://x/logo.png"},
+    }
+    mock_get_client.return_value = mock_client
+
+    result = server.get_milestone(1, payload="minimal")
+
+    assert result == {
+        "id": 1,
+        "name": "Sprint 1",
+        "slug": "sprint-1",
+        "project": 5,
+        "estimated_start": "2026-09-01",
+        "estimated_finish": "2026-09-14",
+        "closed": False,
+    }
