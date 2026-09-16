@@ -333,6 +333,36 @@ def set_custom_attribute_value_by_id(
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
 
 
+def _resolve_assigned_users(
+    data: dict[str, Any] | list[dict[str, Any]],
+) -> dict[str, Any] | list[dict[str, Any]]:
+    """Attach `assigned_users_extra_info` (id + full_name_display) to each item's bare
+    `assigned_users` id list, resolving names via each distinct project's memberships.
+
+    Memberships share the same `full_name_display` field every other Taiga user block in
+    this codebase uses (`owner_extra_info`, `assigned_to_extra_info`, ...). Fetches at most
+    one membership page (up to 100 members) per distinct project id actually referenced.
+    """
+    items = data if isinstance(data, list) else [data]
+    if not any(item.get("assigned_users") for item in items):
+        return data
+    client = get_client()
+    membership_maps: dict[int, dict[int, str | None]] = {}
+    for item in items:
+        assigned_users = item.get("assigned_users")
+        if not assigned_users:
+            continue
+        project_id = item["project"]
+        if project_id not in membership_maps:
+            memberships = to_jsonable(client.projects.get(project_id).list_memberships(**_paginated({})))
+            membership_maps[project_id] = {m["user"]: m.get("full_name_display") for m in memberships}
+        name_map = membership_maps[project_id]
+        item["assigned_users_extra_info"] = [
+            {"id": uid, "full_name_display": name_map.get(uid)} for uid in assigned_users
+        ]
+    return data
+
+
 # --- User stories -----------------------------------------------------------------
 
 
