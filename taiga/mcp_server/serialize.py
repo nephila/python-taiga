@@ -66,3 +66,30 @@ def _select_from_item(item: dict[str, Any], paths: list[str]) -> dict[str, Any]:
         else:
             result[top] = value
     return result
+
+
+_LABEL_KEYS = ("name", "full_name_display")
+_EXTRA_INFO_EXTRA_KEEP = {"status_extra_info": ("is_closed",)}
+
+
+def collapse_extra_info(data: Any) -> Any:
+    """Shrink every `*_extra_info` block to its id plus whichever descriptive label
+    field is present.
+
+    Keeps `name` or `full_name_display` (the only two label fields used across
+    owner_extra_info, assigned_to_extra_info, project_extra_info and status_extra_info in
+    this codebase), and additionally `is_closed` for status_extra_info specifically, so a
+    compact caller can still tell whether an item is closed without expanding the block.
+    """
+    if isinstance(data, dict):
+        result: dict[str, Any] = {}
+        for key, value in data.items():
+            if key.endswith("_extra_info") and isinstance(value, dict):
+                keep = ("id", *_LABEL_KEYS, *_EXTRA_INFO_EXTRA_KEEP.get(key, ()))
+                result[key] = {k: value[k] for k in keep if k in value}
+            else:
+                result[key] = collapse_extra_info(value)
+        return result
+    if isinstance(data, list):
+        return [collapse_extra_info(item) for item in data]
+    return data

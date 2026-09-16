@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock
 
-from taiga.mcp_server.serialize import select_fields, strip_avatar_fields, to_jsonable
+from taiga.mcp_server.serialize import collapse_extra_info, select_fields, strip_avatar_fields, to_jsonable
 from taiga.models.base import InstanceResource
 
 
@@ -182,3 +182,63 @@ def test_select_fields_nested_list_items_missing_the_path_are_dropped_down_to_em
     result = select_fields(data, ["epics.ref"])
 
     assert result == {"epics": [{"ref": 10}, {}]}
+
+
+def test_collapse_extra_info_keeps_id_and_name_for_project_like_blocks():
+    data = {
+        "id": 1,
+        "project_extra_info": {"id": 7, "name": "Demo", "slug": "demo", "logo_small_url": "https://x/y.png"},
+    }
+
+    result = collapse_extra_info(data)
+
+    assert result == {"id": 1, "project_extra_info": {"id": 7, "name": "Demo"}}
+
+
+def test_collapse_extra_info_keeps_id_and_full_name_display_for_user_like_blocks():
+    data = {
+        "owner_extra_info": {
+            "id": 3,
+            "full_name_display": "Alice",
+            "username": "alice",
+            "photo": "https://x/a.png",
+        }
+    }
+
+    result = collapse_extra_info(data)
+
+    assert result == {"owner_extra_info": {"id": 3, "full_name_display": "Alice"}}
+
+
+def test_collapse_extra_info_keeps_is_closed_for_status_extra_info_only():
+    data = {
+        "status_extra_info": {"id": 2, "name": "Done", "is_closed": True, "color": "#00ff00"},
+        "project_extra_info": {"id": 7, "name": "Demo", "is_closed": True},
+    }
+
+    result = collapse_extra_info(data)
+
+    assert result == {
+        "status_extra_info": {"id": 2, "name": "Done", "is_closed": True},
+        "project_extra_info": {"id": 7, "name": "Demo"},
+    }
+
+
+def test_collapse_extra_info_recurses_into_list_of_dicts():
+    data = [
+        {"owner_extra_info": {"id": 1, "full_name_display": "Alice", "photo": "x"}},
+        {"owner_extra_info": {"id": 2, "full_name_display": "Bob", "photo": "y"}},
+    ]
+
+    result = collapse_extra_info(data)
+
+    assert result == [
+        {"owner_extra_info": {"id": 1, "full_name_display": "Alice"}},
+        {"owner_extra_info": {"id": 2, "full_name_display": "Bob"}},
+    ]
+
+
+def test_collapse_extra_info_leaves_non_extra_info_keys_untouched():
+    data = {"id": 1, "subject": "hello", "user_stories": [{"id": 10}]}
+
+    assert collapse_extra_info(data) == data
