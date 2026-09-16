@@ -1205,3 +1205,74 @@ def test_list_memberships_payload_minimal_falls_back_to_compact(mock_get_client)
     result = server.list_memberships(1, payload="minimal")
 
     assert result == [{"id": 1, "owner_extra_info": {"id": 9, "full_name_display": "Alice"}}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_user_stories_payload_minimal_uses_measured_field_set(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.user_stories.list.return_value = [
+        {
+            "id": 1,
+            "ref": 42,
+            "subject": "hello",
+            "version": 3,
+            "milestone": 7,
+            "milestone_name": "Sprint 1",
+            "status": 2,
+            "status_extra_info": {"id": 2, "name": "Done", "is_closed": True},
+            "is_closed": True,
+            "finish_date": None,
+            "is_blocked": False,
+            "assigned_to_extra_info": {"id": 5, "full_name_display": "Bob", "photo": "x"},
+            "epics": [{"ref": 10, "subject": "Epic A"}],
+            "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "y"},
+        }
+    ]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_user_stories(payload="minimal")
+
+    assert result == [
+        {
+            "id": 1,
+            "ref": 42,
+            "subject": "hello",
+            "version": 3,
+            "milestone": 7,
+            "milestone_name": "Sprint 1",
+            "status": 2,
+            "status_extra_info": {"name": "Done", "is_closed": True},
+            "is_closed": True,
+            "finish_date": None,
+            "is_blocked": False,
+            "assigned_to_extra_info": {"full_name_display": "Bob"},
+            "epics": [{"ref": 10}],
+        }
+    ]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_user_story_expand_adds_full_block_back(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.get_userstory_by_ref.return_value = {
+        "id": 1,
+        "ref": 45634,
+        "subject": "hello",
+        "version": 1,
+        "milestone": None,
+        "milestone_name": None,
+        "status": 2,
+        "status_extra_info": {"id": 2, "name": "Done", "is_closed": True},
+        "is_closed": True,
+        "finish_date": None,
+        "is_blocked": False,
+        "assigned_to_extra_info": {"id": 5, "full_name_display": "Bob", "photo": "x"},
+        "epics": [],
+    }
+    mock_get_client.return_value = mock_client
+
+    result = server.get_user_story(1, 45634, payload="minimal", expand=["assigned_to_extra_info"])
+
+    assert result["assigned_to_extra_info"] == {"id": 5, "full_name_display": "Bob", "photo": "x"}
