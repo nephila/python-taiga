@@ -1330,3 +1330,25 @@ def test_get_issue_payload_minimal_uses_measured_field_set(mock_get_client):
         "assigned_to_extra_info": {"full_name_display": "Bob"},
         "epics": [],
     }
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_epics_payload_minimal_uses_measured_field_set(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.epics.list.return_value = [
+        {
+            "id": 1,
+            "ref": 7,
+            "subject": "hello",
+            "project": 5,
+            "status_extra_info": {"id": 2, "name": "Done", "is_closed": True},
+            "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "x"},
+        }
+    ]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_epics(payload="minimal")
+
+    assert result == [
+        {"id": 1, "ref": 7, "subject": "hello", "status_extra_info": {"name": "Done"}, "project": 5}
+    ]

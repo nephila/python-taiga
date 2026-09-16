@@ -694,32 +694,71 @@ def delete_issue_by_id(id: int) -> dict[str, str]:  # noqa: A002
 
 
 @mcp.tool()
-def list_epics(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def list_epics(
+    project: str | int | None = None,
+    filters: dict[str, Any] | None = None,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """List epics, optionally scoped to a project.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+
+    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
+    keeps only id/ref/subject/project plus status_extra_info.name. `fields` (optionally
+    dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
+    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().epics.list(**_paginated(query)))
+    result = to_jsonable(get_client().epics.list(**_paginated(query)))
+    return apply_payload(result, "epic", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_epic(project: str | int, ref: int) -> dict[str, Any]:
-    """Get an epic by its per-project ref number (the number shown in the Taiga UI/URL)."""
-    return to_jsonable(_get_by_ref("epic", project, ref))
+def get_epic(
+    project: str | int,
+    ref: int,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
+    """Get an epic by its per-project ref number (the number shown in the Taiga UI/URL).
+
+    `payload` ("full" default / "compact" / "minimal") shrinks the response. `fields`
+    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
+    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    """
+    result = to_jsonable(_get_by_ref("epic", project, ref))
+    return apply_payload(result, "epic", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_epic_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+def get_epic_by_id(
+    id: int,  # noqa: A002
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
     """Get an epic by its database id.
 
     Secondary lookup: prefer `get_epic` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
+    ("full" default / "compact" / "minimal") shrinks the response. `fields` (optionally
+    dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped. `expand` adds named
+    top-level blocks back at full detail on top of a reduced `payload`.
     """
-    return to_jsonable(get_client().epics.get(id))
+    result = to_jsonable(get_client().epics.get(id))
+    return apply_payload(result, "epic", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
