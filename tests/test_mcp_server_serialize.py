@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock
 
-from taiga.mcp_server.serialize import to_jsonable
+from taiga.mcp_server.serialize import strip_avatar_fields, to_jsonable
 from taiga.models.base import InstanceResource
 
 
@@ -73,3 +73,45 @@ def test_to_jsonable_converts_plain_date_and_datetime_values():
         "due_date": "2026-01-01",
         "finished_at": "2026-01-01T12:30:00+00:00",
     }
+
+
+def test_strip_avatar_fields_removes_known_keys_from_nested_dict():
+    data = {
+        "id": 1,
+        "owner_extra_info": {
+            "full_name_display": "Alice",
+            "photo": "https://example.com/a.png",
+            "big_photo": "https://example.com/a-big.png",
+            "gravatar_id": "abc123",
+        },
+    }
+
+    result = strip_avatar_fields(data)
+
+    assert result == {"id": 1, "owner_extra_info": {"full_name_display": "Alice"}}
+
+
+def test_strip_avatar_fields_removes_logo_small_url():
+    data = {"project_extra_info": {"name": "Demo", "logo_small_url": "https://example.com/logo.png"}}
+
+    result = strip_avatar_fields(data)
+
+    assert result == {"project_extra_info": {"name": "Demo"}}
+
+
+def test_strip_avatar_fields_recurses_into_list_of_dicts():
+    data = [{"photo": "x", "id": 1}, {"photo": "y", "id": 2}]
+
+    result = strip_avatar_fields(data)
+
+    assert result == [{"id": 1}, {"id": 2}]
+
+
+def test_strip_avatar_fields_no_op_when_no_avatar_keys_present():
+    assert strip_avatar_fields({"id": 1, "subject": "hello"}) == {"id": 1, "subject": "hello"}
+
+
+def test_strip_avatar_fields_passes_through_non_dict_non_list_values():
+    assert strip_avatar_fields("hello") == "hello"
+    assert strip_avatar_fields(42) == 42
+    assert strip_avatar_fields(None) is None
