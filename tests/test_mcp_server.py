@@ -1397,3 +1397,29 @@ def test_get_milestone_payload_minimal_uses_measured_field_set(mock_get_client):
         "estimated_finish": "2026-09-14",
         "closed": False,
     }
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_wiki_pages_default_unchanged(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.wikipages.list.return_value = [{"id": 1, "slug": "home", "content": "hello"}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_wiki_pages()
+
+    assert result == [{"id": 1, "slug": "home", "content": "hello"}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_wiki_page_strip_media_true(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.wikipages.get.return_value = {
+        "id": 1,
+        "slug": "home",
+        "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "x"},
+    }
+    mock_get_client.return_value = mock_client
+
+    result = server.get_wiki_page(1, strip_media=True)
+
+    assert result == {"id": 1, "slug": "home", "owner_extra_info": {"id": 9, "full_name_display": "Alice"}}
