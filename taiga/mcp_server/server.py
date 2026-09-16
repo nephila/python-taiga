@@ -915,22 +915,52 @@ def delete_milestone(id: int) -> dict[str, str]:  # noqa: A002
 
 
 @mcp.tool()
-def list_wiki_pages(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def list_wiki_pages(
+    project: str | int | None = None,
+    filters: dict[str, Any] | None = None,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """List wiki pages, optionally scoped to a project.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for wiki pages yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().wikipages.list(**_paginated(query)))
+    result = to_jsonable(get_client().wikipages.list(**_paginated(query)))
+    return apply_payload(result, "wikipage", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_wiki_page(id: int) -> dict[str, Any]:  # noqa: A002
-    """Get a wiki page by id."""
-    return to_jsonable(get_client().wikipages.get(id))
+def get_wiki_page(
+    id: int,  # noqa: A002
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
+    """Get a wiki page by id.
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for wiki pages yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
+    """
+    result = to_jsonable(get_client().wikipages.get(id))
+    return apply_payload(result, "wikipage", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
