@@ -1501,3 +1501,36 @@ def test_resolve_assigned_users_no_op_when_assigned_users_empty():
     result = server._resolve_assigned_users(data)
 
     assert "assigned_users_extra_info" not in result
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_user_stories_resolve_assigned_users(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.user_stories.list.return_value = [{"id": 1, "project": 5, "assigned_users": [10]}]
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_user_stories(resolve_assigned_users=True)
+
+    assert result == [
+        {
+            "id": 1,
+            "project": 5,
+            "assigned_users": [10],
+            "assigned_users_extra_info": [{"id": 10, "full_name_display": "Alice"}],
+        }
+    ]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_user_stories_resolve_assigned_users_defaults_false(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.user_stories.list.return_value = [{"id": 1, "project": 5, "assigned_users": [10]}]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_user_stories()
+
+    assert "assigned_users_extra_info" not in result[0]
+    mock_client.projects.get.assert_not_called()
