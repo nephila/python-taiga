@@ -9,7 +9,7 @@ from typing import Any, Literal
 from mcp.server.mcpserver import MCPServer
 
 from .auth import get_client
-from .serialize import to_jsonable
+from .serialize import apply_payload, to_jsonable
 
 mcp = MCPServer(
     name="taiga",
@@ -99,25 +99,56 @@ def whoami() -> dict[str, Any]:
 
 
 @mcp.tool()
-def list_projects(member: int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def list_projects(
+    member: int | None = None,
+    filters: dict[str, Any] | None = None,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """List projects visible to the authenticated user, optionally filtered by member id.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for projects yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
     """
     query = dict(filters or {})
     if member is not None:
         query["member"] = member
-    return to_jsonable(get_client().projects.list(**_paginated(query)))
+    result = to_jsonable(get_client().projects.list(**_paginated(query)))
+    return apply_payload(result, "project", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_project(project: str | int) -> dict[str, Any]:
-    """Get full project detail by numeric id or slug, including statuses/priorities/severities/points."""
+def get_project(
+    project: str | int,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
+    """Get full project detail by numeric id or slug, including statuses/priorities/severities/points.
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for projects yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
+    """
     client = get_client()
     if isinstance(project, int) or str(project).isdigit():
-        return to_jsonable(client.projects.get(int(project)))
-    return to_jsonable(client.projects.get_by_slug(str(project)))
+        result = to_jsonable(client.projects.get(int(project)))
+    else:
+        result = to_jsonable(client.projects.get_by_slug(str(project)))
+    return apply_payload(result, "project", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
@@ -136,16 +167,31 @@ def search(project: str | int, text: str = "") -> dict[str, Any]:
 
 
 @mcp.tool()
-def list_memberships(project: str | int, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def list_memberships(
+    project: str | int,
+    filters: dict[str, Any] | None = None,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """List a project's memberships (username, full_name, user_email, role_name, etc.) -
     the pool of users assignable as owner/assigned_to/watcher on that project's items.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further.
+
+    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
+    for memberships yet and currently behaves the same as "compact") shrinks the response.
+    `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
+    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
+    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
+    reduced `payload`.
     """
     proj = _resolve_project(project)
     query = _paginated(dict(filters or {}))
-    return to_jsonable(proj.list_memberships(**query))
+    result = to_jsonable(proj.list_memberships(**query))
+    return apply_payload(result, "membership", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
