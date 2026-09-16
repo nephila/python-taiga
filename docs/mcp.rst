@@ -268,7 +268,26 @@ Available tools
            plus display name) / ``"minimal"`` (only the fields a sprint-planning
            report actually reads - currently defined for user stories, issues,
            epics and milestones; for any other resource ``"minimal"`` behaves
-           the same as ``"compact"`` for now).
+           the same as ``"compact"`` for now). The exact field set kept by
+           ``payload="minimal"`` per entity (``MINIMAL_FIELDS`` in
+           ``taiga/mcp_server/serialize.py``):
+
+           - ``milestone`` (``list_milestones``/``get_milestone``): ``id``,
+             ``name``, ``slug``, ``project``, ``estimated_start``,
+             ``estimated_finish``, ``closed``.
+           - ``userstory`` (``list_user_stories``/``get_user_story``/
+             ``get_user_story_by_id``): ``id``, ``ref``, ``subject``,
+             ``version``, ``milestone``, ``milestone_name``, ``status``,
+             ``status_extra_info.name``, ``status_extra_info.is_closed``,
+             ``is_closed``, ``finish_date``, ``is_blocked``,
+             ``assigned_to_extra_info.full_name_display``, ``epics.ref``,
+             ``assigned_users_extra_info``.
+           - ``issue`` (``list_issues``/``get_issue``/``get_issue_by_id``):
+             same as ``userstory`` minus ``assigned_users_extra_info``
+             (issues have no ``assigned_users``).
+           - ``epic`` (``list_epics``/``get_epic``/``get_epic_by_id``):
+             ``id``, ``ref``, ``subject``, ``status_extra_info.name``,
+             ``project``.
          - ``fields``: an explicit list of field paths, overriding ``payload``
            entirely, e.g. ``["ref", "subject", "status_extra_info.name"]``. A
            dotted path keeps only that nested key; if the value at that point is
