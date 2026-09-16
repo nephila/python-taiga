@@ -1423,3 +1423,81 @@ def test_get_wiki_page_strip_media_true(mock_get_client):
     result = server.get_wiki_page(1, strip_media=True)
 
     assert result == {"id": 1, "slug": "home", "owner_extra_info": {"id": 9, "full_name_display": "Alice"}}
+
+
+# --- _resolve_assigned_users -----------------------------------------------------------
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_resolve_assigned_users_attaches_names_from_project_memberships(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.list_memberships.return_value = [
+        {"user": 10, "full_name_display": "Alice"},
+        {"user": 11, "full_name_display": "Bob"},
+    ]
+    mock_get_client.return_value = mock_client
+
+    data = [{"id": 1, "project": 5, "assigned_users": [10, 11]}]
+
+    result = server._resolve_assigned_users(data)
+
+    assert result[0]["assigned_users_extra_info"] == [
+        {"id": 10, "full_name_display": "Alice"},
+        {"id": 11, "full_name_display": "Bob"},
+    ]
+    mock_client.projects.get.assert_called_once_with(5)
+    mock_project.list_memberships.assert_called_once_with(page=1, page_size=100)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_resolve_assigned_users_fetches_memberships_once_per_distinct_project(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_get_client.return_value = mock_client
+
+    data = [
+        {"id": 1, "project": 5, "assigned_users": [10]},
+        {"id": 2, "project": 5, "assigned_users": [10]},
+    ]
+
+    server._resolve_assigned_users(data)
+
+    mock_client.projects.get.assert_called_once_with(5)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_resolve_assigned_users_unmatched_id_gets_none_name(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_get_client.return_value = mock_client
+
+    data = {"id": 1, "project": 5, "assigned_users": [10, 99]}
+
+    result = server._resolve_assigned_users(data)
+
+    assert result["assigned_users_extra_info"] == [
+        {"id": 10, "full_name_display": "Alice"},
+        {"id": 99, "full_name_display": None},
+    ]
+
+
+def test_resolve_assigned_users_no_op_when_assigned_users_absent():
+    data = {"id": 1, "project": 5}
+
+    result = server._resolve_assigned_users(data)
+
+    assert "assigned_users_extra_info" not in result
+
+
+def test_resolve_assigned_users_no_op_when_assigned_users_empty():
+    data = {"id": 1, "project": 5, "assigned_users": []}
+
+    result = server._resolve_assigned_users(data)
+
+    assert "assigned_users_extra_info" not in result
