@@ -52,6 +52,9 @@ def select_fields(data: Any, paths: list[str]) -> Any:
 
 
 def _select_from_item(item: dict[str, Any], paths: list[str]) -> dict[str, Any]:
+    """Apply select_fields' path rules to a single dict: group by top-level key,
+    then recurse for a purely-dotted group or keep the bare value if any path
+    targeting that key was bare (bare beats dotted on a collision)."""
     groups: dict[str, list[str]] = {}
     for path in paths:
         top, _, rest = path.partition(".")
