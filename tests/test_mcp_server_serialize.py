@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock
 
-from taiga.mcp_server.serialize import strip_avatar_fields, to_jsonable
+from taiga.mcp_server.serialize import select_fields, strip_avatar_fields, to_jsonable
 from taiga.models.base import InstanceResource
 
 
@@ -115,3 +115,70 @@ def test_strip_avatar_fields_passes_through_non_dict_non_list_values():
     assert strip_avatar_fields("hello") == "hello"
     assert strip_avatar_fields(42) == 42
     assert strip_avatar_fields(None) is None
+
+
+def test_select_fields_keeps_only_requested_top_level_keys():
+    data = {"id": 1, "subject": "hello", "status": 2}
+
+    result = select_fields(data, ["id", "subject"])
+
+    assert result == {"id": 1, "subject": "hello"}
+
+
+def test_select_fields_projects_dotted_path_into_nested_dict():
+    data = {
+        "ref": 42,
+        "status_extra_info": {"id": 3, "name": "In progress", "color": "#000000"},
+    }
+
+    result = select_fields(data, ["ref", "status_extra_info.name"])
+
+    assert result == {"ref": 42, "status_extra_info": {"name": "In progress"}}
+
+
+def test_select_fields_ignores_paths_not_present_in_item():
+    data = {"id": 1}
+
+    result = select_fields(data, ["id", "missing", "missing.nested"])
+
+    assert result == {"id": 1}
+
+
+def test_select_fields_applies_per_item_when_data_is_a_list():
+    data = [{"id": 1, "subject": "a"}, {"id": 2, "subject": "b"}]
+
+    result = select_fields(data, ["id"])
+
+    assert result == [{"id": 1}, {"id": 2}]
+
+
+def test_select_fields_bare_key_wins_over_dotted_path_for_same_top_level_key():
+    data = {"status": {"id": 3, "name": "In progress"}}
+
+    result = select_fields(data, ["status", "status.name"])
+
+    assert result == {"status": {"id": 3, "name": "In progress"}}
+
+
+def test_select_fields_supports_nested_path_deeper_than_two_levels():
+    data = {"a": {"b": {"c": 1, "d": 2}}}
+
+    result = select_fields(data, ["a.b.c"])
+
+    assert result == {"a": {"b": {"c": 1}}}
+
+
+def test_select_fields_projects_into_each_item_of_a_nested_list():
+    data = {"id": 1, "epics": [{"ref": 10, "subject": "Epic A"}, {"ref": 11, "subject": "Epic B"}]}
+
+    result = select_fields(data, ["id", "epics.ref"])
+
+    assert result == {"id": 1, "epics": [{"ref": 10}, {"ref": 11}]}
+
+
+def test_select_fields_nested_list_items_missing_the_path_are_dropped_down_to_empty_dict():
+    data = {"epics": [{"ref": 10}, {"subject": "no ref here"}]}
+
+    result = select_fields(data, ["epics.ref"])
+
+    assert result == {"epics": [{"ref": 10}, {}]}

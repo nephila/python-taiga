@@ -40,3 +40,29 @@ def strip_avatar_fields(data: Any) -> Any:
     if isinstance(data, list):
         return [strip_avatar_fields(item) for item in data]
     return data
+
+
+def select_fields(data: Any, paths: list[str]) -> Any:
+    """Project a jsonable dict/list down to only the requested (optionally dotted) paths."""
+    if isinstance(data, list):
+        return [_select_from_item(item, paths) if isinstance(item, dict) else item for item in data]
+    if isinstance(data, dict):
+        return _select_from_item(data, paths)
+    return data
+
+
+def _select_from_item(item: dict[str, Any], paths: list[str]) -> dict[str, Any]:
+    groups: dict[str, list[str]] = {}
+    for path in paths:
+        top, _, rest = path.partition(".")
+        groups.setdefault(top, []).append(rest)
+    result: dict[str, Any] = {}
+    for top, rests in groups.items():
+        if top not in item:
+            continue
+        value = item[top]
+        if isinstance(value, (dict, list)) and all(rests):
+            result[top] = select_fields(value, rests)
+        else:
+            result[top] = value
+    return result
