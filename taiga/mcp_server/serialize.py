@@ -112,6 +112,7 @@ MINIMAL_FIELDS: dict[str, list[str]] = {
         "is_blocked",
         "assigned_to_extra_info.full_name_display",
         "epics.ref",
+        "assigned_users_extra_info",
     ],
     "issue": [
         "id",
