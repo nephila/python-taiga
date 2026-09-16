@@ -137,13 +137,9 @@ def list_projects(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for projects yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
-    tool's own parameter names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -163,12 +159,8 @@ def get_project(
 ) -> dict[str, Any]:
     """Get full project detail by numeric id or slug, including statuses/priorities/severities/points.
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for projects yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     client = get_client()
     if isinstance(project, int) or str(project).isdigit():
@@ -209,13 +201,9 @@ def list_memberships(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further.
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for memberships yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist that overrides `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
-    tool's own parameter names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     proj = _resolve_project(project)
@@ -412,18 +400,11 @@ def list_user_stories(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
-    keeps only id/ref/subject/version/milestone/milestone_name/status/is_closed/
-    finish_date/is_blocked plus status_extra_info.name, status_extra_info.is_closed,
-    assigned_to_extra_info.full_name_display and epics[].ref. `fields` (optionally dotted
-    paths, e.g. "status_extra_info.name") is an explicit allowlist overriding `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`. `assigned_users` is a bare id list with no names in the payload;
-    pass `resolve_assigned_users=True` to attach `assigned_users_extra_info` (id +
-    full_name_display) - costs one extra memberships call per distinct project in the
-    result, so it's opt-in. `strict_filters=True` raises if `filters` contains one of this
-    tool's own parameter names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `resolve_assigned_users=True` attaches
+    `assigned_users_extra_info` (costs an extra API call per project) - see docs/mcp.rst.
+    `strict_filters=True` raises instead of silently ignoring a `filters` key that collides
+    with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -447,13 +428,9 @@ def get_user_story(
 ) -> dict[str, Any]:
     """Get a user story by its per-project ref number (the number shown in the Taiga UI/URL).
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response. `fields`
-    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
-    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
-    `assigned_users` is a bare id list with no names in the payload; pass
-    `resolve_assigned_users=True` to attach `assigned_users_extra_info` (id +
-    full_name_display) - costs one extra memberships call, so it's opt-in.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `resolve_assigned_users=True` attaches
+    `assigned_users_extra_info` (costs an extra API call per project) - see docs/mcp.rst.
     """
     result = to_jsonable(_get_by_ref("user_story", project, ref))
     if resolve_assigned_users:
@@ -473,13 +450,11 @@ def get_user_story_by_id(
     """Get a user story by its database id.
 
     Secondary lookup: prefer `get_user_story` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
-    ("full" default / "compact" / "minimal") shrinks the response. `fields` (optionally
-    dotted paths) is an explicit allowlist overriding `payload`. `strip_media` (True/False)
-    overrides whether avatar/logo URLs are stripped. `expand` adds named top-level blocks
-    back at full detail on top of a reduced `payload`. Pass `resolve_assigned_users=True`
-    to attach `assigned_users_extra_info` (id + full_name_display) - costs one extra
-    memberships call.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `resolve_assigned_users=True` attaches
+    `assigned_users_extra_info` (costs an extra API call per project) - see docs/mcp.rst.
     """
     result = to_jsonable(get_client().user_stories.get(id))
     if resolve_assigned_users:
@@ -548,13 +523,9 @@ def list_tasks(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for tasks yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
-    tool's own parameter names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -577,12 +548,8 @@ def get_task(
 ) -> dict[str, Any]:
     """Get a task by its per-project ref number (the number shown in the Taiga UI/URL).
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for tasks yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(_get_by_ref("task", project, ref))
     return apply_payload(result, "task", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
@@ -599,12 +566,10 @@ def get_task_by_id(
     """Get a task by its database id.
 
     Secondary lookup: prefer `get_task` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
-    ("full" default / "compact" / "minimal" - "minimal" behaves the same as "compact" for
-    tasks) shrinks the response. `fields` (optionally dotted paths) is an explicit
-    allowlist overriding `payload`. `strip_media` (True/False) overrides whether
-    avatar/logo URLs are stripped. `expand` adds named top-level blocks back at full
-    detail on top of a reduced `payload`.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(get_client().tasks.get(id))
     return apply_payload(result, "task", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
@@ -668,15 +633,9 @@ def list_issues(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
-    keeps only id/ref/subject/version/milestone/milestone_name/status/is_closed/
-    finish_date/is_blocked plus status_extra_info.name, status_extra_info.is_closed,
-    assigned_to_extra_info.full_name_display and epics[].ref. `fields` (optionally dotted
-    paths) is an explicit allowlist overriding `payload`. `strip_media` (True/False)
-    overrides whether avatar/logo URLs are stripped, regardless of `payload`. `expand`
-    adds named top-level blocks back at full detail on top of a reduced `payload`.
-    `strict_filters=True` raises if `filters` contains one of this tool's own parameter
-    names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -697,10 +656,8 @@ def get_issue(
 ) -> dict[str, Any]:
     """Get an issue by its per-project ref number (the number shown in the Taiga UI/URL, e.g. .../issues/45634).
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response. `fields`
-    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
-    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(_get_by_ref("issue", project, ref))
     return apply_payload(result, "issue", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
@@ -717,11 +674,10 @@ def get_issue_by_id(
     """Get an issue by its database id.
 
     Secondary lookup: prefer `get_issue` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
-    ("full" default / "compact" / "minimal") shrinks the response. `fields` (optionally
-    dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped. `expand` adds named
-    top-level blocks back at full detail on top of a reduced `payload`.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(get_client().issues.get(id))
     return apply_payload(result, "issue", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
@@ -795,13 +751,9 @@ def list_epics(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
-    keeps only id/ref/subject/project plus status_extra_info.name. `fields` (optionally
-    dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
-    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
-    `strict_filters=True` raises if `filters` contains one of this tool's own parameter
-    names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -822,10 +774,8 @@ def get_epic(
 ) -> dict[str, Any]:
     """Get an epic by its per-project ref number (the number shown in the Taiga UI/URL).
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response. `fields`
-    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
-    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(_get_by_ref("epic", project, ref))
     return apply_payload(result, "epic", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
@@ -842,11 +792,10 @@ def get_epic_by_id(
     """Get an epic by its database id.
 
     Secondary lookup: prefer `get_epic` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
-    ("full" default / "compact" / "minimal") shrinks the response. `fields` (optionally
-    dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped. `expand` adds named
-    top-level blocks back at full detail on top of a reduced `payload`.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(get_client().epics.get(id))
     return apply_payload(result, "epic", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
@@ -942,13 +891,9 @@ def list_milestones(
     Each milestone embeds its full `user_stories`; pass `include_user_stories=False`
     to strip that (potentially large) field from every returned milestone.
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
-    keeps only id/name/slug/project/estimated_start/estimated_finish/closed. `fields`
-    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
-    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
-    `strict_filters=True` raises if `filters` contains one of this tool's own parameter
-    names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -974,11 +919,8 @@ def get_milestone(
     The milestone embeds its full `user_stories`; pass `include_user_stories=False`
     to strip that (potentially large) field from the returned milestone.
 
-    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
-    keeps only id/name/slug/project/estimated_start/estimated_finish/closed. `fields`
-    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
-    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
-    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(get_client().milestones.get(id))
     if not include_user_stories:
@@ -1024,13 +966,9 @@ def list_wiki_pages(
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for wiki pages yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`. `strict_filters=True` raises if `filters` contains one of this
-    tool's own parameter names instead of silently ignoring it.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics. `strict_filters=True` raises instead of silently
+    ignoring a `filters` key that collides with this tool's own parameter names.
     """
     _check_strict_filters(filters, strict_filters)
     query = dict(filters or {})
@@ -1050,12 +988,8 @@ def get_wiki_page(
 ) -> dict[str, Any]:
     """Get a wiki page by id.
 
-    `payload` ("full" default / "compact" / "minimal" - "minimal" isn't specially tuned
-    for wiki pages yet and currently behaves the same as "compact") shrinks the response.
-    `fields` (optionally dotted paths) is an explicit allowlist overriding `payload`.
-    `strip_media` (True/False) overrides whether avatar/logo URLs are stripped, regardless
-    of `payload`. `expand` adds named top-level blocks back at full detail on top of a
-    reduced `payload`.
+    `payload`/`fields`/`strip_media`/`expand` optionally shrink the response - see
+    docs/mcp.rst for full semantics.
     """
     result = to_jsonable(get_client().wikipages.get(id))
     return apply_payload(result, "wikipage", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
