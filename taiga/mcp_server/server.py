@@ -571,32 +571,73 @@ def delete_task_by_id(id: int) -> dict[str, str]:  # noqa: A002
 
 
 @mcp.tool()
-def list_issues(project: str | int | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def list_issues(
+    project: str | int | None = None,
+    filters: dict[str, Any] | None = None,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """List issues, optionally scoped to a project.
 
     Paginated: defaults to page 1 of up to 100 results. Pass `filters` with `page`/
     `page_size` to page further, or `order_by` (e.g. '-created_date') to control order.
+
+    `payload` ("full" default / "compact" / "minimal") shrinks the response - "minimal"
+    keeps only id/ref/subject/version/milestone/milestone_name/status/is_closed/
+    finish_date/is_blocked plus status_extra_info.name, status_extra_info.is_closed,
+    assigned_to_extra_info.full_name_display and epics[].ref. `fields` (optionally dotted
+    paths) is an explicit allowlist overriding `payload`. `strip_media` (True/False)
+    overrides whether avatar/logo URLs are stripped, regardless of `payload`. `expand`
+    adds named top-level blocks back at full detail on top of a reduced `payload`.
     """
     query = dict(filters or {})
     if project is not None:
         query["project"] = _resolve_project_id(project)
-    return to_jsonable(get_client().issues.list(**_paginated(query)))
+    result = to_jsonable(get_client().issues.list(**_paginated(query)))
+    return apply_payload(result, "issue", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_issue(project: str | int, ref: int) -> dict[str, Any]:
-    """Get an issue by its per-project ref number (the number shown in the Taiga UI/URL, e.g. .../issues/45634)."""
-    return to_jsonable(_get_by_ref("issue", project, ref))
+def get_issue(
+    project: str | int,
+    ref: int,
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
+    """Get an issue by its per-project ref number (the number shown in the Taiga UI/URL, e.g. .../issues/45634).
+
+    `payload` ("full" default / "compact" / "minimal") shrinks the response. `fields`
+    (optionally dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped, regardless of `payload`.
+    `expand` adds named top-level blocks back at full detail on top of a reduced `payload`.
+    """
+    result = to_jsonable(_get_by_ref("issue", project, ref))
+    return apply_payload(result, "issue", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
-def get_issue_by_id(id: int) -> dict[str, Any]:  # noqa: A002
+def get_issue_by_id(
+    id: int,  # noqa: A002
+    payload: str = "full",
+    fields: list[str] | None = None,
+    strip_media: bool | None = None,
+    expand: list[str] | None = None,
+) -> dict[str, Any]:
     """Get an issue by its database id.
 
     Secondary lookup: prefer `get_issue` with a project + ref. Use this only when you
-    already hold the raw database id, not the ref shown in the Taiga UI/URL.
+    already hold the raw database id, not the ref shown in the Taiga UI/URL. `payload`
+    ("full" default / "compact" / "minimal") shrinks the response. `fields` (optionally
+    dotted paths) is an explicit allowlist overriding `payload`. `strip_media`
+    (True/False) overrides whether avatar/logo URLs are stripped. `expand` adds named
+    top-level blocks back at full detail on top of a reduced `payload`.
     """
-    return to_jsonable(get_client().issues.get(id))
+    result = to_jsonable(get_client().issues.get(id))
+    return apply_payload(result, "issue", payload=payload, fields=fields, strip_media=strip_media, expand=expand)
 
 
 @mcp.tool()
