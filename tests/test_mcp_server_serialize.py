@@ -335,6 +335,51 @@ def test_apply_payload_minimal_uses_the_entity_measured_field_set():
     }
 
 
+def test_apply_payload_minimal_keeps_assigned_users_extra_info_for_userstory():
+    data = {
+        "id": 1,
+        "ref": 42,
+        "subject": "hello",
+        "version": 3,
+        "milestone": 7,
+        "milestone_name": "Sprint 1",
+        "status": 2,
+        "status_extra_info": {"id": 2, "name": "Done", "is_closed": True},
+        "is_closed": True,
+        "finish_date": None,
+        "is_blocked": False,
+        "assigned_to_extra_info": {"id": 5, "full_name_display": "Bob", "photo": "x"},
+        "epics": [{"ref": 10, "subject": "Epic A"}],
+        "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "y"},
+        "assigned_users_extra_info": [
+            {"id": 10, "full_name_display": "Alice"},
+            {"id": 11, "full_name_display": "Bob"},
+        ],
+    }
+
+    result = apply_payload(data, "userstory", payload="minimal")
+
+    assert result == {
+        "id": 1,
+        "ref": 42,
+        "subject": "hello",
+        "version": 3,
+        "milestone": 7,
+        "milestone_name": "Sprint 1",
+        "status": 2,
+        "status_extra_info": {"name": "Done", "is_closed": True},
+        "is_closed": True,
+        "finish_date": None,
+        "is_blocked": False,
+        "assigned_to_extra_info": {"full_name_display": "Bob"},
+        "epics": [{"ref": 10}],
+        "assigned_users_extra_info": [
+            {"id": 10, "full_name_display": "Alice"},
+            {"id": 11, "full_name_display": "Bob"},
+        ],
+    }
+
+
 def test_apply_payload_minimal_falls_back_to_compact_for_entity_without_a_measured_set():
     data = {"id": 1, "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "x"}}
 

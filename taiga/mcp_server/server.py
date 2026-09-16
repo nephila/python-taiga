@@ -126,7 +126,7 @@ def whoami() -> dict[str, Any]:
 def list_projects(
     member: int | None = None,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -156,7 +156,7 @@ def list_projects(
 @mcp.tool()
 def get_project(
     project: str | int,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -197,7 +197,7 @@ def search(project: str | int, text: str = "") -> dict[str, Any]:
 def list_memberships(
     project: str | int,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -400,7 +400,7 @@ def _resolve_assigned_users(
 def list_user_stories(
     project: str | int | None = None,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -439,7 +439,7 @@ def list_user_stories(
 def get_user_story(
     project: str | int,
     ref: int,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -464,7 +464,7 @@ def get_user_story(
 @mcp.tool()
 def get_user_story_by_id(
     id: int,  # noqa: A002
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -537,7 +537,7 @@ def list_tasks(
     project: str | int | None = None,
     user_story: int | None = None,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -570,7 +570,7 @@ def list_tasks(
 def get_task(
     project: str | int,
     ref: int,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -591,7 +591,7 @@ def get_task(
 @mcp.tool()
 def get_task_by_id(
     id: int,  # noqa: A002
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -657,7 +657,7 @@ def delete_task_by_id(id: int) -> dict[str, str]:  # noqa: A002
 def list_issues(
     project: str | int | None = None,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -690,7 +690,7 @@ def list_issues(
 def get_issue(
     project: str | int,
     ref: int,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -709,7 +709,7 @@ def get_issue(
 @mcp.tool()
 def get_issue_by_id(
     id: int,  # noqa: A002
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -784,7 +784,7 @@ def delete_issue_by_id(id: int) -> dict[str, str]:  # noqa: A002
 def list_epics(
     project: str | int | None = None,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -815,7 +815,7 @@ def list_epics(
 def get_epic(
     project: str | int,
     ref: int,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -834,7 +834,7 @@ def get_epic(
 @mcp.tool()
 def get_epic_by_id(
     id: int,  # noqa: A002
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -929,7 +929,7 @@ def list_milestones(
     project: str | int | None = None,
     filters: dict[str, Any] | None = None,
     include_user_stories: bool = True,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -964,7 +964,7 @@ def list_milestones(
 def get_milestone(
     id: int,  # noqa: A002
     include_user_stories: bool = True,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -1013,7 +1013,7 @@ def delete_milestone(id: int) -> dict[str, str]:  # noqa: A002
 def list_wiki_pages(
     project: str | int | None = None,
     filters: dict[str, Any] | None = None,
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
@@ -1043,7 +1043,7 @@ def list_wiki_pages(
 @mcp.tool()
 def get_wiki_page(
     id: int,  # noqa: A002
-    payload: str = "full",
+    payload: Literal["full", "compact", "minimal"] = "full",
     fields: list[str] | None = None,
     strip_media: bool | None = None,
     expand: list[str] | None = None,
