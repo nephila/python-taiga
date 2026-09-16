@@ -258,6 +258,55 @@ Available tools
          through further pages, and ``order_by`` (e.g. ``-created_date``) to
          control ordering - for example to fetch the most recent items first.
 
+.. tip:: Every ``list_*``/``get_*`` tool that returns a full resource - projects,
+         user stories, tasks, issues, epics, milestones, memberships, wiki pages -
+         accepts four further parameters to shrink an oversized response, all
+         opt-in (the default reproduces today's full response exactly):
+
+         - ``payload``: ``"full"`` (default, untouched) / ``"compact"`` (drops
+           avatar/logo URLs and shrinks every ``*_extra_info`` block to its id
+           plus display name) / ``"minimal"`` (only the fields a sprint-planning
+           report actually reads - currently defined for user stories, issues,
+           epics and milestones; for any other resource ``"minimal"`` behaves
+           the same as ``"compact"`` for now).
+         - ``fields``: an explicit list of field paths, overriding ``payload``
+           entirely, e.g. ``["ref", "subject", "status_extra_info.name"]``. A
+           dotted path keeps only that nested key; if the value at that point is
+           itself a list (e.g. a story's ``epics``), the remaining path is
+           applied to every element, e.g. ``"epics.ref"``.
+         - ``strip_media``: ``True``/``False``, overriding whether avatar/logo
+           URLs (``photo``, ``big_photo``, ``gravatar_id``, ``logo_small_url``)
+           are stripped, regardless of ``payload``. These carry rotating
+           signed-URL signatures, so leaving them in also defeats prompt caching
+           between otherwise-identical calls.
+         - ``expand``: a list of top-level block names to add back at full
+           detail on top of a reduced ``payload``, e.g.
+           ``payload="minimal", expand=["assigned_to_extra_info"]``.
+
+         ``list_user_stories``, ``get_user_story`` and ``get_user_story_by_id``
+         additionally accept ``resolve_assigned_users=True``: ``assigned_users``
+         is a bare list of user ids with no names anywhere in the default
+         payload, so this resolves them into
+         ``assigned_users_extra_info: [{"id", "full_name_display"}, ...]`` via
+         that story's project memberships. Off by default because, unlike the
+         four parameters above, it adds a request rather than removing one (one
+         ``list_memberships`` call per distinct project touched).
+
+         Every ``list_*`` tool additionally accepts ``strict_filters=False``
+         (default): pass ``True`` to raise immediately if ``filters`` nests one
+         of this server's own parameter names by mistake (e.g.
+         ``filters={"include_user_stories": False}``) instead of silently
+         returning an unfiltered response - Taiga's REST backend ignores
+         unknown query parameters with no error either way, which measured as
+         much as a 24x size regression with no signal that anything went wrong.
+
+.. note:: ``filters`` is forwarded as-is to Taiga's REST endpoint, so
+          server-side filtering - e.g. ``list_milestones(filters={"closed":
+          False, "estimated_start__lte": "2026-09-20"})`` - already works
+          today with no MCP-side change, for any lookup Taiga's own API
+          filter backend supports. Which lookups that includes is a property
+          of the Taiga server you're talking to, not of this client.
+
 ****************
 Security notes
 ****************
