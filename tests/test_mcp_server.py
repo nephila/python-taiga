@@ -1159,3 +1159,49 @@ def test_update_wiki_page(mock_get_client):
     mock_client.wikipages.get.assert_has_calls([call(1), call(1)])
     mock_resource.patch.assert_called_once_with(["content"], content="Updated")
     assert result == {"id": 1, "content": "Updated"}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_project_payload_compact_strips_logo(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.projects.get.return_value = {
+        "id": 1,
+        "owner_extra_info": {"id": 9, "full_name_display": "Alice", "logo_small_url": "https://x/a.png"},
+    }
+    mock_get_client.return_value = mock_client
+
+    result = server.get_project(1, payload="compact")
+
+    assert result == {"id": 1, "owner_extra_info": {"id": 9, "full_name_display": "Alice"}}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_memberships_fields(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_client.projects.get_by_slug.return_value = mock_project
+    mock_project.list_memberships.return_value = [
+        {"user": 10, "full_name_display": "Alice", "photo": "https://example.com/a.png"}
+    ]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_memberships(1, fields=["user", "full_name_display"])
+
+    assert result == [{"user": 10, "full_name_display": "Alice"}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_memberships_payload_minimal_falls_back_to_compact(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_client.projects.get_by_slug.return_value = mock_project
+    mock_project.list_memberships.return_value = [
+        {"id": 1, "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "x"}}
+    ]
+    mock_get_client.return_value = mock_client
+
+    result = server.list_memberships(1, payload="minimal")
+
+    assert result == [{"id": 1, "owner_extra_info": {"id": 9, "full_name_display": "Alice"}}]
