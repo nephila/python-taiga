@@ -347,8 +347,11 @@ Available tools
          On ``update_*`` tools, ``"minimal"``/``"none"`` also skip the
          re-fetch these tools otherwise perform after writing - a latency
          win, not just a smaller response. ``version`` is not a separate
-         parameter anywhere in this server: if Taiga needs it for optimistic
-         locking, pass it inside ``fields`` yourself, exactly as today.
+         parameter on any ``create_*``/``update_*`` tool: if Taiga needs it
+         for optimistic locking, pass it inside ``fields`` yourself, exactly
+         as today. (``set_custom_attribute_value``/``set_custom_attribute_value_by_id``
+         are the exception - see the note above on their own, unrelated
+         ``version`` sequence.)
 
 .. tip:: ``update_work_items(project, updates, return_representation="full")``
          updates a batch of user stories/tasks/issues/epics in one call.

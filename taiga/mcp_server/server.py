@@ -82,7 +82,7 @@ def _represent(
     if hasattr(resource, "ref"):
         base["ref"] = resource.ref
     if return_representation == "minimal":
-        return {**base, **written}
+        return {**written, **base}
     return {"ok": True, **base}
 
 
@@ -1052,7 +1052,7 @@ def update_work_items(
                     "status": "error",
                     "entity_type": item.get("entity_type"),
                     "ref": item.get("ref"),
-                    "error": str(exc),
+                    "error": f"{type(exc).__name__}: {exc}",
                 }
             )
     return results
