@@ -1661,3 +1661,15 @@ def test_update_user_story_by_id_none(mock_get_client):
     assert result == {"ok": True, "id": 1, "version": 4, "ref": 45634}
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
     mock_client.user_stories.get.assert_called_once_with(1)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_create_task_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_resource = MagicMock(id=2, version=1, ref=50)
+    mock_client.tasks.create.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.create_task(1, "New task", 3, fields={"user_story": 10}, return_representation="minimal")
+
+    assert result == {"id": 2, "version": 1, "ref": 50, "user_story": 10}
