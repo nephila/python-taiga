@@ -1673,3 +1673,18 @@ def test_create_task_return_representation_minimal(mock_get_client):
     result = server.create_task(1, "New task", 3, fields={"user_story": 10}, return_representation="minimal")
 
     assert result == {"id": 2, "version": 1, "ref": 50, "user_story": 10}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_issue_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=3, version=2, ref=60)
+    mock_project.get_issue_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.update_issue(1, 60, {"status": 5}, return_representation="minimal")
+
+    assert result == {"id": 3, "version": 2, "ref": 60, "status": 5}
+    mock_client.issues.get.assert_not_called()

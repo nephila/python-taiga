@@ -781,30 +781,57 @@ def create_issue(
     issue_type: int,
     severity: int,
     fields: dict[str, Any] | None = None,
+    return_representation: Literal["full", "minimal", "none"] = "full",
 ) -> dict[str, Any]:
-    """Create an issue. `priority`/`status`/`issue_type`/`severity` are numeric ids (see get_project)."""
+    """Create an issue. `priority`/`status`/`issue_type`/`severity` are numeric ids (see get_project).
+
+    `return_representation` ("full" default / "minimal" / "none") controls how much of the
+    created resource comes back - see docs/mcp.rst.
+    """
     pid = _resolve_project_id(project)
-    return to_jsonable(
-        get_client().issues.create(pid, subject, priority, status, issue_type, severity, **(fields or {}))
-    )
+    resource = get_client().issues.create(pid, subject, priority, status, issue_type, severity, **(fields or {}))
+    if return_representation == "full":
+        return to_jsonable(resource)
+    return _represent(resource, fields or {}, return_representation)
 
 
 @mcp.tool()
-def update_issue(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
-    """Update an issue identified by its per-project ref number. `fields` is a dict of the attributes to change."""
-    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
+def update_issue(
+    project: str | int,
+    ref: int,
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update an issue identified by its per-project ref number. `fields` is a dict of the attributes to change.
+
+    `return_representation` ("full" default / "minimal" / "none") - see `update_user_story`
+    for the full explanation; "minimal"/"none" skip the re-fetch this tool otherwise performs.
+    """
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     resource = _get_by_ref("issue", project, ref)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(get_client().issues.get(resource.id))
+    if return_representation == "full":
+        return to_jsonable(get_client().issues.get(resource.id))
+    return _represent(resource, fields, return_representation)
 
 
 @mcp.tool()
-def update_issue_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update an issue by its database id. Secondary lookup - prefer `update_issue` with a project + ref."""
+def update_issue_by_id(
+    id: int,  # noqa: A002
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update an issue by its database id. Secondary lookup - prefer `update_issue` with a project + ref.
+
+    `return_representation` ("full" default / "minimal" / "none") - see `update_user_story`
+    for the full explanation; "minimal"/"none" skip the re-fetch this tool otherwise performs.
+    """
     client = get_client()
     resource = client.issues.get(id)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(client.issues.get(id))
+    if return_representation == "full":
+        return to_jsonable(client.issues.get(id))
+    return _represent(resource, fields, return_representation)
 
 
 @mcp.tool()
