@@ -219,6 +219,10 @@ Available tools
     Link a user story to an epic, identifying both by their per-project ref
     numbers (primary) or by database id (secondary, see below).
 
+``update_work_items``
+    Update a batch of user stories/tasks/issues/epics in one call - see the
+    tip below for the exact shape and its non-atomic semantics.
+
 .. important:: ``get_user_story``/``get_task``/``get_issue``/``get_epic`` and
          their ``update_*``/``delete_*`` counterparts take a ``project`` (id
          or slug) and a ``ref`` - the per-project sequential number Taiga
@@ -325,6 +329,39 @@ Available tools
           today with no MCP-side change, for any lookup Taiga's own API
           filter backend supports. Which lookups that includes is a property
           of the Taiga server you're talking to, not of this client.
+
+.. tip:: Every ``create_*``/``update_*`` tool accepts ``return_representation``
+         (``"full"`` default / ``"minimal"`` / ``"none"``), opt-in, to shrink
+         what a write echoes back:
+
+         - ``"full"`` (default): the complete written resource, exactly as
+           before.
+         - ``"minimal"``: ``{"id", "ref" (only if the entity has one),
+           "version", ...the fields you passed in ``fields``}`` - never the
+           tool's own required arguments (``subject``, ``status``, etc.),
+           since you already know those - only ``id``/``ref``/``version`` are
+           genuinely new information a write produces.
+         - ``"none"``: ``{"ok": true, "id", "ref" (if any), "version"}`` - a
+           bare acknowledgement.
+
+         On ``update_*`` tools, ``"minimal"``/``"none"`` also skip the
+         re-fetch these tools otherwise perform after writing - a latency
+         win, not just a smaller response. ``version`` is not a separate
+         parameter anywhere in this server: if Taiga needs it for optimistic
+         locking, pass it inside ``fields`` yourself, exactly as today.
+
+.. tip:: ``update_work_items(project, updates, return_representation="full")``
+         updates a batch of user stories/tasks/issues/epics in one call.
+         Each entry in ``updates`` is
+         ``{"entity_type": "user_story"|"task"|"issue"|"epic", "ref": <int>,
+         "fields": {...}}``. **Not atomic** - items are processed in order,
+         each succeeds or fails independently, and one failure never rolls
+         back or blocks any other item. Returns one result row per input
+         item, in the same order (zip ``updates`` with the result to match
+         them up); a failed item's row is
+         ``{"status": "error", "entity_type", "ref", "error"}``. Wiki pages
+         aren't supported here (no per-project ``ref``) - use
+         ``update_wiki_page`` directly.
 
 ****************
 Security notes
