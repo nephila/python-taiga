@@ -1803,3 +1803,29 @@ def test_update_work_items_return_representation_minimal(mock_get_client):
 
     assert result == [{"id": 1, "version": 5, "ref": 10, "subject": "Updated"}]
     mock_client.user_stories.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_malformed_item_does_not_abort_batch(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_us = MagicMock(id=1)
+    mock_project.get_userstory_by_ref.return_value = mock_us
+    mock_client.user_stories.get.return_value = {"id": 1, "subject": "US updated"}
+    mock_get_client.return_value = mock_client
+
+    updates = [
+        {"entity_type": "user_story", "ref": 10, "fields": {"subject": "US updated"}},
+        {"entity_type": "task", "ref": 20},  # missing "fields" - malformed
+    ]
+
+    result = server.update_work_items(1, updates)
+
+    assert len(result) == 2
+    assert result[0] == {"id": 1, "subject": "US updated"}
+    assert result[1]["status"] == "error"
+    assert result[1]["entity_type"] == "task"
+    assert result[1]["ref"] == 20
+    assert isinstance(result[1]["error"], str) and result[1]["error"]
+    mock_us.patch.assert_called_once_with(["subject"], subject="US updated")

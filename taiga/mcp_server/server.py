@@ -1035,10 +1035,10 @@ def update_work_items(
     """
     results: list[dict[str, Any]] = []
     for item in updates:
-        entity_type = item["entity_type"]
-        ref = item["ref"]
-        fields = item["fields"]
         try:
+            entity_type = item["entity_type"]
+            ref = item["ref"]
+            fields = item["fields"]
             resource = _get_by_ref(entity_type, project, ref)
             resource.patch(list(fields.keys()), **fields)
             if return_representation == "full":
@@ -1047,7 +1047,14 @@ def update_work_items(
             else:
                 results.append(_represent(resource, fields, return_representation))
         except Exception as exc:  # A single bad item must not abort the rest of the batch.
-            results.append({"status": "error", "entity_type": entity_type, "ref": ref, "error": str(exc)})
+            results.append(
+                {
+                    "status": "error",
+                    "entity_type": item.get("entity_type"),
+                    "ref": item.get("ref"),
+                    "error": str(exc),
+                }
+            )
     return results
 
 
