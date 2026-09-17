@@ -1728,3 +1728,78 @@ def test_create_milestone_return_representation_minimal(mock_get_client):
     result = server.create_milestone(1, "Sprint 1", "2026-09-01", "2026-09-14", return_representation="minimal")
 
     assert result == {"id": 5, "version": 1}
+
+
+# --- update_work_items ------------------------------------------------------------------
+
+
+def test_update_work_items_empty_list():
+    assert server.update_work_items(1, []) == []
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_all_success(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_us = MagicMock(id=1)
+    mock_task = MagicMock(id=2)
+    mock_project.get_userstory_by_ref.return_value = mock_us
+    mock_project.get_task_by_ref.return_value = mock_task
+    mock_client.user_stories.get.return_value = {"id": 1, "subject": "US updated"}
+    mock_client.tasks.get.return_value = {"id": 2, "subject": "Task updated"}
+    mock_get_client.return_value = mock_client
+
+    updates = [
+        {"entity_type": "user_story", "ref": 10, "fields": {"subject": "US updated"}},
+        {"entity_type": "task", "ref": 20, "fields": {"subject": "Task updated"}},
+    ]
+
+    result = server.update_work_items(1, updates)
+
+    mock_us.patch.assert_called_once_with(["subject"], subject="US updated")
+    mock_task.patch.assert_called_once_with(["subject"], subject="Task updated")
+    assert result == [
+        {"id": 1, "subject": "US updated"},
+        {"id": 2, "subject": "Task updated"},
+    ]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_mixed_success_and_failure(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_us = MagicMock(id=1)
+    mock_project.get_userstory_by_ref.return_value = mock_us
+    mock_project.get_task_by_ref.side_effect = Exception("boom")
+    mock_client.user_stories.get.return_value = {"id": 1, "subject": "US updated"}
+    mock_get_client.return_value = mock_client
+
+    updates = [
+        {"entity_type": "user_story", "ref": 10, "fields": {"subject": "US updated"}},
+        {"entity_type": "task", "ref": 20, "fields": {"subject": "Task updated"}},
+    ]
+
+    result = server.update_work_items(1, updates)
+
+    assert result[0] == {"id": 1, "subject": "US updated"}
+    assert result[1] == {"status": "error", "entity_type": "task", "ref": 20, "error": "boom"}
+    mock_us.patch.assert_called_once_with(["subject"], subject="US updated")
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_us = MagicMock(id=1, version=5, ref=10)
+    mock_project.get_userstory_by_ref.return_value = mock_us
+    mock_get_client.return_value = mock_client
+
+    updates = [{"entity_type": "user_story", "ref": 10, "fields": {"subject": "Updated"}}]
+
+    result = server.update_work_items(1, updates, return_representation="minimal")
+
+    assert result == [{"id": 1, "version": 5, "ref": 10, "subject": "Updated"}]
+    mock_client.user_stories.get.assert_not_called()
