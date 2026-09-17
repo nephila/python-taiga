@@ -1162,6 +1162,20 @@ def test_update_wiki_page(mock_get_client):
 
 
 @patch("taiga.mcp_server.server.get_client")
+def test_update_wiki_page_minimal_has_no_ref_key(mock_get_client):
+    mock_client = MagicMock()
+    mock_resource = MagicMock(spec=["id", "version", "patch"], id=6, version=2)
+    mock_client.wikipages.get.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.update_wiki_page(6, {"content": "Updated"}, return_representation="minimal")
+
+    assert result == {"id": 6, "version": 2, "content": "Updated"}
+    assert "ref" not in result
+    mock_resource.patch.assert_called_once_with(["content"], content="Updated")
+
+
+@patch("taiga.mcp_server.server.get_client")
 def test_get_project_payload_compact_strips_logo(mock_get_client):
     mock_client = MagicMock()
     mock_client.projects.get.return_value = {
