@@ -482,30 +482,66 @@ def get_user_story_by_id(
 
 
 @mcp.tool()
-def create_user_story(project: str | int, subject: str, fields: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Create a user story. `fields` may set status, points, milestone, description, tags, etc."""
+def create_user_story(
+    project: str | int,
+    subject: str,
+    fields: dict[str, Any] | None = None,
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Create a user story. `fields` may set status, points, milestone, description, tags, etc.
+
+    `return_representation` ("full" default / "minimal" / "none") controls how much of the
+    created resource comes back - "minimal" returns just id/ref/version plus whatever was
+    in `fields`; "none" returns only an acknowledgement. See docs/mcp.rst for the exact shape.
+    """
     pid = _resolve_project_id(project)
-    return to_jsonable(get_client().user_stories.create(pid, subject, **(fields or {})))
+    resource = get_client().user_stories.create(pid, subject, **(fields or {}))
+    if return_representation == "full":
+        return to_jsonable(resource)
+    return _represent(resource, fields or {}, return_representation)
 
 
 @mcp.tool()
-def update_user_story(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
-    """Update a user story identified by its per-project ref number. `fields` is a dict of the attributes to change."""
-    # InstanceResource.patch() only refreshes `version` on the local object, not the other
-    # fields the server actually applied, so the result must be re-fetched, not serialized
-    # from the patched object itself.
+def update_user_story(
+    project: str | int,
+    ref: int,
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update a user story identified by its per-project ref number. `fields` is a dict of the attributes to change.
+
+    `return_representation` ("full" default / "minimal" / "none") controls how much of the
+    updated resource comes back. "full" re-fetches the complete resource, exactly as before -
+    InstanceResource.patch() only refreshes `version` on the local object, not the other
+    fields the server actually applied, so "full" must re-fetch, not serialize from the
+    patched object itself. "minimal"/"none" skip that re-fetch entirely - they only need
+    id/ref/version (already on the patched-in-place resource) and, for "minimal", the
+    caller's own `fields` (already known). See docs/mcp.rst.
+    """
     resource = _get_by_ref("user_story", project, ref)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(get_client().user_stories.get(resource.id))
+    if return_representation == "full":
+        return to_jsonable(get_client().user_stories.get(resource.id))
+    return _represent(resource, fields, return_representation)
 
 
 @mcp.tool()
-def update_user_story_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update a user story by its database id. Secondary lookup - prefer `update_user_story` with a project + ref."""
+def update_user_story_by_id(
+    id: int,  # noqa: A002
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update a user story by its database id. Secondary lookup - prefer `update_user_story` with a project + ref.
+
+    `return_representation` ("full" default / "minimal" / "none") - see `update_user_story`
+    for the full explanation; "minimal"/"none" skip the re-fetch this tool otherwise performs.
+    """
     client = get_client()
     resource = client.user_stories.get(id)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(client.user_stories.get(id))
+    if return_representation == "full":
+        return to_jsonable(client.user_stories.get(id))
+    return _represent(resource, fields, return_representation)
 
 
 @mcp.tool()
