@@ -1196,13 +1196,13 @@ def test_list_memberships_fields(mock_get_client):
     mock_client.projects.get.return_value = mock_project
     mock_client.projects.get_by_slug.return_value = mock_project
     mock_project.list_memberships.return_value = [
-        {"user": 10, "full_name_display": "Alice", "photo": "https://example.com/a.png"}
+        {"user": 10, "full_name": "Alice", "photo": "https://example.com/a.png"}
     ]
     mock_get_client.return_value = mock_client
 
-    result = server.list_memberships(1, fields=["user", "full_name_display"])
+    result = server.list_memberships(1, fields=["user", "full_name"])
 
-    assert result == [{"user": 10, "full_name_display": "Alice"}]
+    assert result == [{"user": 10, "full_name": "Alice"}]
 
 
 @patch("taiga.mcp_server.server.get_client")
@@ -1448,8 +1448,8 @@ def test_resolve_assigned_users_attaches_names_from_project_memberships(mock_get
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
     mock_project.list_memberships.return_value = [
-        {"user": 10, "full_name_display": "Alice"},
-        {"user": 11, "full_name_display": "Bob"},
+        {"user": 10, "full_name": "Alice"},
+        {"user": 11, "full_name": "Bob"},
     ]
     mock_get_client.return_value = mock_client
 
@@ -1470,7 +1470,7 @@ def test_resolve_assigned_users_fetches_memberships_once_per_distinct_project(mo
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
     mock_get_client.return_value = mock_client
 
     data = [
@@ -1488,7 +1488,7 @@ def test_resolve_assigned_users_unmatched_id_gets_none_name(mock_get_client):
     mock_client = MagicMock()
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
     mock_get_client.return_value = mock_client
 
     data = {"id": 1, "project": 5, "assigned_users": [10, 99]}
@@ -1523,7 +1523,7 @@ def test_list_user_stories_resolve_assigned_users(mock_get_client):
     mock_client.user_stories.list.return_value = [{"id": 1, "project": 5, "assigned_users": [10]}]
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
     mock_get_client.return_value = mock_client
 
     result = server.list_user_stories(resolve_assigned_users=True)
@@ -1556,7 +1556,7 @@ def test_list_user_stories_resolve_assigned_users_survives_payload_minimal(mock_
     mock_client.user_stories.list.return_value = [{"id": 1, "project": 5, "assigned_users": [10]}]
     mock_project = MagicMock()
     mock_client.projects.get.return_value = mock_project
-    mock_project.list_memberships.return_value = [{"user": 10, "full_name_display": "Alice"}]
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
     mock_get_client.return_value = mock_client
 
     result = server.list_user_stories(resolve_assigned_users=True, payload="minimal")
