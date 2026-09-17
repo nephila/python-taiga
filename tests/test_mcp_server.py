@@ -1238,6 +1238,7 @@ def test_list_user_stories_payload_minimal_uses_measured_field_set(mock_get_clie
             "finish_date": None,
             "is_blocked": False,
             "assigned_to_extra_info": {"id": 5, "full_name_display": "Bob", "photo": "x"},
+            "assigned_users": [10, 11],
             "epics": [{"ref": 10, "subject": "Epic A"}],
             "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "y"},
         }
@@ -1254,12 +1255,12 @@ def test_list_user_stories_payload_minimal_uses_measured_field_set(mock_get_clie
             "version": 3,
             "milestone": 7,
             "milestone_name": "Sprint 1",
-            "status": 2,
             "status_extra_info": {"name": "Done", "is_closed": True},
             "is_closed": True,
             "finish_date": None,
             "is_blocked": False,
             "assigned_to_extra_info": {"full_name_display": "Bob"},
+            "assigned_users": [10, 11],
             "epics": [{"ref": 10}],
         }
     ]
@@ -1336,7 +1337,6 @@ def test_get_issue_payload_minimal_uses_measured_field_set(mock_get_client):
         "version": 1,
         "milestone": None,
         "milestone_name": None,
-        "status": 2,
         "status_extra_info": {"name": "Done", "is_closed": True},
         "is_closed": True,
         "finish_date": None,
@@ -1396,7 +1396,7 @@ def test_get_milestone_payload_minimal_uses_measured_field_set(mock_get_client):
         "estimated_finish": "2026-09-14",
         "closed": False,
         "user_stories": [{"id": 10}],
-        "project_extra_info": {"id": 5, "name": "Demo", "logo_small_url": "https://x/logo.png"},
+        "project_extra_info": {"id": 5, "name": "Demo", "slug": "demo", "logo_small_url": "https://x/logo.png"},
     }
     mock_get_client.return_value = mock_client
 
@@ -1407,6 +1407,7 @@ def test_get_milestone_payload_minimal_uses_measured_field_set(mock_get_client):
         "name": "Sprint 1",
         "slug": "sprint-1",
         "project": 5,
+        "project_extra_info": {"name": "Demo", "slug": "demo"},
         "estimated_start": "2026-09-01",
         "estimated_finish": "2026-09-14",
         "closed": False,
