@@ -73,21 +73,25 @@ def _select_from_item(item: dict[str, Any], paths: list[str]) -> dict[str, Any]:
 
 _LABEL_KEYS = ("name", "full_name_display")
 _EXTRA_INFO_EXTRA_KEEP = {"status_extra_info": ("is_closed",)}
+_ADDITIONAL_COLLAPSIBLE_KEYS = frozenset({"invited_by"})
 
 
 def collapse_extra_info(data: Any) -> Any:
-    """Shrink every `*_extra_info` block to its id plus whichever descriptive label
-    field is present.
+    """Shrink every `*_extra_info` block, plus `invited_by`, to its id plus whichever
+    descriptive label field is present.
 
     Keeps `name` or `full_name_display` (the only two label fields used across
     owner_extra_info, assigned_to_extra_info, project_extra_info and status_extra_info in
     this codebase), and additionally `is_closed` for status_extra_info specifically, so a
     compact caller can still tell whether an item is closed without expanding the block.
+    `invited_by` (seen on membership records) is a full nested user block too, but doesn't
+    end in `_extra_info`, so it needs naming explicitly rather than falling out of the
+    suffix check.
     """
     if isinstance(data, dict):
         result: dict[str, Any] = {}
         for key, value in data.items():
-            if key.endswith("_extra_info") and isinstance(value, dict):
+            if (key.endswith("_extra_info") or key in _ADDITIONAL_COLLAPSIBLE_KEYS) and isinstance(value, dict):
                 keep = ("id", *_LABEL_KEYS, *_EXTRA_INFO_EXTRA_KEEP.get(key, ()))
                 result[key] = {k: value[k] for k in keep if k in value}
             else:
