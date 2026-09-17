@@ -1619,6 +1619,14 @@ def test_represent_minimal_omits_ref_when_resource_has_none():
     assert result == {"id": 1, "version": 5, "content": "Updated"}
 
 
+def test_represent_minimal_version_from_resource_wins_over_stale_written_version():
+    resource = MagicMock(id=1, version=8, ref=42)
+
+    result = server._represent(resource, {"subject": "Updated", "version": 7}, "minimal")
+
+    assert result == {"id": 1, "version": 8, "ref": 42, "subject": "Updated"}
+
+
 def test_represent_none_includes_only_ok_id_ref_version():
     resource = MagicMock(id=1, version=5, ref=42)
 
@@ -1784,7 +1792,12 @@ def test_update_work_items_mixed_success_and_failure(mock_get_client):
     result = server.update_work_items(1, updates)
 
     assert result[0] == {"id": 1, "subject": "US updated"}
-    assert result[1] == {"status": "error", "entity_type": "task", "ref": 20, "error": "boom"}
+    assert result[1] == {
+        "status": "error",
+        "entity_type": "task",
+        "ref": 20,
+        "error": "Exception: boom",
+    }
     mock_us.patch.assert_called_once_with(["subject"], subject="US updated")
 
 
@@ -1803,6 +1816,20 @@ def test_update_work_items_return_representation_minimal(mock_get_client):
 
     assert result == [{"id": 1, "version": 5, "ref": 10, "subject": "Updated"}]
     mock_client.user_stories.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_unsupported_entity_type_produces_error_row(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_get_client.return_value = mock_client
+
+    updates = [{"entity_type": "wiki", "ref": 5, "fields": {"content": "x"}}]
+
+    result = server.update_work_items(1, updates)
+
+    assert result == [{"status": "error", "entity_type": "wiki", "ref": 5, "error": "KeyError: 'wiki'"}]
 
 
 @patch("taiga.mcp_server.server.get_client")
