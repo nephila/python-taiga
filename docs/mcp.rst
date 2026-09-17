@@ -267,7 +267,13 @@ Available tools
     List/get milestones (sprints), optionally scoped to a project (``list_milestones``
     only). Each milestone embeds its full ``user_stories`` - pass
     ``include_user_stories=False`` to strip that (potentially large) field from the
-    result.
+    result. This embedded route is the cheapest way to get every story in a sprint in
+    one call (pair it with ``fields=["id", "user_stories.ref", ...]`` to shrink it
+    further), but Taiga's embedded story serializer carries only the single primary
+    ``assigned_to`` - it has no ``assigned_users`` key at all, so multi-assignee data is
+    unavailable through this route regardless of ``fields``/``resolve_assigned_users``.
+    For complete multi-assignee data, fetch those stories individually with
+    ``list_user_stories``/``get_user_story`` instead.
 
 ``create_milestone``, ``delete_milestone``
     Create/delete milestones (sprints).
