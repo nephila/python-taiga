@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 from .auth import get_client
 from .serialize import apply_payload, to_jsonable
@@ -86,6 +87,22 @@ def _represent(
     return {"ok": True, **base}
 
 
+def _patch(resource: Any, fields: dict[str, Any]) -> None:
+    """Apply `resource.patch()`, surfacing the real failure message to the caller.
+
+    Any exception here (a stale/missing `version`, a resource that vanished after
+    lookup, ...) would otherwise reach the caller as a bare "Error executing tool
+    <name>" - the mcp SDK replaces any exception that isn't its own `ToolError`
+    with a fixed generic message, deliberately, treating it as an unanticipated
+    crash. Re-raising as `ToolError` preserves the real message, the same detail
+    `update_work_items` already surfaces per-row for the same underlying failures.
+    """
+    try:
+        resource.patch(list(fields.keys()), **fields)
+    except Exception as exc:
+        raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+
+
 DEFAULT_PAGE_SIZE = 100
 
 
@@ -125,12 +142,16 @@ def _check_strict_filters(filters: dict[str, Any] | None, strict_filters: bool) 
     signal either way. Checked against a fixed set of this server's own parameter names,
     not Taiga's full (and from this client, unknowable) set of real filterable fields, so
     this can never false-positive on a genuine Taiga filter.
+
+    Raises `ToolError`, not a bare `ValueError` - the mcp SDK discards a bare exception's
+    message and replaces it with a generic "Error executing tool <name>", which would
+    defeat the entire point of naming the offending key(s) here.
     """
     if not strict_filters or not filters:
         return
     trapped = _FILTER_TRAP_KEYS & filters.keys()
     if trapped:
-        raise ValueError(
+        raise ToolError(
             f"filters contains parameter name(s) meant to be passed top-level, not nested: {sorted(trapped)}"
         )
 
@@ -522,7 +543,7 @@ def update_user_story(
     caller's own `fields` (already known). See docs/mcp.rst.
     """
     resource = _get_by_ref("user_story", project, ref)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(get_client().user_stories.get(resource.id))
     return _represent(resource, fields, return_representation)
@@ -541,7 +562,7 @@ def update_user_story_by_id(
     """
     client = get_client()
     resource = client.user_stories.get(id)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(client.user_stories.get(id))
     return _represent(resource, fields, return_representation)
@@ -667,7 +688,7 @@ def update_task(
     """
     # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     resource = _get_by_ref("task", project, ref)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(get_client().tasks.get(resource.id))
     return _represent(resource, fields, return_representation)
@@ -686,7 +707,7 @@ def update_task_by_id(
     """
     client = get_client()
     resource = client.tasks.get(id)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(client.tasks.get(id))
     return _represent(resource, fields, return_representation)
@@ -812,7 +833,7 @@ def update_issue(
     """
     # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     resource = _get_by_ref("issue", project, ref)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(get_client().issues.get(resource.id))
     return _represent(resource, fields, return_representation)
@@ -831,7 +852,7 @@ def update_issue_by_id(
     """
     client = get_client()
     resource = client.issues.get(id)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(client.issues.get(id))
     return _represent(resource, fields, return_representation)
@@ -953,7 +974,7 @@ def update_epic(
     """
     # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     resource = _get_by_ref("epic", project, ref)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(get_client().epics.get(resource.id))
     return _represent(resource, fields, return_representation)
@@ -972,7 +993,7 @@ def update_epic_by_id(
     """
     client = get_client()
     resource = client.epics.get(id)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(client.epics.get(id))
     return _represent(resource, fields, return_representation)
@@ -1239,7 +1260,7 @@ def update_wiki_page(
     # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     client = get_client()
     resource = client.wikipages.get(id)
-    resource.patch(list(fields.keys()), **fields)
+    _patch(resource, fields)
     if return_representation == "full":
         return to_jsonable(client.wikipages.get(id))
     return _represent(resource, fields, return_representation)

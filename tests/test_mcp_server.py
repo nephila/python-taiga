@@ -3,7 +3,9 @@ from __future__ import annotations
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+from mcp.server.mcpserver.exceptions import ToolError
 
+from taiga.exceptions import TaigaRestException
 from taiga.mcp_server import server
 
 _HISTORY_ENTRY = {
@@ -530,6 +532,25 @@ def test_update_user_story_by_id(mock_get_client):
     mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
     mock_client.user_stories.get.assert_has_calls([call(1), call(1)])
     assert result == {"id": 1, "subject": "Updated"}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_user_story_surfaces_the_real_patch_failure_message(mock_get_client):
+    # A bare exception from resource.patch() (e.g. a stale `version`) would otherwise reach
+    # the caller as a generic "Error executing tool update_user_story" with no detail - the
+    # mcp SDK replaces any exception that isn't its own ToolError with a fixed message.
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=1)
+    mock_resource.patch.side_effect = TaigaRestException(
+        "url", 400, '{"version": "The version doesn\'t match with the current one"}'
+    )
+    mock_project.get_userstory_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    with pytest.raises(ToolError, match="version doesn't match"):
+        server.update_user_story(1, 45634, {"subject": "Updated", "version": 7})
 
 
 @patch("taiga.mcp_server.server.get_client")
@@ -1581,7 +1602,7 @@ def test_check_strict_filters_no_op_when_filters_clean():
 
 
 def test_check_strict_filters_raises_naming_the_trapped_key():
-    with pytest.raises(ValueError, match="include_user_stories"):
+    with pytest.raises(ToolError, match="include_user_stories"):
         server._check_strict_filters({"include_user_stories": False}, strict_filters=True)
 
 
@@ -1597,7 +1618,7 @@ def test_list_milestones_strict_filters_false_ignores_trap_key_silently(mock_get
 
 
 def test_list_milestones_strict_filters_true_raises():
-    with pytest.raises(ValueError, match="include_user_stories"):
+    with pytest.raises(ToolError, match="include_user_stories"):
         server.list_milestones(filters={"include_user_stories": False}, strict_filters=True)
 
 
