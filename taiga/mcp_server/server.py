@@ -1010,6 +1010,47 @@ def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, An
     return to_jsonable(epic.add_related_user_story(user_story_id))
 
 
+@mcp.tool()
+def update_work_items(
+    project: str | int,
+    updates: list[dict[str, Any]],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> list[dict[str, Any]]:
+    """Update a batch of user stories/tasks/issues/epics in one call.
+
+    Each entry in `updates` is `{"entity_type": "user_story"|"task"|"issue"|"epic", "ref": <int>,
+    "fields": {...}}` - `ref` is the per-project ref number (as in `update_user_story` etc.), and
+    `fields` is the dict of attributes to change, exactly as a single-item `update_*` call would
+    take it. If Taiga needs a `version` for optimistic locking, put it inside that item's own
+    `fields`, same as today's single-item contract - this tool adds no new version handling.
+
+    Not atomic: items are processed in order, each succeeds or fails independently, and a
+    failure does not roll back or block any other item. Returns one result row per input item,
+    in the same order, so `updates` and the result can always be zipped. A successful item's row
+    follows `return_representation` exactly like a single-item `update_*` call. A failed item's
+    row is `{"status": "error", "entity_type": ..., "ref": ..., "error": "<message>"}`.
+
+    Wiki pages are not supported here - they have no per-project ref number, and aren't part of
+    the sprint-rollover workflow this tool targets. Use `update_wiki_page` directly.
+    """
+    results: list[dict[str, Any]] = []
+    for item in updates:
+        entity_type = item["entity_type"]
+        ref = item["ref"]
+        fields = item["fields"]
+        try:
+            resource = _get_by_ref(entity_type, project, ref)
+            resource.patch(list(fields.keys()), **fields)
+            if return_representation == "full":
+                client_attr = getattr(get_client(), _ENTITY_ATTR[entity_type])
+                results.append(to_jsonable(client_attr.get(resource.id)))
+            else:
+                results.append(_represent(resource, fields, return_representation))
+        except Exception as exc:  # A single bad item must not abort the rest of the batch.
+            results.append({"status": "error", "entity_type": entity_type, "ref": ref, "error": str(exc)})
+    return results
+
+
 # --- Milestones (sprints) -----------------------------------------------------------------
 
 
