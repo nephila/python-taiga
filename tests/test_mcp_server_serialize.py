@@ -250,6 +250,14 @@ def test_collapse_extra_info_leaves_non_extra_info_keys_untouched():
     assert collapse_extra_info(data) == data
 
 
+def test_collapse_extra_info_collapses_invited_by_despite_the_name_mismatch():
+    data = {"invited_by": {"id": 5, "username": "yakky", "full_name_display": "Iacopo Spalletti", "is_active": True}}
+
+    result = collapse_extra_info(data)
+
+    assert result == {"invited_by": {"id": 5, "full_name_display": "Iacopo Spalletti"}}
+
+
 # --- apply_payload ---------------------------------------------------------------------
 
 
