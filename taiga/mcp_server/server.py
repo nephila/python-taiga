@@ -67,6 +67,25 @@ def _get_by_ref(entity_type: str, project: str | int, ref: int) -> Any:
     return getattr(proj, _REF_METHOD[entity_type])(ref)
 
 
+def _represent(
+    resource: Any,
+    written: dict[str, Any],
+    return_representation: str,
+) -> dict[str, Any]:
+    """Project a written resource down per return_representation - "minimal"/"none" only.
+
+    Callers handle "full" themselves: that shape differs between create_* (no re-fetch)
+    and update_* (re-fetch required), and duplicating that branching here would obscure,
+    not simplify, either.
+    """
+    base: dict[str, Any] = {"id": resource.id, "version": getattr(resource, "version", None)}
+    if hasattr(resource, "ref"):
+        base["ref"] = resource.ref
+    if return_representation == "minimal":
+        return {**base, **written}
+    return {"ok": True, **base}
+
+
 DEFAULT_PAGE_SIZE = 100
 
 
