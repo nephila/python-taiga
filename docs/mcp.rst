@@ -153,6 +153,28 @@ not in any particular project. Check it went through with:
 
     claude mcp get taiga
 
+.. warning:: **Some MCP clients require every declared parameter to be passed
+             explicitly, even ones with a documented default.** Every
+             parameter below that shows a default (e.g. ``payload="full"``,
+             ``strict_filters=False``) is genuinely optional in this server's
+             own JSON schema and its runtime validation - confirmed by
+             calling the real server directly over the MCP protocol,
+             omitting those parameters entirely. Some MCP clients have
+             nonetheless been observed rejecting the call outright
+             (``-32602``, wording resembling Zod's ``nonoptional`` schema
+             check) when a parameter carrying a schema-level ``default`` is
+             omitted - for *every* such parameter, not just the ones this
+             server added recently: `include_user_stories` on
+             ``list_milestones`` (which predates this server's payload-
+             reduction work) triggers the same rejection on an affected
+             client. This is a property of that client's own schema
+             validation, not of this server, and there is no available hook
+             in this server's dependencies to change what gets emitted to
+             work around it. **If your client exhibits this, pass every
+             parameter explicitly on every call to an affected tool** -
+             there is no way to make a client-side check like this
+             optional from the server side.
+
 ****************
 Available tools
 ****************
