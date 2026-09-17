@@ -6,7 +6,7 @@
 Taiga Python API library
 """
 
-__version__ = "2.0.0b3"
+__version__ = "2.0.0b4"
 __author__ = "Nephila"
 __license__ = "MIT"
 __all__ = ["TaigaAPI"]
