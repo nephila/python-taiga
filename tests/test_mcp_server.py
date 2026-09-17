@@ -1700,3 +1700,17 @@ def test_create_epic_return_representation_none(mock_get_client):
     result = server.create_epic(1, "New epic", return_representation="none")
 
     assert result == {"ok": True, "id": 4, "version": 1, "ref": 70}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_create_milestone_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_resource = MagicMock(spec=["id", "version"])
+    mock_resource.id = 5
+    mock_resource.version = 1
+    mock_client.milestones.create.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.create_milestone(1, "Sprint 1", "2026-09-01", "2026-09-14", return_representation="minimal")
+
+    assert result == {"id": 5, "version": 1}

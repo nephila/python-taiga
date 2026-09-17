@@ -1084,10 +1084,18 @@ def create_milestone(
     estimated_start: str,
     estimated_finish: str,
     fields: dict[str, Any] | None = None,
+    return_representation: Literal["full", "minimal", "none"] = "full",
 ) -> dict[str, Any]:
-    """Create a milestone. Dates are ISO strings ('YYYY-MM-DD')."""
+    """Create a milestone. Dates are ISO strings ('YYYY-MM-DD').
+
+    `return_representation` ("full" default / "minimal" / "none") controls how much of the
+    created resource comes back - see docs/mcp.rst.
+    """
     pid = _resolve_project_id(project)
-    return to_jsonable(get_client().milestones.create(pid, name, estimated_start, estimated_finish, **(fields or {})))
+    resource = get_client().milestones.create(pid, name, estimated_start, estimated_finish, **(fields or {}))
+    if return_representation == "full":
+        return to_jsonable(resource)
+    return _represent(resource, fields or {}, return_representation)
 
 
 @mcp.tool()
