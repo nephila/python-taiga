@@ -1619,3 +1619,45 @@ def test_represent_none_omits_ref_when_resource_has_none():
     result = server._represent(resource, {}, "none")
 
     assert result == {"ok": True, "id": 1, "version": 5}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_create_user_story_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_resource = MagicMock(id=1, version=1, ref=99)
+    mock_client.user_stories.create.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.create_user_story(1, "New story", fields={"points": {"1": 2}}, return_representation="minimal")
+
+    assert result == {"id": 1, "version": 1, "ref": 99, "points": {"1": 2}}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_user_story_minimal_skips_refetch(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=1, version=3, ref=45634)
+    mock_project.get_userstory_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.update_user_story(1, 45634, {"subject": "Updated"}, return_representation="minimal")
+
+    assert result == {"id": 1, "version": 3, "ref": 45634, "subject": "Updated"}
+    mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.user_stories.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_user_story_by_id_none(mock_get_client):
+    mock_client = MagicMock()
+    mock_resource = MagicMock(id=1, version=4, ref=45634)
+    mock_client.user_stories.get.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.update_user_story_by_id(1, {"subject": "Updated"}, return_representation="none")
+
+    assert result == {"ok": True, "id": 1, "version": 4, "ref": 45634}
+    mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_client.user_stories.get.assert_called_once_with(1)
