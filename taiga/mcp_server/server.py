@@ -918,28 +918,61 @@ def get_epic_by_id(
 
 
 @mcp.tool()
-def create_epic(project: str | int, subject: str, fields: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Create an epic."""
+def create_epic(
+    project: str | int,
+    subject: str,
+    fields: dict[str, Any] | None = None,
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Create an epic.
+
+    `return_representation` ("full" default / "minimal" / "none") controls how much of the
+    created resource comes back - see docs/mcp.rst.
+    """
     pid = _resolve_project_id(project)
-    return to_jsonable(get_client().epics.create(pid, subject, **(fields or {})))
+    resource = get_client().epics.create(pid, subject, **(fields or {}))
+    if return_representation == "full":
+        return to_jsonable(resource)
+    return _represent(resource, fields or {}, return_representation)
 
 
 @mcp.tool()
-def update_epic(project: str | int, ref: int, fields: dict[str, Any]) -> dict[str, Any]:
-    """Update an epic identified by its per-project ref number. `fields` is a dict of the attributes to change."""
-    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
+def update_epic(
+    project: str | int,
+    ref: int,
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update an epic identified by its per-project ref number. `fields` is a dict of the attributes to change.
+
+    `return_representation` ("full" default / "minimal" / "none") - see `update_user_story`
+    for the full explanation; "minimal"/"none" skip the re-fetch this tool otherwise performs.
+    """
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     resource = _get_by_ref("epic", project, ref)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(get_client().epics.get(resource.id))
+    if return_representation == "full":
+        return to_jsonable(get_client().epics.get(resource.id))
+    return _represent(resource, fields, return_representation)
 
 
 @mcp.tool()
-def update_epic_by_id(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update an epic by its database id. Secondary lookup - prefer `update_epic` with a project + ref."""
+def update_epic_by_id(
+    id: int,  # noqa: A002
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update an epic by its database id. Secondary lookup - prefer `update_epic` with a project + ref.
+
+    `return_representation` ("full" default / "minimal" / "none") - see `update_user_story`
+    for the full explanation; "minimal"/"none" skip the re-fetch this tool otherwise performs.
+    """
     client = get_client()
     resource = client.epics.get(id)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(client.epics.get(id))
+    if return_representation == "full":
+        return to_jsonable(client.epics.get(id))
+    return _represent(resource, fields, return_representation)
 
 
 @mcp.tool()
