@@ -1584,3 +1584,38 @@ def test_list_milestones_strict_filters_false_ignores_trap_key_silently(mock_get
 def test_list_milestones_strict_filters_true_raises():
     with pytest.raises(ValueError, match="include_user_stories"):
         server.list_milestones(filters={"include_user_stories": False}, strict_filters=True)
+
+
+# --- _represent ------------------------------------------------------------------------
+
+
+def test_represent_minimal_includes_id_ref_version_and_written_fields():
+    resource = MagicMock(id=1, version=5, ref=42)
+
+    result = server._represent(resource, {"subject": "Updated"}, "minimal")
+
+    assert result == {"id": 1, "version": 5, "ref": 42, "subject": "Updated"}
+
+
+def test_represent_minimal_omits_ref_when_resource_has_none():
+    resource = MagicMock(spec=["id", "version"], id=1, version=5)
+
+    result = server._represent(resource, {"content": "Updated"}, "minimal")
+
+    assert result == {"id": 1, "version": 5, "content": "Updated"}
+
+
+def test_represent_none_includes_only_ok_id_ref_version():
+    resource = MagicMock(id=1, version=5, ref=42)
+
+    result = server._represent(resource, {"subject": "Updated"}, "none")
+
+    assert result == {"ok": True, "id": 1, "version": 5, "ref": 42}
+
+
+def test_represent_none_omits_ref_when_resource_has_none():
+    resource = MagicMock(spec=["id", "version"], id=1, version=5)
+
+    result = server._represent(resource, {}, "none")
+
+    assert result == {"ok": True, "id": 1, "version": 5}
