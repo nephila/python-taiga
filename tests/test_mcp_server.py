@@ -1688,3 +1688,15 @@ def test_update_issue_return_representation_minimal(mock_get_client):
 
     assert result == {"id": 3, "version": 2, "ref": 60, "status": 5}
     mock_client.issues.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_create_epic_return_representation_none(mock_get_client):
+    mock_client = MagicMock()
+    mock_resource = MagicMock(id=4, version=1, ref=70)
+    mock_client.epics.create.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    result = server.create_epic(1, "New epic", return_representation="none")
+
+    assert result == {"ok": True, "id": 4, "version": 1, "ref": 70}
