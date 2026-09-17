@@ -388,7 +388,18 @@ Available tools
           **not** supported the same way for either ``milestone`` (errors) or
           ``milestone__in`` (silently ignored, returning an arbitrary unrelated
           page of results rather than an error) - do not rely on either form;
-          fetch each milestone's items with its own call instead. Separately,
+          fetch each milestone's items with its own call instead. A Python
+          *list* value (e.g. ``filters={"milestone": [1444, 1446]}``) is a
+          third failure mode, and the most dangerous of the three: it returns
+          a small, clean, plausible-looking result set - but only for the
+          *last* id in the list, with every other id's items silently
+          dropped. This client sends the list correctly (as repeated query
+          parameters, standard ``requests`` behaviour); the collapse happens
+          in Taiga's own REST backend, which appears to read only the last
+          value of a repeated parameter (standard Django ``QueryDict.get()``
+          semantics) - nothing on this client's side can change that. Do not
+          pass a list as a filter value for any key; fetch each id with its
+          own call instead. Separately,
           ``project=None`` (the default on item-listing tools) already returns
           results across every project the caller can see - no project scope
           is required for a cross-project item query.
