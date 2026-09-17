@@ -1311,7 +1311,10 @@ def test_get_user_story_expand_adds_full_block_back(mock_get_client):
 
     result = server.get_user_story(1, 45634, payload="minimal", expand=["assigned_to_extra_info"])
 
-    assert result["assigned_to_extra_info"] == {"id": 5, "full_name_display": "Bob", "photo": "x"}
+    # expand adds back every field of the block ("id" here, absent from MINIMAL_FIELDS),
+    # but the block still goes through the same strip pass as the rest of the response -
+    # "photo" is gone even though it was requested to be expanded (M6).
+    assert result["assigned_to_extra_info"] == {"id": 5, "full_name_display": "Bob"}
 
 
 @patch("taiga.mcp_server.server.get_client")
