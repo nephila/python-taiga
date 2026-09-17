@@ -99,7 +99,17 @@ def collapse_extra_info(data: Any) -> Any:
 
 
 MINIMAL_FIELDS: dict[str, list[str]] = {
-    "milestone": ["id", "name", "slug", "project", "estimated_start", "estimated_finish", "closed"],
+    "milestone": [
+        "id",
+        "name",
+        "slug",
+        "project",
+        "project_extra_info.name",
+        "project_extra_info.slug",
+        "estimated_start",
+        "estimated_finish",
+        "closed",
+    ],
     "userstory": [
         "id",
         "ref",
@@ -107,13 +117,13 @@ MINIMAL_FIELDS: dict[str, list[str]] = {
         "version",
         "milestone",
         "milestone_name",
-        "status",
         "status_extra_info.name",
         "status_extra_info.is_closed",
         "is_closed",
         "finish_date",
         "is_blocked",
         "assigned_to_extra_info.full_name_display",
+        "assigned_users",
         "epics.ref",
         "assigned_users_extra_info",
     ],
@@ -124,7 +134,6 @@ MINIMAL_FIELDS: dict[str, list[str]] = {
         "version",
         "milestone",
         "milestone_name",
-        "status",
         "status_extra_info.name",
         "status_extra_info.is_closed",
         "is_closed",

@@ -312,6 +312,7 @@ def test_apply_payload_minimal_uses_the_entity_measured_field_set():
         "finish_date": None,
         "is_blocked": False,
         "assigned_to_extra_info": {"id": 5, "full_name_display": "Bob", "photo": "x"},
+        "assigned_users": [10, 11],
         "epics": [{"ref": 10, "subject": "Epic A"}],
         "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "y"},
     }
@@ -325,12 +326,12 @@ def test_apply_payload_minimal_uses_the_entity_measured_field_set():
         "version": 3,
         "milestone": 7,
         "milestone_name": "Sprint 1",
-        "status": 2,
         "status_extra_info": {"name": "Done", "is_closed": True},
         "is_closed": True,
         "finish_date": None,
         "is_blocked": False,
         "assigned_to_extra_info": {"full_name_display": "Bob"},
+        "assigned_users": [10, 11],
         "epics": [{"ref": 10}],
     }
 
@@ -349,6 +350,7 @@ def test_apply_payload_minimal_keeps_assigned_users_extra_info_for_userstory():
         "finish_date": None,
         "is_blocked": False,
         "assigned_to_extra_info": {"id": 5, "full_name_display": "Bob", "photo": "x"},
+        "assigned_users": [10, 11],
         "epics": [{"ref": 10, "subject": "Epic A"}],
         "owner_extra_info": {"id": 9, "full_name_display": "Alice", "photo": "y"},
         "assigned_users_extra_info": [
@@ -366,12 +368,12 @@ def test_apply_payload_minimal_keeps_assigned_users_extra_info_for_userstory():
         "version": 3,
         "milestone": 7,
         "milestone_name": "Sprint 1",
-        "status": 2,
         "status_extra_info": {"name": "Done", "is_closed": True},
         "is_closed": True,
         "finish_date": None,
         "is_blocked": False,
         "assigned_to_extra_info": {"full_name_display": "Bob"},
+        "assigned_users": [10, 11],
         "epics": [{"ref": 10}],
         "assigned_users_extra_info": [
             {"id": 10, "full_name_display": "Alice"},

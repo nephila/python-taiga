@@ -277,18 +277,28 @@ Available tools
            ``taiga/mcp_server/serialize.py``):
 
            - ``milestone`` (``list_milestones``/``get_milestone``): ``id``,
-             ``name``, ``slug``, ``project``, ``estimated_start``,
-             ``estimated_finish``, ``closed``.
+             ``name``, ``slug``, ``project``, ``project_extra_info.name``,
+             ``project_extra_info.slug``, ``estimated_start``,
+             ``estimated_finish``, ``closed``. The board's name/slug are
+             included alongside the bare ``project`` id specifically so a
+             cross-project report can display and link each board without a
+             second call.
            - ``userstory`` (``list_user_stories``/``get_user_story``/
              ``get_user_story_by_id``): ``id``, ``ref``, ``subject``,
-             ``version``, ``milestone``, ``milestone_name``, ``status``,
+             ``version``, ``milestone``, ``milestone_name``,
              ``status_extra_info.name``, ``status_extra_info.is_closed``,
              ``is_closed``, ``finish_date``, ``is_blocked``,
-             ``assigned_to_extra_info.full_name_display``, ``epics.ref``,
-             ``assigned_users_extra_info``.
+             ``assigned_to_extra_info.full_name_display``,
+             ``assigned_users``, ``epics.ref``, ``assigned_users_extra_info``.
+             The numeric ``status`` id is deliberately omitted - it is a
+             per-project id, not comparable across boards, and redundant
+             alongside ``status_extra_info.name``. ``assigned_users`` (the
+             bare secondary-assignee id list) is included so ``minimal``
+             never silently under-reports who is assigned; pair it with
+             ``resolve_assigned_users=True`` for names, not just ids.
            - ``issue`` (``list_issues``/``get_issue``/``get_issue_by_id``):
-             same as ``userstory`` minus ``assigned_users_extra_info``
-             (issues have no ``assigned_users``).
+             same as ``userstory`` minus ``assigned_users``/
+             ``assigned_users_extra_info`` (issues have no ``assigned_users``).
            - ``epic`` (``list_epics``/``get_epic``/``get_epic_by_id``):
              ``id``, ``ref``, ``subject``, ``status_extra_info.name``,
              ``project``.
@@ -328,7 +338,32 @@ Available tools
           False, "estimated_start__lte": "2026-09-20"})`` - already works
           today with no MCP-side change, for any lookup Taiga's own API
           filter backend supports. Which lookups that includes is a property
-          of the Taiga server you're talking to, not of this client.
+          of the Taiga server you're talking to, not of this client. Filters
+          verified against a live instance: ``closed`` (milestones),
+          ``page_size`` (all ``list_*`` tools, caps at 100 per page regardless
+          of the value requested), ``estimated_start__lte``/
+          ``estimated_finish__gte`` (milestones - returns exactly the boards
+          whose window overlaps the given range), and ``milestone`` as a
+          single int (user stories, issues). A comma-separated list of ids is
+          **not** supported the same way for either ``milestone`` (errors) or
+          ``milestone__in`` (silently ignored, returning an arbitrary unrelated
+          page of results rather than an error) - do not rely on either form;
+          fetch each milestone's items with its own call instead. Separately,
+          ``project=None`` (the default on item-listing tools) already returns
+          results across every project the caller can see - no project scope
+          is required for a cross-project item query.
+
+.. note:: Taiga's own data can disagree with itself on closure state: the
+          top-level ``is_closed`` field and ``status_extra_info.is_closed``
+          are two independently-set signals and have been observed to
+          contradict each other on the same item (e.g. ``is_closed: true``
+          while the status is actually "In progress" and
+          ``status_extra_info.is_closed: false``). This is a property of the
+          underlying Taiga data, not a serialization defect in this server.
+          ``status_extra_info.name``/``status_extra_info.is_closed`` are the
+          more reliable signals if the two disagree - they come directly from
+          the status Taiga's UI itself displays, rather than a separately
+          maintained flag on the item.
 
 .. tip:: Every ``create_*``/``update_*`` tool accepts ``return_representation``
          (``"full"`` default / ``"minimal"`` / ``"none"``), opt-in, to shrink
