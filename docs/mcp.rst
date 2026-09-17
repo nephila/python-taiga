@@ -333,6 +333,18 @@ Available tools
          unknown query parameters with no error either way, which measured as
          much as a 24x size regression with no signal that anything went wrong.
 
+         **`strict_filters` is a narrow guard, not a filter validator.** It
+         only catches this server's own parameter names appearing inside
+         `filters` by mistake. It gives **no protection** against a
+         misspelled or unsupported Taiga filter key (e.g. `milestone__in`,
+         which Taiga silently ignores rather than erroring - see the note
+         below) - that class of mistake returns a normal-looking but wrong
+         result set with no error either way, `strict_filters` or not. Any
+         filter-based narrowing this server accepts must be re-asserted
+         client-side (e.g. checking the returned items' own fields match
+         what the filter was supposed to select) rather than trusted purely
+         because the call didn't raise.
+
 .. note:: ``filters`` is forwarded as-is to Taiga's REST endpoint, so
           server-side filtering - e.g. ``list_milestones(filters={"closed":
           False, "estimated_start__lte": "2026-09-20"})`` - already works
