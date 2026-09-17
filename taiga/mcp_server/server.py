@@ -1154,18 +1154,41 @@ def get_wiki_page(
 
 @mcp.tool()
 def create_wiki_page(
-    project: str | int, slug: str, content: str, fields: dict[str, Any] | None = None
+    project: str | int,
+    slug: str,
+    content: str,
+    fields: dict[str, Any] | None = None,
+    return_representation: Literal["full", "minimal", "none"] = "full",
 ) -> dict[str, Any]:
-    """Create a wiki page."""
+    """Create a wiki page.
+
+    `return_representation` ("full" default / "minimal" / "none") controls how much of the
+    created resource comes back - see docs/mcp.rst. Wiki pages have no `ref` number, so
+    "minimal"/"none" here never include a `ref` key.
+    """
     pid = _resolve_project_id(project)
-    return to_jsonable(get_client().wikipages.create(pid, slug, content, **(fields or {})))
+    resource = get_client().wikipages.create(pid, slug, content, **(fields or {}))
+    if return_representation == "full":
+        return to_jsonable(resource)
+    return _represent(resource, fields or {}, return_representation)
 
 
 @mcp.tool()
-def update_wiki_page(id: int, fields: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-    """Update a wiki page. `fields` is a dict of the attributes to change."""
-    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it.
+def update_wiki_page(
+    id: int,  # noqa: A002
+    fields: dict[str, Any],
+    return_representation: Literal["full", "minimal", "none"] = "full",
+) -> dict[str, Any]:
+    """Update a wiki page. `fields` is a dict of the attributes to change.
+
+    `return_representation` ("full" default / "minimal" / "none") - see `update_user_story`
+    for the full explanation; "minimal"/"none" skip the re-fetch this tool otherwise performs.
+    Wiki pages have no `ref` number, so "minimal"/"none" here never include a `ref` key.
+    """
+    # See update_user_story: patch() doesn't refresh the local object, so re-fetch it for "full".
     client = get_client()
     resource = client.wikipages.get(id)
     resource.patch(list(fields.keys()), **fields)
-    return to_jsonable(client.wikipages.get(id))
+    if return_representation == "full":
+        return to_jsonable(client.wikipages.get(id))
+    return _represent(resource, fields, return_representation)
