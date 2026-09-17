@@ -175,6 +175,11 @@ def apply_payload(
     compatibility contract. `MINIMAL_FIELDS` only has measured entries for "milestone",
     "userstory", "issue" and "epic"; for any other `entity`, `payload="minimal"` falls
     back to the same projection as `payload="compact"`.
+
+    `expand` merges each named key's full, unprojected value from `data` before the strip
+    pass runs, so an expanded block still loses its avatar/logo fields under the same
+    `strip_media` semantics as the rest of the response - `expand` widens which fields
+    come back, not whether media is stripped from them.
     """
     if payload == "full" and fields is None and expand is None and strip_media in (None, False):
         return data
@@ -195,11 +200,11 @@ def apply_payload(
     else:
         out = data
 
+    if expand:
+        out = _merge_paths(out, data, expand)
+
     strip = strip_media if strip_media is not None else payload in ("compact", "minimal")
     if strip:
         out = strip_avatar_fields(out)
-
-    if expand:
-        out = _merge_paths(out, data, expand)
 
     return out

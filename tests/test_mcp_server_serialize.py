@@ -426,7 +426,10 @@ def test_apply_payload_expand_adds_full_block_back_on_top_of_minimal():
 
     result = apply_payload(data, "userstory", payload="minimal", expand=["assigned_to_extra_info"])
 
-    assert result["assigned_to_extra_info"] == {"id": 5, "full_name_display": "Bob", "photo": "x"}
+    # expand adds back every field of the block ("id" here, absent from MINIMAL_FIELDS),
+    # but the block still goes through the same strip pass as the rest of the response -
+    # "photo" is gone even though it was requested to be expanded (M6).
+    assert result["assigned_to_extra_info"] == {"id": 5, "full_name_display": "Bob"}
 
 
 def test_apply_payload_applies_per_item_when_data_is_a_list():
