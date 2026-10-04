@@ -438,3 +438,21 @@ def test_apply_payload_applies_per_item_when_data_is_a_list():
     result = apply_payload(data, "userstory", fields=["id", "subject"])
 
     assert result == [{"id": 1, "subject": "a"}, {"id": 2, "subject": "b"}]
+
+
+def test_to_jsonable_falls_back_to_str_for_unknown_types():
+    assert to_jsonable(object) == str(object)
+
+
+def test_select_fields_returns_scalars_unchanged():
+    assert select_fields("text", ["a"]) == "text"
+
+
+def test_select_fields_passes_non_dict_list_items_through():
+    assert select_fields([1, {"a": 1, "b": 2}], ["a"]) == [1, {"a": 1}]
+
+
+def test_merge_paths_ignores_keys_missing_from_source():
+    from taiga.mcp_server.serialize import _merge_paths
+
+    assert _merge_paths({"a": 1}, {"b": 2}, ["b", "missing"]) == {"a": 1, "b": 2}

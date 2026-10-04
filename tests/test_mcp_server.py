@@ -1881,3 +1881,137 @@ def test_update_work_items_malformed_item_does_not_abort_batch(mock_get_client):
     assert result[1]["ref"] == 20
     assert isinstance(result[1]["error"], str) and result[1]["error"]
     mock_us.patch.assert_called_once_with(["subject"], subject="US updated")
+
+
+# --- return_representation on remaining write tools -------------------------------------
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_task_by_id_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.tasks.get.return_value = MagicMock(id=1, version=2, ref=9)
+    mock_get_client.return_value = mock_client
+
+    result = server.update_task_by_id(1, {"status": 5}, return_representation="minimal")
+
+    assert result == {"id": 1, "version": 2, "ref": 9, "status": 5}
+    mock_client.tasks.get.assert_called_once_with(1)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_create_issue_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.issues.create.return_value = MagicMock(id=3, version=1, ref=11)
+    mock_get_client.return_value = mock_client
+
+    result = server.create_issue(1, "New", 2, 3, 4, 5, fields={"description": "d"}, return_representation="minimal")
+
+    assert result == {"description": "d", "id": 3, "version": 1, "ref": 11}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_issue_by_id_return_representation_none(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.issues.get.return_value = MagicMock(id=3, version=4, ref=12)
+    mock_get_client.return_value = mock_client
+
+    result = server.update_issue_by_id(3, {"status": 5}, return_representation="none")
+
+    assert result == {"ok": True, "id": 3, "version": 4, "ref": 12}
+    mock_client.issues.get.assert_called_once_with(3)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_epic_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.get_epic_by_ref.return_value = MagicMock(id=4, version=1, ref=70)
+    mock_get_client.return_value = mock_client
+
+    result = server.update_epic(1, 70, {"subject": "S"}, return_representation="minimal")
+
+    assert result == {"subject": "S", "id": 4, "version": 1, "ref": 70}
+    mock_client.epics.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_epic_by_id_return_representation_none(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.epics.get.return_value = MagicMock(id=4, version=1, ref=70)
+    mock_get_client.return_value = mock_client
+
+    result = server.update_epic_by_id(4, {"subject": "S"}, return_representation="none")
+
+    assert result == {"ok": True, "id": 4, "version": 1, "ref": 70}
+    mock_client.epics.get.assert_called_once_with(4)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_create_wiki_page_return_representation_minimal(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.wikipages.create.return_value = MagicMock(id=8, version=1, spec=["id", "version"])
+    mock_get_client.return_value = mock_client
+
+    result = server.create_wiki_page(1, "home", "Welcome", fields={"x": 1}, return_representation="minimal")
+
+    assert result == {"x": 1, "id": 8, "version": 1}
+
+
+# --- resolve_assigned_users on get_user_story* -------------------------------------------
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_user_story_resolves_assigned_users(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.get_userstory_by_ref.return_value = {"id": 1, "project": 5, "assigned_users": [10]}
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
+    mock_get_client.return_value = mock_client
+
+    result = server.get_user_story(5, 1, resolve_assigned_users=True)
+
+    assert result["assigned_users_extra_info"] == [{"id": 10, "full_name_display": "Alice"}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_get_user_story_by_id_resolves_assigned_users(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_client.user_stories.get.return_value = {"id": 1, "project": 5, "assigned_users": [10]}
+    mock_project.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
+    mock_get_client.return_value = mock_client
+
+    result = server.get_user_story_by_id(1, resolve_assigned_users=True)
+
+    assert result["assigned_users_extra_info"] == [{"id": 10, "full_name_display": "Alice"}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_resolve_assigned_users_skips_items_without_assignees(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.projects.get.return_value.list_memberships.return_value = [{"user": 10, "full_name": "Alice"}]
+    mock_get_client.return_value = mock_client
+
+    data = [{"id": 1, "project": 5, "assigned_users": []}, {"id": 2, "project": 5, "assigned_users": [10]}]
+
+    result = server._resolve_assigned_users(data)
+
+    assert "assigned_users_extra_info" not in result[0]
+    assert result[1]["assigned_users_extra_info"] == [{"id": 10, "full_name_display": "Alice"}]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_task_return_representation_none(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.get_task_by_ref.return_value = MagicMock(id=2, version=3, ref=45)
+    mock_get_client.return_value = mock_client
+
+    result = server.update_task(1, 45, {"status": 5}, return_representation="none")
+
+    assert result == {"ok": True, "id": 2, "version": 3, "ref": 45}
+    mock_client.tasks.get.assert_not_called()
