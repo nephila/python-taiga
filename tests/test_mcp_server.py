@@ -2149,3 +2149,32 @@ def test_update_work_items_keeps_an_explicit_version(mock_get_client):
     )
 
     mock_resource.patch.assert_called_once_with(["status", "version"], status=437, version=2)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_resolves_project_once(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_project.get_task_by_ref.return_value = MagicMock(id=1)
+    mock_client.tasks.get.return_value = {"id": 1}
+    mock_get_client.return_value = mock_client
+
+    updates = [{"entity_type": "task", "ref": n, "fields": {"subject": "x"}} for n in (1, 2, 3)]
+    server.update_work_items(1, updates)
+
+    assert mock_client.projects.get.call_count == 1
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_resolve_assigned_users_pages_through_memberships(mock_get_client):
+    first = [{"user": n, "full_name": f"U{n}"} for n in range(1, 101)]
+    second = [{"user": 101, "full_name": "U101"}]
+    mock_project = MagicMock()
+    mock_project.list_memberships.side_effect = [first, second]
+    mock_get_client.return_value.projects.get.return_value = mock_project
+
+    result = server._resolve_assigned_users({"project": 1, "assigned_users": [101]})
+
+    assert result["assigned_users_extra_info"] == [{"id": 101, "full_name_display": "U101"}]
+    assert mock_project.list_memberships.call_count == 2

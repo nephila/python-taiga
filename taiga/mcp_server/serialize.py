@@ -76,7 +76,7 @@ _EXTRA_INFO_EXTRA_KEEP = {"status_extra_info": ("is_closed",)}
 _ADDITIONAL_COLLAPSIBLE_KEYS = frozenset({"invited_by"})
 
 
-def collapse_extra_info(data: Any) -> Any:
+def collapse_extra_info(data: Any, keep_media: bool = False) -> Any:
     """Shrink every `*_extra_info` block, plus `invited_by`, to its id plus whichever
     descriptive label field is present.
 
@@ -86,19 +86,22 @@ def collapse_extra_info(data: Any) -> Any:
     compact caller can still tell whether an item is closed without expanding the block.
     `invited_by` (seen on membership records) is a full nested user block too, but doesn't
     end in `_extra_info`, so it needs naming explicitly rather than falling out of the
-    suffix check.
+    suffix check. `keep_media=True` also keeps the avatar/logo keys, for callers that
+    explicitly disabled media stripping.
     """
     if isinstance(data, dict):
         result: dict[str, Any] = {}
         for key, value in data.items():
             if (key.endswith("_extra_info") or key in _ADDITIONAL_COLLAPSIBLE_KEYS) and isinstance(value, dict):
                 keep = ("id", *_LABEL_KEYS, *_EXTRA_INFO_EXTRA_KEEP.get(key, ()))
+                if keep_media:
+                    keep = (*keep, *_AVATAR_KEYS)
                 result[key] = {k: value[k] for k in keep if k in value}
             else:
-                result[key] = collapse_extra_info(value)
+                result[key] = collapse_extra_info(value, keep_media)
         return result
     if isinstance(data, list):
-        return [collapse_extra_info(item) for item in data]
+        return [collapse_extra_info(item, keep_media) for item in data]
     return data
 
 
@@ -190,13 +193,16 @@ def apply_payload(
             for item in data
         ]
 
+    keep_media = strip_media is False
     if fields is not None:
         out = select_fields(data, fields)
     elif payload == "minimal":
         minimal_paths = MINIMAL_FIELDS.get(entity)
-        out = select_fields(data, minimal_paths) if minimal_paths is not None else collapse_extra_info(data)
+        out = (
+            select_fields(data, minimal_paths) if minimal_paths is not None else collapse_extra_info(data, keep_media)
+        )
     elif payload == "compact":
-        out = collapse_extra_info(data)
+        out = collapse_extra_info(data, keep_media)
     else:
         out = data
 

@@ -64,7 +64,11 @@ def _get_by_ref(entity_type: str, project: str | int, ref: int) -> Any:
     `ref` is the sequential number Taiga shows per project - e.g. the 45634 in
     `.../issues/45634` - not the database id used internally for update/delete.
     """
-    proj = _resolve_project(project)
+    return _get_by_ref_in(_resolve_project(project), entity_type, ref)
+
+
+def _get_by_ref_in(proj: Any, entity_type: str, ref: int) -> Any:
+    """Like `_get_by_ref`, but for an already-resolved project (avoids a re-fetch per item)."""
     return getattr(proj, _REF_METHOD[entity_type])(ref)
 
 
@@ -406,6 +410,18 @@ def set_custom_attribute_value_by_id(
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
 
 
+def _membership_names(proj: Any, wanted: set[int]) -> dict[int, str | None]:
+    """Map user id -> full_name over a project's memberships, paging until `wanted` is covered."""
+    names: dict[int, str | None] = {}
+    page = 1
+    while True:
+        batch = to_jsonable(proj.list_memberships(page=page, page_size=DEFAULT_PAGE_SIZE))
+        names.update({m["user"]: m.get("full_name") for m in batch})
+        if len(batch) < DEFAULT_PAGE_SIZE or wanted <= names.keys():
+            return names
+        page += 1
+
+
 def _resolve_assigned_users(
     data: dict[str, Any] | list[dict[str, Any]],
 ) -> dict[str, Any] | list[dict[str, Any]]:
@@ -416,8 +432,8 @@ def _resolve_assigned_users(
     field seen on other Taiga user blocks (`owner_extra_info`, `assigned_to_extra_info`,
     ...) - confirmed against a live instance. We still key our own output as
     `full_name_display`, for consistency with those other blocks; only the source field
-    read from the membership record differs. Fetches at most one membership page (up to
-    100 members) per distinct project id actually referenced.
+    read from the membership record differs. Pages through each distinct referenced
+    project's memberships until every assigned user id is found or the pages run out.
     """
     items = data if isinstance(data, list) else [data]
     if not any(item.get("assigned_users") for item in items):
@@ -430,8 +446,8 @@ def _resolve_assigned_users(
             continue
         project_id = item["project"]
         if project_id not in membership_maps:
-            memberships = to_jsonable(client.projects.get(project_id).list_memberships(**_paginated({})))
-            membership_maps[project_id] = {m["user"]: m.get("full_name") for m in memberships}
+            wanted = {uid for it in items if it.get("project") == project_id for uid in it.get("assigned_users") or []}
+            membership_maps[project_id] = _membership_names(client.projects.get(project_id), wanted)
         name_map = membership_maps[project_id]
         item["assigned_users_extra_info"] = [
             {"id": uid, "full_name_display": name_map.get(uid)} for uid in assigned_users
@@ -1081,12 +1097,13 @@ def update_work_items(
     the sprint-rollover workflow this tool targets. Use `update_wiki_page` directly.
     """
     results: list[dict[str, Any]] = []
+    proj = _resolve_project(project) if updates else None
     for item in updates:
         try:
             entity_type = item["entity_type"]
             ref = item["ref"]
             fields = item["fields"]
-            resource = _get_by_ref(entity_type, project, ref)
+            resource = _get_by_ref_in(proj, entity_type, ref)
             patch_fields = _with_version(resource, fields)
             resource.patch(list(patch_fields.keys()), **patch_fields)
             if return_representation == "full":
