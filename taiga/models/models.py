@@ -51,7 +51,9 @@ class CustomAttributeResource(InstanceResource):
         :param value: value of the attribute
         :param version: version of the custom-attributes-values resource (default: its current version)
         """
-        attributes = self._get_attributes(cache=True)
+        # An omitted version is derived from the fetched values, so it must be fresh: a cached
+        # copy from an earlier write would carry a stale version after an external edit.
+        attributes = self._get_attributes(cache=version is not None)
         if version is None:
             version = attributes.get("version", 1)
         formatted_id = f"{id}"
