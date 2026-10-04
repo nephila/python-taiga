@@ -2178,3 +2178,21 @@ def test_resolve_assigned_users_pages_through_memberships(mock_get_client):
 
     assert result["assigned_users_extra_info"] == [{"id": 101, "full_name_display": "U101"}]
     assert mock_project.list_memberships.call_count == 2
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_readback_failure_is_not_reported_as_write_failure(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_task = MagicMock(id=7)
+    mock_project.get_task_by_ref.return_value = mock_task
+    mock_client.tasks.get.side_effect = RuntimeError("timeout")
+    mock_get_client.return_value = mock_client
+
+    result = server.update_work_items(1, [{"entity_type": "task", "ref": 3, "fields": {"subject": "x"}}])
+
+    mock_task.patch.assert_called_once()
+    assert result == [
+        {"status": "updated", "entity_type": "task", "ref": 3, "id": 7, "readback_error": "RuntimeError: timeout"}
+    ]

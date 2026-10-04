@@ -1095,6 +1095,10 @@ def update_work_items(
 
     Wiki pages are not supported here - they have no per-project ref number, and aren't part of
     the sprint-rollover workflow this tool targets. Use `update_wiki_page` directly.
+
+    If the write succeeds but the follow-up re-fetch for `return_representation` fails, the row is
+    `{"status": "updated", "entity_type": ..., "ref": ..., "id": ..., "readback_error": "<message>"}`
+    - the change was applied, so do not retry it.
     """
     results: list[dict[str, Any]] = []
     proj = _resolve_project(project) if updates else None
@@ -1106,21 +1110,35 @@ def update_work_items(
             resource = _get_by_ref_in(proj, entity_type, ref)
             patch_fields = _with_version(resource, fields)
             resource.patch(list(patch_fields.keys()), **patch_fields)
+        except Exception as exc:  # A single bad item must not abort the rest of the batch.
+            results.append(_batch_error(item, exc))
+            continue
+        try:
             if return_representation == "full":
                 client_attr = getattr(get_client(), _ENTITY_ATTR[entity_type])
                 results.append(to_jsonable(client_attr.get(resource.id)))
             else:
                 results.append(_represent(resource, fields, return_representation))
-        except Exception as exc:  # A single bad item must not abort the rest of the batch.
+        except Exception as exc:  # The write already succeeded: report it as such, not as a failure.
             results.append(
                 {
-                    "status": "error",
-                    "entity_type": item.get("entity_type"),
-                    "ref": item.get("ref"),
-                    "error": f"{type(exc).__name__}: {exc}",
+                    "status": "updated",
+                    "entity_type": entity_type,
+                    "ref": ref,
+                    "id": resource.id,
+                    "readback_error": f"{type(exc).__name__}: {exc}",
                 }
             )
     return results
+
+
+def _batch_error(item: dict[str, Any], exc: Exception) -> dict[str, Any]:
+    return {
+        "status": "error",
+        "entity_type": item.get("entity_type"),
+        "ref": item.get("ref"),
+        "error": f"{type(exc).__name__}: {exc}",
+    }
 
 
 # --- Milestones (sprints) -----------------------------------------------------------------
