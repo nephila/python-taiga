@@ -310,7 +310,8 @@ def get_history(
 
 @mcp.tool()
 def get_history_by_id(
-    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"], id: int  # noqa: A002
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki"],
+    id: int,  # noqa: A002
 ) -> list[dict[str, Any]]:
     """Get history by database id.
 
@@ -341,7 +342,8 @@ def get_custom_attributes_values(
 
 @mcp.tool()
 def get_custom_attributes_values_by_id(
-    entity_type: Literal["user_story", "task", "issue", "epic"], id: int  # noqa: A002
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    id: int,  # noqa: A002
 ) -> dict[str, Any]:
     """Get custom-attribute values by database id.
 

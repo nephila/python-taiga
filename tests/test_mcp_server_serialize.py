@@ -456,3 +456,13 @@ def test_merge_paths_ignores_keys_missing_from_source():
     from taiga.mcp_server.serialize import _merge_paths
 
     assert _merge_paths({"a": 1}, {"b": 2}, ["b", "missing"]) == {"a": 1, "b": 2}
+
+
+def test_apply_payload_fields_are_not_media_stripped_by_default_from_payload():
+    data = {"id": 1, "owner_extra_info": {"id": 2, "photo": "u"}}
+
+    kept = apply_payload(data, "issue", payload="minimal", fields=["owner_extra_info.photo"])
+    stripped = apply_payload(data, "issue", payload="minimal", fields=["owner_extra_info.photo"], strip_media=True)
+
+    assert kept == {"owner_extra_info": {"photo": "u"}}
+    assert stripped == {"owner_extra_info": {}}

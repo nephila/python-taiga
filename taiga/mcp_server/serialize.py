@@ -203,7 +203,10 @@ def apply_payload(
     if expand:
         out = _merge_paths(out, data, expand)
 
-    strip = strip_media if strip_media is not None else payload in ("compact", "minimal")
+    # `fields` overrides `payload` entirely, so the payload-derived default must not apply
+    # to an explicit field projection; an explicit `strip_media` still wins either way.
+    default_strip = fields is None and payload in ("compact", "minimal")
+    strip = strip_media if strip_media is not None else default_strip
     if strip:
         out = strip_avatar_fields(out)
 
