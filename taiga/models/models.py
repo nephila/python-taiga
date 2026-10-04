@@ -43,15 +43,17 @@ class CustomAttributeResource(InstanceResource):
     CustomAttributeResource base class
     """
 
-    def set_attribute(self, id, value, version=1):  # noqa: A002
+    def set_attribute(self, id, value, version=None):  # noqa: A002
         """
         Set attribute to a specific value
 
         :param id: id of the attribute
         :param value: value of the attribute
-        :param version: version of the attribute (default = 1)
+        :param version: version of the custom-attributes-values resource (default: its current version)
         """
         attributes = self._get_attributes(cache=True)
+        if version is None:
+            version = attributes.get("version", 1)
         formatted_id = f"{id}"
         attributes["attributes_values"][formatted_id] = value
         response = self.requester.patch(
@@ -332,10 +334,12 @@ class Epic(CustomAttributeResource, CommentableResource):
         """
         Link an existing :class:`UserStory` to this epic.
 
+        The API requires ``epic`` in the request body, so it is always sent.
+
         :param user_story_id: id of the :class:`UserStory` to link
         :param attrs: other optional attributes of the relation
         """
-        attrs.update({"user_story": user_story_id})
+        attrs.update({"user_story": user_story_id, "epic": self.id})
         response = self.requester.post(
             "/{endpoint}/{id}/related_userstories", endpoint=self.endpoint, id=self.id, payload=attrs
         )

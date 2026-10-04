@@ -435,6 +435,35 @@ def test_set_custom_attribute_value_by_id_routes_every_entity_type(mock_get_clie
         assert result == {"attributes_values": {"10": "NPH-INT"}, "version": 2}
 
 
+@patch("taiga.mcp_server.server.get_client")
+def test_set_custom_attribute_value_version_is_optional(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_get_client.return_value = mock_client
+    resource = mock_project.get_task_by_ref.return_value
+    resource.set_attribute.return_value = {"attributes_values": {"12": "x"}, "version": 2}
+
+    server.set_custom_attribute_value("task", 1, 9, 12, "x")
+    resource.set_attribute.assert_called_once_with(12, "x", version=None)
+
+    resource.set_attribute.reset_mock()
+    server.set_custom_attribute_value("task", 1, 9, 12, "x", version=3)
+    resource.set_attribute.assert_called_once_with(12, "x", version=3)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_set_custom_attribute_value_by_id_version_is_optional(mock_get_client):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    resource = mock_client.tasks.get.return_value
+    resource.set_attribute.return_value = {"attributes_values": {"12": "x"}, "version": 2}
+
+    server.set_custom_attribute_value_by_id("task", 1, 12, "x")
+
+    resource.set_attribute.assert_called_once_with(12, "x", version=None)
+
+
 # --- User stories -----------------------------------------------------------------------
 
 
@@ -1193,7 +1222,7 @@ def test_update_wiki_page_minimal_has_no_ref_key(mock_get_client):
 
     assert result == {"id": 6, "version": 2, "content": "Updated"}
     assert "ref" not in result
-    mock_resource.patch.assert_called_once_with(["content"], content="Updated")
+    mock_resource.patch.assert_called_once_with(["content", "version"], content="Updated", version=2)
 
 
 @patch("taiga.mcp_server.server.get_client")
@@ -1692,7 +1721,7 @@ def test_update_user_story_minimal_skips_refetch(mock_get_client):
     result = server.update_user_story(1, 45634, {"subject": "Updated"}, return_representation="minimal")
 
     assert result == {"id": 1, "version": 3, "ref": 45634, "subject": "Updated"}
-    mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_resource.patch.assert_called_once_with(["subject", "version"], subject="Updated", version=3)
     mock_client.user_stories.get.assert_not_called()
 
 
@@ -1706,7 +1735,7 @@ def test_update_user_story_by_id_none(mock_get_client):
     result = server.update_user_story_by_id(1, {"subject": "Updated"}, return_representation="none")
 
     assert result == {"ok": True, "id": 1, "version": 4, "ref": 45634}
-    mock_resource.patch.assert_called_once_with(["subject"], subject="Updated")
+    mock_resource.patch.assert_called_once_with(["subject", "version"], subject="Updated", version=4)
     mock_client.user_stories.get.assert_called_once_with(1)
 
 
@@ -2015,3 +2044,108 @@ def test_update_task_return_representation_none(mock_get_client):
 
     assert result == {"ok": True, "id": 2, "version": 3, "ref": 45}
     mock_client.tasks.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_link_epic_user_story_surfaces_the_real_failure_message(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_epic = MagicMock(id=1)
+    mock_project.get_epic_by_ref.return_value = mock_epic
+    mock_project.get_userstory_by_ref.return_value = MagicMock(id=10)
+    mock_epic.add_related_user_story.side_effect = RuntimeError('{"epic": ["This field is required."]}')
+    mock_get_client.return_value = mock_client
+
+    with pytest.raises(ToolError, match="This field is required"):
+        server.link_epic_user_story(1, 42, 45634)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_link_epic_user_story_by_id_surfaces_the_real_failure_message(mock_get_client):
+    mock_client = MagicMock()
+    mock_epic = MagicMock()
+    mock_client.epics.get.return_value = mock_epic
+    mock_epic.add_related_user_story.side_effect = RuntimeError("boom")
+    mock_get_client.return_value = mock_client
+
+    with pytest.raises(ToolError, match="RuntimeError: boom"):
+        server.link_epic_user_story_by_id(1, 10)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_task_fills_in_the_fetched_version_when_omitted(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=1, version=5)
+    mock_project.get_task_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    server.update_task(1, 45634, {"status": 437}, return_representation="none")
+
+    mock_resource.patch.assert_called_once_with(["status", "version"], status=437, version=5)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_task_keeps_an_explicit_version(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=1, version=5)
+    mock_project.get_task_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    server.update_task(1, 45634, {"status": 437, "version": 3}, return_representation="none")
+
+    mock_resource.patch.assert_called_once_with(["status", "version"], status=437, version=3)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_task_leaves_fields_alone_when_the_resource_has_no_version(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(spec=["id", "patch"])
+    mock_resource.id = 1
+    mock_project.get_task_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    server.update_task(1, 45634, {"status": 437}, return_representation="none")
+
+    mock_resource.patch.assert_called_once_with(["status"], status=437)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_fills_in_the_fetched_version_when_omitted(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=1, version=7)
+    mock_project.get_task_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    rows = server.update_work_items(
+        1, [{"entity_type": "task", "ref": 9, "fields": {"status": 437}}], return_representation="none"
+    )
+
+    mock_resource.patch.assert_called_once_with(["status", "version"], status=437, version=7)
+    assert "error" not in rows[0]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_keeps_an_explicit_version(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_client.projects.get.return_value = mock_project
+    mock_resource = MagicMock(id=1, version=7)
+    mock_project.get_task_by_ref.return_value = mock_resource
+    mock_get_client.return_value = mock_client
+
+    server.update_work_items(
+        1,
+        [{"entity_type": "task", "ref": 9, "fields": {"status": 437, "version": 2}}],
+        return_representation="none",
+    )
+
+    mock_resource.patch.assert_called_once_with(["status", "version"], status=437, version=2)

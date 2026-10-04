@@ -87,6 +87,18 @@ def _represent(
     return {"ok": True, **base}
 
 
+def _with_version(resource: Any, fields: dict[str, Any]) -> dict[str, Any]:
+    """Return `fields` with the resource's current `version` added when the caller omitted it.
+
+    The resource was just fetched, so its version is the optimistic-lock token Taiga expects;
+    leaving it out makes Taiga reject the write. An explicit caller-supplied `version` wins.
+    """
+    version = getattr(resource, "version", None)
+    if "version" in fields or not isinstance(version, int):
+        return fields
+    return {**fields, "version": version}
+
+
 def _patch(resource: Any, fields: dict[str, Any]) -> None:
     """Apply `resource.patch()`, surfacing the real failure message to the caller.
 
@@ -97,6 +109,7 @@ def _patch(resource: Any, fields: dict[str, Any]) -> None:
     crash. Re-raising as `ToolError` preserves the real message, the same detail
     `update_work_items` already surfaces per-row for the same underlying failures.
     """
+    fields = _with_version(resource, fields)
     try:
         resource.patch(list(fields.keys()), **fields)
     except Exception as exc:
@@ -362,14 +375,14 @@ def set_custom_attribute_value(
     ref: int,
     attribute_id: int,
     value: Any,
-    version: int,
+    version: int | None = None,
 ) -> dict[str, Any]:
     """Set one custom-attribute value on a user story, task, issue or epic,
     identified by its per-project ref number. `attribute_id` is the numeric id
     from get_project's `*_custom_attributes` list (e.g. the "Code" attribute).
-    `version` is the custom-attributes-values resource's own version (from a
-    prior get_custom_attributes_values call, or 1 if never set before) - not
-    the entity's own `version` field.
+    `version` is optional: when omitted, the custom-attributes-values resource's
+    current version is used. If given, it is that resource's own version (from a
+    prior get_custom_attributes_values call) - not the entity's own `version` field.
     """
     resource = _get_by_ref(entity_type, project, ref)
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
@@ -381,7 +394,7 @@ def set_custom_attribute_value_by_id(
     id: int,  # noqa: A002
     attribute_id: int,
     value: Any,
-    version: int,
+    version: int | None = None,
 ) -> dict[str, Any]:
     """Set a custom-attribute value by database id.
 
@@ -1016,13 +1029,21 @@ def delete_epic_by_id(id: int) -> dict[str, str]:  # noqa: A002
     return {"status": "deleted", "id": str(id)}
 
 
+def _link_epic(epic: Any, user_story_id: int) -> dict[str, Any]:
+    """Link a user story to an epic, surfacing the real failure message to the caller (see `_patch`)."""
+    try:
+        return to_jsonable(epic.add_related_user_story(user_story_id))
+    except Exception as exc:
+        raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+
+
 @mcp.tool()
 def link_epic_user_story(project: str | int, epic_ref: int, user_story_ref: int) -> dict[str, Any]:
     """Link a user story to an epic, identifying both by their per-project ref numbers."""
     proj = _resolve_project(project)
     epic = proj.get_epic_by_ref(epic_ref)
     user_story = proj.get_userstory_by_ref(user_story_ref)
-    return to_jsonable(epic.add_related_user_story(user_story.id))
+    return _link_epic(epic, user_story.id)
 
 
 @mcp.tool()
@@ -1033,7 +1054,7 @@ def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, An
     """
     client = get_client()
     epic = client.epics.get(epic_id)
-    return to_jsonable(epic.add_related_user_story(user_story_id))
+    return _link_epic(epic, user_story_id)
 
 
 @mcp.tool()
@@ -1047,8 +1068,8 @@ def update_work_items(
     Each entry in `updates` is `{"entity_type": "user_story"|"task"|"issue"|"epic", "ref": <int>,
     "fields": {...}}` - `ref` is the per-project ref number (as in `update_user_story` etc.), and
     `fields` is the dict of attributes to change, exactly as a single-item `update_*` call would
-    take it. If Taiga needs a `version` for optimistic locking, put it inside that item's own
-    `fields`, same as today's single-item contract - this tool adds no new version handling.
+    take it. If `version` is omitted from an item's `fields`, the fetched item's current version
+    is used for optimistic locking; an explicit `version` wins.
 
     Not atomic: items are processed in order, each succeeds or fails independently, and a
     failure does not roll back or block any other item. Returns one result row per input item,
@@ -1066,7 +1087,8 @@ def update_work_items(
             ref = item["ref"]
             fields = item["fields"]
             resource = _get_by_ref(entity_type, project, ref)
-            resource.patch(list(fields.keys()), **fields)
+            patch_fields = _with_version(resource, fields)
+            resource.patch(list(patch_fields.keys()), **patch_fields)
             if return_representation == "full":
                 client_attr = getattr(get_client(), _ENTITY_ATTR[entity_type])
                 results.append(to_jsonable(client_attr.get(resource.id)))
