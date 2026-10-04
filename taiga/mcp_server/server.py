@@ -1101,12 +1101,14 @@ def update_work_items(
     - the change was applied, so do not retry it.
     """
     results: list[dict[str, Any]] = []
-    proj = _resolve_project(project) if updates else None
+    proj = None
     for item in updates:
         try:
             entity_type = item["entity_type"]
             ref = item["ref"]
             fields = item["fields"]
+            if proj is None:  # Resolved lazily so a lookup failure becomes an error row, not an abort.
+                proj = _resolve_project(project)
             resource = _get_by_ref_in(proj, entity_type, ref)
             patch_fields = _with_version(resource, fields)
             resource.patch(list(patch_fields.keys()), **patch_fields)

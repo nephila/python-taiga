@@ -2196,3 +2196,21 @@ def test_update_work_items_readback_failure_is_not_reported_as_write_failure(moc
     assert result == [
         {"status": "updated", "entity_type": "task", "ref": 3, "id": 7, "readback_error": "RuntimeError: timeout"}
     ]
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_update_work_items_project_lookup_failure_is_a_per_item_error(mock_get_client):
+    mock_client = MagicMock()
+    mock_project = MagicMock()
+    mock_task = MagicMock(id=5)
+    mock_project.get_task_by_ref.return_value = mock_task
+    mock_client.projects.get.side_effect = [RuntimeError("503"), mock_project]
+    mock_client.tasks.get.return_value = {"id": 5}
+    mock_get_client.return_value = mock_client
+
+    updates = [{"entity_type": "task", "ref": n, "fields": {"subject": "x"}} for n in (1, 2)]
+    result = server.update_work_items(1, updates)
+
+    assert result[0]["status"] == "error"
+    assert result[1] == {"id": 5}
+    assert mock_client.projects.get.call_count == 2
