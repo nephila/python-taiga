@@ -451,7 +451,12 @@ Available tools
          back or blocks any other item. Returns one result row per input
          item, in the same order (zip ``updates`` with the result to match
          them up); a failed item's row is
-         ``{"status": "error", "entity_type", "ref", "error"}``. Wiki pages
+         ``{"status": "error", "entity_type", "ref", "error"}``. If the write
+         succeeded but the follow-up re-fetch needed for
+         ``return_representation`` failed, the row is instead
+         ``{"status": "updated", "entity_type", "ref", "id",
+         "readback_error"}`` - the change **was applied**, so don't retry it;
+         re-read the item to see its current state. Wiki pages
          aren't supported here (no per-project ``ref``) - use
          ``update_wiki_page`` directly.
          As with the single-item tools, a missing ``version`` in an item's
