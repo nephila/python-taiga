@@ -581,6 +581,20 @@ def test_delete_custom_attribute_refuses_an_attribute_of_another_project(mock_ge
 
 
 @patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_refuses_an_attribute_with_no_owner(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attribute_factories()
+    attribute = SimpleNamespace(id=449, name="Estimation", delete=MagicMock())
+    factories["user_story"].return_value.get.return_value = attribute
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        with pytest.raises(ToolError, match="belongs to project None"):
+            server.delete_custom_attribute("user_story", 42, 449)
+
+    attribute.delete.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
 def test_delete_custom_attribute_falls_back_to_project_id(mock_get_client):
     mock_get_client.return_value = MagicMock()
     factories = _attribute_factories()
