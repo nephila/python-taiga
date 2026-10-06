@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -540,6 +541,84 @@ def test_create_custom_attribute_surfaces_the_real_taiga_error(mock_get_client):
     with patch.dict(server._ATTRIBUTE_FACTORY, factories):
         with pytest.raises(ToolError, match="Duplicated name"):
             server.create_custom_attribute("issue", 42, "Estimation")
+
+
+def _attribute(project=42, **extra):
+    return SimpleNamespace(id=449, name="Estimation", project=project, delete=MagicMock(), **extra)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_routes_every_entity_type(mock_get_client):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    factories = _attribute_factories()
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        for entity_type, factory in factories.items():
+            attribute = _attribute()
+            factory.return_value.get.return_value = attribute
+
+            result = server.delete_custom_attribute(entity_type, 42, 449)
+
+            factory.assert_called_once_with(mock_client.raw_request)
+            factory.return_value.get.assert_called_once_with(449)
+            attribute.delete.assert_called_once_with()
+            assert result == {"status": "deleted", "id": "449", "name": "Estimation"}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_refuses_an_attribute_of_another_project(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attribute_factories()
+    attribute = _attribute(project=99)
+    factories["user_story"].return_value.get.return_value = attribute
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        with pytest.raises(ToolError, match="belongs to project 99"):
+            server.delete_custom_attribute("user_story", 42, 449)
+
+    attribute.delete.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_falls_back_to_project_id(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attribute_factories()
+    attribute = SimpleNamespace(id=449, name="Estimation", project_id=42, delete=MagicMock())
+    factories["issue"].return_value.get.return_value = attribute
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        result = server.delete_custom_attribute("issue", 42, 449)
+
+    attribute.delete.assert_called_once_with()
+    assert result["status"] == "deleted"
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_resolves_a_project_slug(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.projects.get_by_slug.return_value.id = 42
+    mock_get_client.return_value = mock_client
+    factories = _attribute_factories()
+    attribute = _attribute()
+    factories["task"].return_value.get.return_value = attribute
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        server.delete_custom_attribute("task", "desktop-gym", 449)
+
+    mock_client.projects.get_by_slug.assert_called_once_with("desktop-gym")
+    attribute.delete.assert_called_once_with()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_surfaces_the_real_taiga_error(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attribute_factories()
+    factories["epic"].return_value.get.side_effect = TaigaRestException("url", 404, '{"_error_message": "Not found"}')
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        with pytest.raises(ToolError, match="Not found"):
+            server.delete_custom_attribute("epic", 42, 449)
 
 
 # --- User stories -----------------------------------------------------------------------

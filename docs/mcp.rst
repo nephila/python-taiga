@@ -239,6 +239,14 @@ Available tools
     when omitted. The options of a ``dropdown`` attribute cannot be set through
     this tool; add them in the Taiga admin.
 
+``delete_custom_attribute``
+    Delete a custom-attribute *definition* (``entity_type``, ``project``,
+    ``attribute_id``). Destructive: Taiga also drops every value stored under
+    that attribute on the project's items. Attribute ids are global across
+    projects, so ``project`` must be the one that owns the attribute - the call
+    is refused, and nothing deleted, otherwise. Returns
+    ``{"status": "deleted", "id": ..., "name": ...}``.
+
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
 
@@ -485,6 +493,6 @@ Taiga projects. Review what an MCP client proposes to do before approving
 write operations, and consider a dedicated Taiga account with restricted
 project membership if you want to limit the blast radius.
 
-``create_custom_attribute``, ``set_custom_attribute_value``/``set_custom_attribute_value_by_id`` and
+``create_custom_attribute``/``delete_custom_attribute``, ``set_custom_attribute_value``/``set_custom_attribute_value_by_id`` and
 ``link_epic_user_story``/``link_epic_user_story_by_id`` are also writes and
 fall under the same destructive-tools framing above.

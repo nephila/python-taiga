@@ -444,6 +444,36 @@ def create_custom_attribute(
         raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
 
 
+@mcp.tool()
+def delete_custom_attribute(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    project: str | int,
+    attribute_id: int,
+) -> dict[str, str]:
+    """Delete a custom-attribute definition (not a single item's value) from a project.
+
+    Destructive: Taiga also drops every value stored under that attribute on the project's items.
+    `attribute_id` is the numeric id from `get_project`'s `*_custom_attributes` list or from
+    `create_custom_attribute`. Attribute ids are global across projects, so `project` must be the one
+    that owns the attribute; the call is refused otherwise and nothing is deleted.
+    """
+    client = get_client()
+    try:
+        project_id = _resolve_project_id(project)
+        attribute = _ATTRIBUTE_FACTORY[entity_type](client.raw_request).get(attribute_id)
+        owner = getattr(attribute, "project", None) or getattr(attribute, "project_id", None)
+        if owner != project_id:
+            raise ToolError(
+                f"Custom attribute {attribute_id} belongs to project {owner}, not {project_id}; not deleted"
+            )
+        attribute.delete()
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
+    return {"status": "deleted", "id": str(attribute_id), "name": attribute.name}
+
+
 def _membership_names(proj: Any, wanted: set[int]) -> dict[int, str | None]:
     """Map user id -> full_name over a project's memberships, paging until `wanted` is covered."""
     names: dict[int, str | None] = {}
