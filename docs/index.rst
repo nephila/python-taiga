@@ -10,6 +10,7 @@ Welcome to python-taiga's documentation!
    :maxdepth: 3
 
    usage
+   mcp
    api
    models
    development

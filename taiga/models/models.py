@@ -328,6 +328,19 @@ class Epic(CustomAttributeResource, CommentableResource):
         """
         return UserStories(self.requester).list(epic=self.id, **queryparams)
 
+    def add_related_user_story(self, user_story_id, **attrs):
+        """
+        Link an existing :class:`UserStory` to this epic.
+
+        :param user_story_id: id of the :class:`UserStory` to link
+        :param attrs: other optional attributes of the relation
+        """
+        attrs.update({"user_story": user_story_id})
+        response = self.requester.post(
+            "/{endpoint}/{id}/related_userstories", endpoint=self.endpoint, id=self.id, payload=attrs
+        )
+        return response.json()
+
     def list_attachments(self):
         """
         Get a list of :class:`EpicAttachment`.
@@ -1356,11 +1369,13 @@ class Project(InstanceResource):
         """
         return Memberships(self.requester).create(self.id, email, role, **attrs)
 
-    def list_memberships(self):
+    def list_memberships(self, **queryparams):
         """
         Get the list of :class:`Membership` resources for the project.
+
+        :param queryparams: optional query parameters (e.g. `page`, `page_size`)
         """
-        return Memberships(self.requester).list(project=self.id)
+        return Memberships(self.requester).list(project=self.id, **queryparams)
 
     def add_user_story(self, subject, **attrs):
         """

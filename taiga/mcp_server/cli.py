@@ -1,0 +1,177 @@
+# python-taiga
+# Copyright 2015 Nephila
+# See LICENSE for details.
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+
+import typer
+from mcp.server.mcpserver.exceptions import ToolError
+from mcp.shared.exceptions import MCPError
+from pydantic import ValidationError as PydanticValidationError
+
+from .. import __version__
+from .auth import DEFAULT_HOST, DEFAULT_TOKEN_TYPE, Credentials, configure
+
+app = typer.Typer(
+    add_completion=False,
+    no_args_is_help=True,
+    help="Taiga MCP server & CLI. Prefer TAIGA_TOKEN/TAIGA_PASSWORD env vars over "
+    "--token/--password, which can be visible in the process list.",
+)
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"taiga-mcp-server (python-taiga {__version__})")
+        raise typer.Exit()
+
+
+@app.callback()
+def _main(
+    version: bool | None = typer.Option(
+        None, "--version", callback=_version_callback, is_eager=True, help="Show the version and exit."
+    ),
+) -> None:
+    """Taiga MCP server & CLI."""
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() not in ("0", "false", "no", "off")
+
+
+def _resolve_credentials(
+    host: str | None,
+    token: str | None,
+    token_type: str | None,
+    username: str | None,
+    password: str | None,
+    tls_verify: bool | None,
+) -> Credentials:
+    return Credentials(
+        host=host or os.environ.get("TAIGA_HOST", DEFAULT_HOST),
+        tls_verify=_env_bool("TAIGA_TLS_VERIFY", True) if tls_verify is None else tls_verify,
+        token=token or os.environ.get("TAIGA_TOKEN"),
+        token_type=token_type or os.environ.get("TAIGA_TOKEN_TYPE", DEFAULT_TOKEN_TYPE),
+        username=username or os.environ.get("TAIGA_USERNAME"),
+        password=password or os.environ.get("TAIGA_PASSWORD"),
+    )
+
+
+HostOption = typer.Option(None, help="Taiga instance host (default: TAIGA_HOST env var, or https://api.taiga.io).")
+TokenOption = typer.Option(None, help="Taiga auth token (default: TAIGA_TOKEN env var).")
+TokenTypeOption = typer.Option(None, help="Type of the auth token (default: TAIGA_TOKEN_TYPE env var, or Bearer).")
+UsernameOption = typer.Option(None, help="Taiga username (default: TAIGA_USERNAME env var).")
+PasswordOption = typer.Option(None, help="Taiga password (default: TAIGA_PASSWORD env var).")
+TlsVerifyOption = typer.Option(
+    None,
+    "--tls-verify/--no-tls-verify",
+    help="Verify TLS certificates (default: TAIGA_TLS_VERIFY env var, or true).",
+)
+
+
+@app.command()
+def serve(
+    host: str | None = HostOption,
+    token: str | None = TokenOption,
+    token_type: str | None = TokenTypeOption,
+    username: str | None = UsernameOption,
+    password: str | None = PasswordOption,
+    tls_verify: bool | None = TlsVerifyOption,
+) -> None:
+    """Run the MCP server over stdio.
+
+    Credentials can be passed as flags or read from the TAIGA_HOST/TAIGA_TOKEN
+    or TAIGA_HOST/TAIGA_USERNAME/TAIGA_PASSWORD environment variables. Passing
+    --token/--password on the command line can expose them via the process
+    list; prefer the environment variables where possible.
+    """
+    configure(_resolve_credentials(host, token, token_type, username, password, tls_verify))
+
+    from .server import mcp
+
+    mcp.run(transport="stdio")
+
+
+@app.command("list-tools")
+def list_tools(
+    host: str | None = HostOption,
+    token: str | None = TokenOption,
+    token_type: str | None = TokenTypeOption,
+    username: str | None = UsernameOption,
+    password: str | None = PasswordOption,
+    tls_verify: bool | None = TlsVerifyOption,
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Include each tool's JSON input schema."),
+) -> None:
+    """List every tool exposed by the MCP server."""
+    configure(_resolve_credentials(host, token, token_type, username, password, tls_verify))
+
+    from .server import mcp
+
+    tools = asyncio.run(mcp.list_tools())
+    for tool in sorted(tools, key=lambda t: t.name):
+        dumped = tool.model_dump(by_alias=True, exclude_none=True)
+        typer.echo(f"{dumped['name']}\t{dumped.get('description', '')}")
+        if verbose:
+            typer.echo(json.dumps(dumped["inputSchema"], indent=2))
+
+
+@app.command()
+def call(
+    tool_name: str = typer.Argument(..., help="Tool name, as shown by list-tools."),
+    arguments: str = typer.Option("{}", "--json", "-j", help="JSON object of arguments for the tool."),
+    host: str | None = HostOption,
+    token: str | None = TokenOption,
+    token_type: str | None = TokenTypeOption,
+    username: str | None = UsernameOption,
+    password: str | None = PasswordOption,
+    tls_verify: bool | None = TlsVerifyOption,
+) -> None:
+    """Call a single tool directly, bypassing an MCP client.
+
+    Prefer the TAIGA_TOKEN/TAIGA_PASSWORD environment variables over
+    --token/--password, which can be visible in the process list.
+    """
+    try:
+        parsed_arguments = json.loads(arguments)
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Invalid JSON in --json: {exc}", err=True)
+        raise typer.Exit(1) from exc
+
+    configure(_resolve_credentials(host, token, token_type, username, password, tls_verify))
+
+    from .server import mcp
+
+    try:
+        result = asyncio.run(mcp.call_tool(tool_name, parsed_arguments))
+    except ToolError as exc:
+        cause = exc.__cause__
+        message = str(exc)
+        if message.startswith("Unknown tool: "):
+            typer.echo(message, err=True)
+        elif isinstance(cause, PydanticValidationError):
+            typer.echo(f"Invalid arguments for {tool_name}: {cause}", err=True)
+        else:
+            typer.echo(f"Error calling {tool_name}: {cause if cause is not None else exc}", err=True)
+        raise typer.Exit(1) from exc
+    except MCPError as exc:
+        typer.echo(f"Error calling {tool_name}: {exc}", err=True)
+        raise typer.Exit(1) from exc
+
+    payload = result.structured_content if result.structured_content is not None else result.content
+    typer.echo(json.dumps(payload, indent=2, default=str))
+
+
+def main() -> None:
+    """Entry point for the ``taiga-mcp-server`` console script."""
+    app()
+
+
+if __name__ == "__main__":
+    main()
