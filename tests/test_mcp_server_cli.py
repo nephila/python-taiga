@@ -110,6 +110,13 @@ def test_list_tools_lists_all_tool_names():
     assert "create_issue" in result.output
 
 
+def test_list_tools_includes_create_custom_attribute():
+    result = runner.invoke(cli.app, ["list-tools"])
+
+    assert result.exit_code == 0
+    assert "create_custom_attribute" in result.output
+
+
 def test_list_tools_default_excludes_schema():
     result = runner.invoke(cli.app, ["list-tools"])
 

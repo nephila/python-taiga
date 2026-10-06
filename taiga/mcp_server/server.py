@@ -9,6 +9,7 @@ from typing import Any, Literal
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
+from ..models import EpicAttributes, IssueAttributes, TaskAttributes, UserStoryAttributes
 from .auth import get_client
 from .serialize import apply_payload, to_jsonable
 
@@ -28,6 +29,13 @@ _ENTITY_ATTR = {
     "task": "tasks",
     "issue": "issues",
     "epic": "epics",
+}
+
+_ATTRIBUTE_FACTORY = {
+    "user_story": UserStoryAttributes,
+    "task": TaskAttributes,
+    "issue": IssueAttributes,
+    "epic": EpicAttributes,
 }
 
 _REF_METHOD = {
@@ -408,6 +416,67 @@ def set_custom_attribute_value_by_id(
     client = get_client()
     resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
+
+
+@mcp.tool()
+def create_custom_attribute(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    project: str | int,
+    name: str,
+    description: str = "",
+    type: Literal["text", "multiline", "richtext", "date", "url", "dropdown", "checkbox", "number"] | None = None,
+) -> dict[str, Any]:
+    """Create a custom-attribute definition for user stories, tasks, issues or epics in a project.
+
+    Returns the new definition; its `id` is the `attribute_id` that `set_custom_attribute_value`
+    takes. Taiga rejects a name already used by the same entity type in the project, so look at
+    `get_project`'s `*_custom_attributes` list first. `type` is left to the instance's default
+    (text) when omitted; pass "number" for a numeric attribute.
+    """
+    attrs: dict[str, Any] = {"description": description}
+    if type is not None:
+        attrs["type"] = type
+    client = get_client()
+    try:
+        factory = _ATTRIBUTE_FACTORY[entity_type](client.raw_request)
+        return to_jsonable(factory.create(_resolve_project_id(project), name, **attrs))
+    except Exception as exc:
+        raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
+
+
+@mcp.tool()
+def delete_custom_attribute(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    project: str | int,
+    attribute_id: int,
+    expected_name: str,
+) -> dict[str, str]:
+    """Delete a custom-attribute definition (not a single item's value) from a project.
+
+    Destructive: Taiga also drops every value stored under that attribute on the project's items.
+    `attribute_id` is the numeric id from `get_project`'s `*_custom_attributes` list for the same
+    `entity_type`, or from `create_custom_attribute`. Ids are numbered separately per entity type
+    and are global across projects, so the call is refused, and nothing deleted, unless the
+    attribute belongs to `project` and is named `expected_name` (case and surrounding spaces ignored).
+    """
+    client = get_client()
+    try:
+        project_id = _resolve_project_id(project)
+        attribute = _ATTRIBUTE_FACTORY[entity_type](client.raw_request).get(attribute_id)
+        owner = getattr(attribute, "project", None) or getattr(attribute, "project_id", None)
+        if owner != project_id:
+            raise ToolError(
+                f"Custom attribute {attribute_id} belongs to project {owner}, not {project_id}; not deleted"
+            )
+        name = getattr(attribute, "name", None)
+        if str(name).strip().casefold() != expected_name.strip().casefold():
+            raise ToolError(f"Custom attribute {attribute_id} is named {name!r}, not {expected_name!r}; not deleted")
+        attribute.delete()
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
+    return {"status": "deleted", "id": str(attribute_id), "name": name}
 
 
 def _membership_names(proj: Any, wanted: set[int]) -> dict[int, str | None]:
