@@ -466,3 +466,13 @@ def test_apply_payload_fields_are_not_media_stripped_by_default_from_payload():
 
     assert kept == {"owner_extra_info": {"photo": "u"}}
     assert stripped == {"owner_extra_info": {}}
+
+
+def test_apply_payload_compact_strip_media_false_keeps_nested_media():
+    data = {"id": 1, "owner_extra_info": {"id": 2, "full_name_display": "A", "photo": "u", "big_photo": "b"}}
+
+    kept = apply_payload(data, "issue", payload="compact", strip_media=False)
+    default = apply_payload(data, "issue", payload="compact")
+
+    assert kept["owner_extra_info"] == {"id": 2, "full_name_display": "A", "photo": "u", "big_photo": "b"}
+    assert default["owner_extra_info"] == {"id": 2, "full_name_display": "A"}
