@@ -9,6 +9,7 @@ from typing import Any, Literal
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
+from ..models import EpicAttributes, IssueAttributes, TaskAttributes, UserStoryAttributes
 from .auth import get_client
 from .serialize import apply_payload, to_jsonable
 
@@ -28,6 +29,13 @@ _ENTITY_ATTR = {
     "task": "tasks",
     "issue": "issues",
     "epic": "epics",
+}
+
+_ATTRIBUTE_FACTORY = {
+    "user_story": UserStoryAttributes,
+    "task": TaskAttributes,
+    "issue": IssueAttributes,
+    "epic": EpicAttributes,
 }
 
 _REF_METHOD = {
@@ -408,6 +416,32 @@ def set_custom_attribute_value_by_id(
     client = get_client()
     resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
+
+
+@mcp.tool()
+def create_custom_attribute(
+    entity_type: Literal["user_story", "task", "issue", "epic"],
+    project: str | int,
+    name: str,
+    description: str = "",
+    type: Literal["text", "multiline", "richtext", "date", "url", "dropdown", "checkbox", "number"] | None = None,
+) -> dict[str, Any]:
+    """Create a custom-attribute definition for user stories, tasks, issues or epics in a project.
+
+    Returns the new definition; its `id` is the `attribute_id` that `set_custom_attribute_value`
+    takes. Taiga rejects a name already used by the same entity type in the project, so look at
+    `get_project`'s `*_custom_attributes` list first. `type` is left to the instance's default
+    (text) when omitted; pass "number" for a numeric attribute.
+    """
+    attrs: dict[str, Any] = {"description": description}
+    if type is not None:
+        attrs["type"] = type
+    client = get_client()
+    try:
+        factory = _ATTRIBUTE_FACTORY[entity_type](client.raw_request)
+        return to_jsonable(factory.create(_resolve_project_id(project), name, **attrs))
+    except Exception as exc:
+        raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
 
 
 def _membership_names(proj: Any, wanted: set[int]) -> dict[int, str | None]:
