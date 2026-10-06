@@ -449,13 +449,15 @@ def delete_custom_attribute(
     entity_type: Literal["user_story", "task", "issue", "epic"],
     project: str | int,
     attribute_id: int,
+    expected_name: str,
 ) -> dict[str, str]:
     """Delete a custom-attribute definition (not a single item's value) from a project.
 
     Destructive: Taiga also drops every value stored under that attribute on the project's items.
-    `attribute_id` is the numeric id from `get_project`'s `*_custom_attributes` list or from
-    `create_custom_attribute`. Attribute ids are global across projects, so `project` must be the one
-    that owns the attribute; the call is refused otherwise and nothing is deleted.
+    `attribute_id` is the numeric id from `get_project`'s `*_custom_attributes` list for the same
+    `entity_type`, or from `create_custom_attribute`. Ids are numbered separately per entity type
+    and are global across projects, so the call is refused, and nothing deleted, unless the
+    attribute belongs to `project` and is named `expected_name` (case and surrounding spaces ignored).
     """
     client = get_client()
     try:
@@ -466,12 +468,15 @@ def delete_custom_attribute(
             raise ToolError(
                 f"Custom attribute {attribute_id} belongs to project {owner}, not {project_id}; not deleted"
             )
+        name = getattr(attribute, "name", None)
+        if str(name).strip().casefold() != expected_name.strip().casefold():
+            raise ToolError(f"Custom attribute {attribute_id} is named {name!r}, not {expected_name!r}; not deleted")
         attribute.delete()
     except ToolError:
         raise
     except Exception as exc:
         raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
-    return {"status": "deleted", "id": str(attribute_id), "name": attribute.name}
+    return {"status": "deleted", "id": str(attribute_id), "name": name}
 
 
 def _membership_names(proj: Any, wanted: set[int]) -> dict[int, str | None]:

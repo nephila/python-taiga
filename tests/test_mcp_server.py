@@ -558,7 +558,7 @@ def test_delete_custom_attribute_routes_every_entity_type(mock_get_client):
             attribute = _attribute()
             factory.return_value.get.return_value = attribute
 
-            result = server.delete_custom_attribute(entity_type, 42, 449)
+            result = server.delete_custom_attribute(entity_type, 42, 449, "Estimation")
 
             factory.assert_called_once_with(mock_client.raw_request)
             factory.return_value.get.assert_called_once_with(449)
@@ -575,9 +575,40 @@ def test_delete_custom_attribute_refuses_an_attribute_of_another_project(mock_ge
 
     with patch.dict(server._ATTRIBUTE_FACTORY, factories):
         with pytest.raises(ToolError, match="belongs to project 99"):
-            server.delete_custom_attribute("user_story", 42, 449)
+            server.delete_custom_attribute("user_story", 42, 449, "Estimation")
 
     attribute.delete.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_refuses_a_different_name(mock_get_client):
+    # Attribute ids are per entity type, so the same id can name a different attribute
+    # on another kind: the caller states which one it means and nothing is deleted otherwise.
+    mock_get_client.return_value = MagicMock()
+    factories = _attribute_factories()
+    attribute = _attribute()
+    attribute.name = "Risk"
+    factories["user_story"].return_value.get.return_value = attribute
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        with pytest.raises(ToolError, match="is named 'Risk', not 'Estimation'; not deleted"):
+            server.delete_custom_attribute("user_story", 42, 449, "Estimation")
+
+    attribute.delete.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_custom_attribute_name_match_ignores_case_and_padding(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attribute_factories()
+    attribute = _attribute()
+    factories["issue"].return_value.get.return_value = attribute
+
+    with patch.dict(server._ATTRIBUTE_FACTORY, factories):
+        result = server.delete_custom_attribute("issue", 42, 449, "  estimation ")
+
+    attribute.delete.assert_called_once_with()
+    assert result["name"] == "Estimation"
 
 
 @patch("taiga.mcp_server.server.get_client")
@@ -589,7 +620,7 @@ def test_delete_custom_attribute_refuses_an_attribute_with_no_owner(mock_get_cli
 
     with patch.dict(server._ATTRIBUTE_FACTORY, factories):
         with pytest.raises(ToolError, match="belongs to project None"):
-            server.delete_custom_attribute("user_story", 42, 449)
+            server.delete_custom_attribute("user_story", 42, 449, "Estimation")
 
     attribute.delete.assert_not_called()
 
@@ -602,7 +633,7 @@ def test_delete_custom_attribute_falls_back_to_project_id(mock_get_client):
     factories["issue"].return_value.get.return_value = attribute
 
     with patch.dict(server._ATTRIBUTE_FACTORY, factories):
-        result = server.delete_custom_attribute("issue", 42, 449)
+        result = server.delete_custom_attribute("issue", 42, 449, "Estimation")
 
     attribute.delete.assert_called_once_with()
     assert result["status"] == "deleted"
@@ -618,7 +649,7 @@ def test_delete_custom_attribute_resolves_a_project_slug(mock_get_client):
     factories["task"].return_value.get.return_value = attribute
 
     with patch.dict(server._ATTRIBUTE_FACTORY, factories):
-        server.delete_custom_attribute("task", "desktop-gym", 449)
+        server.delete_custom_attribute("task", "desktop-gym", 449, "Estimation")
 
     mock_client.projects.get_by_slug.assert_called_once_with("desktop-gym")
     attribute.delete.assert_called_once_with()
@@ -632,7 +663,7 @@ def test_delete_custom_attribute_surfaces_the_real_taiga_error(mock_get_client):
 
     with patch.dict(server._ATTRIBUTE_FACTORY, factories):
         with pytest.raises(ToolError, match="Not found"):
-            server.delete_custom_attribute("epic", 42, 449)
+            server.delete_custom_attribute("epic", 42, 449, "Estimation")
 
 
 # --- User stories -----------------------------------------------------------------------

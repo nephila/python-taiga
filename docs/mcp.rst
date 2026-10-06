@@ -241,10 +241,13 @@ Available tools
 
 ``delete_custom_attribute``
     Delete a custom-attribute *definition* (``entity_type``, ``project``,
-    ``attribute_id``). Destructive: Taiga also drops every value stored under
-    that attribute on the project's items. Attribute ids are global across
-    projects, so ``project`` must be the one that owns the attribute - the call
-    is refused, and nothing deleted, otherwise. Returns
+    ``attribute_id``, ``expected_name``). Destructive: Taiga also drops every
+    value stored under that attribute on the project's items. Attribute ids are
+    numbered separately per entity type (the same id can name a different
+    attribute on another kind) and are global across projects, so take the id
+    from the ``get_project`` list matching ``entity_type``; the call is refused,
+    and nothing deleted, unless the attribute belongs to ``project`` and is
+    named ``expected_name`` (case and surrounding spaces ignored). Returns
     ``{"status": "deleted", "id": ..., "name": ...}``.
 
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
