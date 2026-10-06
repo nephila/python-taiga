@@ -227,6 +227,18 @@ Available tools
          prior ``get_custom_attributes_values`` call, not the entity's own
          ``version``.
 
+``create_custom_attribute``
+    Create a custom-attribute *definition* for user stories, tasks, issues or
+    epics in a project (``entity_type``, ``project``, ``name``, optional
+    ``description`` and ``type``). Returns the new definition; its ``id`` is the
+    ``attribute_id`` that ``set_custom_attribute_value`` takes. Taiga rejects a
+    name already used by the same entity type in that project, so check
+    ``get_project``'s ``*_custom_attributes`` list first. ``type`` is one of
+    ``text``, ``multiline``, ``richtext``, ``date``, ``url``, ``dropdown``,
+    ``checkbox``, ``number`` and defaults to the instance's own default (text)
+    when omitted. The options of a ``dropdown`` attribute cannot be set through
+    this tool; add them in the Taiga admin.
+
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
 
@@ -473,6 +485,6 @@ Taiga projects. Review what an MCP client proposes to do before approving
 write operations, and consider a dedicated Taiga account with restricted
 project membership if you want to limit the blast radius.
 
-``set_custom_attribute_value``/``set_custom_attribute_value_by_id`` and
+``create_custom_attribute``, ``set_custom_attribute_value``/``set_custom_attribute_value_by_id`` and
 ``link_epic_user_story``/``link_epic_user_story_by_id`` are also writes and
 fall under the same destructive-tools framing above.

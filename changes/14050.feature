@@ -1,0 +1,1 @@
+Add the ``create_custom_attribute`` MCP tool, which creates a custom-attribute definition for user stories, tasks, issues or epics, so agents can set up an attribute on a board before writing values with ``set_custom_attribute_value``.
