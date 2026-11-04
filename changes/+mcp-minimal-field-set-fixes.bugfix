@@ -1,0 +1,1 @@
+Fix the MCP server's `minimal` payload projection: milestones now include `project_extra_info.name`/`.slug`, user stories now include the bare `assigned_users` id list, and both user stories and issues drop the redundant per-project `status` id in favour of the cross-project-comparable `status_extra_info.name`.

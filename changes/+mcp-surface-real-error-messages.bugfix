@@ -1,0 +1,1 @@
+Fix the MCP server swallowing anticipated failure messages (a `strict_filters` violation, a stale/missing `version` on a single-item `update_*` call) into a generic "Error executing tool" with no detail. These now surface the real message, matching what `update_work_items` already returned per-row for the same failures.

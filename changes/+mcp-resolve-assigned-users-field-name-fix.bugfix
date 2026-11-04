@@ -1,0 +1,1 @@
+Fix `resolve_assigned_users` always returning `null` display names by reading the correct `full_name` field from Taiga membership records instead of the nonexistent `full_name_display`.

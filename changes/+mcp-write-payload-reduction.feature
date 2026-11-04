@@ -1,0 +1,1 @@
+Add opt-in `return_representation` (`full`/`minimal`/`none`) to the MCP server's write tools, and a new `update_work_items` batch-write tool, shrinking write-response payloads and collapsing many-item write sequences into one call while leaving default behaviour byte-for-byte unchanged.

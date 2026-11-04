@@ -1,0 +1,1 @@
+Fix `expand` reintroducing avatar/logo fields that `strip_media` otherwise removes from the rest of the response - an expanded block now goes through the same strip pass as everything else.

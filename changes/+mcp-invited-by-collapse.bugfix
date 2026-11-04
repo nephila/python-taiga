@@ -1,0 +1,1 @@
+Fix `invited_by` (on membership records) escaping the `payload="compact"`/`"minimal"` collapsing every other user/project block gets, since it doesn't end in `_extra_info`.
