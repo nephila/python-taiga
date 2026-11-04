@@ -83,3 +83,20 @@ class TestEpics(unittest.TestCase):
         epic = Epic(rm, id=1)
         epic.add_comment("hola")
         mock_update.assert_called_with(comment="hola")
+
+
+@patch("taiga.requestmaker.RequestMaker.post")
+def test_add_related_user_story(mock_requestmaker_post):
+    mock_requestmaker_post.return_value = MockResponse(200, '{"id": 5, "epic": 1, "user_story": 10}')
+    rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+    epic = Epic(rm, id=1)
+
+    result = epic.add_related_user_story(10)
+
+    mock_requestmaker_post.assert_called_with(
+        "/{endpoint}/{id}/related_userstories",
+        endpoint=Epic.endpoint,
+        id=epic.id,
+        payload={"user_story": 10},
+    )
+    assert result == {"id": 5, "epic": 1, "user_story": 10}

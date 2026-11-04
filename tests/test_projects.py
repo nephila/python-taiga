@@ -508,6 +508,9 @@ class TestProjects(unittest.TestCase):
         project.list_memberships()
         mock_list_memberships.assert_called_with(project=1)
 
+        project.list_memberships(page=2, page_size=50)
+        mock_list_memberships.assert_called_with(project=1, page=2, page_size=50)
+
     @patch("taiga.models.Webhooks.create")
     def test_add_webhook(self, mock_new_webhook):
         rm = RequestMaker("/api/v1", "fakehost", "faketoken")
