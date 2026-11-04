@@ -221,9 +221,11 @@ Available tools
 .. important:: The ``version`` returned by ``get_custom_attributes_values``
          (and expected by ``set_custom_attribute_value``) belongs to that
          custom-attributes-values resource - a separate version sequence
-         from the entity's own ``version`` field. Always pass back the
-         version from a prior ``get_custom_attributes_values`` call (or
-         ``1`` if never set before), not the entity's own ``version``.
+         from the entity's own ``version`` field. ``version`` is optional
+         on ``set_custom_attribute_value``: when omitted, the resource's
+         current version is used. If you pass one, it must come from a
+         prior ``get_custom_attributes_values`` call, not the entity's own
+         ``version``.
 
 ``list_user_stories``, ``get_user_story``, ``create_user_story``, ``update_user_story``, ``delete_user_story``
     Manage user stories.
@@ -433,11 +435,12 @@ Available tools
          On ``update_*`` tools, ``"minimal"``/``"none"`` also skip the
          re-fetch these tools otherwise perform after writing - a latency
          win, not just a smaller response. ``version`` is not a separate
-         parameter on any ``create_*``/``update_*`` tool: if Taiga needs it
-         for optimistic locking, pass it inside ``fields`` yourself, exactly
-         as today. (``set_custom_attribute_value``/``set_custom_attribute_value_by_id``
-         are the exception - see the note above on their own, unrelated
-         ``version`` sequence.)
+         parameter on any ``create_*``/``update_*`` tool: if ``fields`` has no
+         ``version``, the tool uses the current version of the item it has
+         just fetched for optimistic locking; an explicit ``version`` inside
+         ``fields`` wins. (``set_custom_attribute_value``/``set_custom_attribute_value_by_id``
+         take their own optional ``version`` - see the note above on that
+         unrelated ``version`` sequence.)
 
 .. tip:: ``update_work_items(project, updates, return_representation="full")``
          updates a batch of user stories/tasks/issues/epics in one call.
@@ -448,9 +451,16 @@ Available tools
          back or blocks any other item. Returns one result row per input
          item, in the same order (zip ``updates`` with the result to match
          them up); a failed item's row is
-         ``{"status": "error", "entity_type", "ref", "error"}``. Wiki pages
+         ``{"status": "error", "entity_type", "ref", "error"}``. If the write
+         succeeded but the follow-up re-fetch needed for
+         ``return_representation`` failed, the row is instead
+         ``{"status": "updated", "entity_type", "ref", "id",
+         "readback_error"}`` - the change **was applied**, so don't retry it;
+         re-read the item to see its current state. Wiki pages
          aren't supported here (no per-project ``ref``) - use
          ``update_wiki_page`` directly.
+         As with the single-item tools, a missing ``version`` in an item's
+         ``fields`` is filled in from the item just fetched.
 
 ****************
 Security notes

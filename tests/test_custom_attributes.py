@@ -27,8 +27,51 @@ class TestCustomAttributes(unittest.TestCase):
             "/{endpoint}/custom-attributes-values/{id}",
             endpoint=Issue.endpoint,
             id=issue.id,
-            payload={"attributes_values": {"1": 13}, "version": 1},
+            payload={"attributes_values": {"1": 13}, "version": 2},
         )
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    @patch("taiga.requestmaker.RequestMaker.patch")
+    def test_set_attribute_uses_the_current_values_version_when_omitted(
+        self, mock_requestmaker_patch, mock_requestmaker_get
+    ):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        mock_requestmaker_patch.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        issue = Issue(rm, id=1, project=1)
+        issue.set_attribute(1, 13)
+        self.assertEqual(mock_requestmaker_patch.call_args.kwargs["payload"]["version"], 2)
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    @patch("taiga.requestmaker.RequestMaker.patch")
+    def test_set_attribute_keeps_an_explicit_version(self, mock_requestmaker_patch, mock_requestmaker_get):
+        mock_requestmaker_get.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        mock_requestmaker_patch.return_value = MockResponse(
+            200, create_mock_json("tests/resources/issue_customattr_success.json")
+        )
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        issue = Issue(rm, id=1, project=1)
+        issue.set_attribute(1, 13, version=9)
+        self.assertEqual(mock_requestmaker_patch.call_args.kwargs["payload"]["version"], 9)
+
+    @patch("taiga.requestmaker.RequestMaker.get")
+    @patch("taiga.requestmaker.RequestMaker.patch")
+    def test_set_attribute_bypasses_the_cache_to_derive_a_default_version(
+        self, mock_requestmaker_patch, mock_requestmaker_get
+    ):
+        stale = create_mock_json("tests/resources/issue_customattr_success.json")
+        mock_requestmaker_get.return_value = MockResponse(200, stale)
+        mock_requestmaker_patch.return_value = MockResponse(200, stale)
+        rm = RequestMaker("/api/v1", "fakehost", "faketoken")
+        issue = Issue(rm, id=1, project=1)
+        issue.set_attribute(1, 13)
+        self.assertFalse(mock_requestmaker_get.call_args.kwargs["cache"])
 
     @patch("taiga.requestmaker.RequestMaker.get")
     def test_get_issue_custom_attributes(self, mock_requestmaker_get):

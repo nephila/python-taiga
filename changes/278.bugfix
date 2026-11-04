@@ -1,0 +1,1 @@
+Fix `Epic.add_related_user_story` (and so the MCP `link_epic_user_story` tools) never linking a user story to an epic: Taiga requires `epic` in the request body of `related_userstories` and rejected the call with `{"epic": ["This field is required."]}`. The epic id is now always sent.

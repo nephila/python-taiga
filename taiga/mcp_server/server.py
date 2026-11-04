@@ -64,7 +64,11 @@ def _get_by_ref(entity_type: str, project: str | int, ref: int) -> Any:
     `ref` is the sequential number Taiga shows per project - e.g. the 45634 in
     `.../issues/45634` - not the database id used internally for update/delete.
     """
-    proj = _resolve_project(project)
+    return _get_by_ref_in(_resolve_project(project), entity_type, ref)
+
+
+def _get_by_ref_in(proj: Any, entity_type: str, ref: int) -> Any:
+    """Like `_get_by_ref`, but for an already-resolved project (avoids a re-fetch per item)."""
     return getattr(proj, _REF_METHOD[entity_type])(ref)
 
 
@@ -87,6 +91,18 @@ def _represent(
     return {"ok": True, **base}
 
 
+def _with_version(resource: Any, fields: dict[str, Any]) -> dict[str, Any]:
+    """Return `fields` with the resource's current `version` added when the caller omitted it.
+
+    The resource was just fetched, so its version is the optimistic-lock token Taiga expects;
+    leaving it out makes Taiga reject the write. An explicit caller-supplied `version` wins.
+    """
+    version = getattr(resource, "version", None)
+    if "version" in fields or not isinstance(version, int):
+        return fields
+    return {**fields, "version": version}
+
+
 def _patch(resource: Any, fields: dict[str, Any]) -> None:
     """Apply `resource.patch()`, surfacing the real failure message to the caller.
 
@@ -97,6 +113,7 @@ def _patch(resource: Any, fields: dict[str, Any]) -> None:
     crash. Re-raising as `ToolError` preserves the real message, the same detail
     `update_work_items` already surfaces per-row for the same underlying failures.
     """
+    fields = _with_version(resource, fields)
     try:
         resource.patch(list(fields.keys()), **fields)
     except Exception as exc:
@@ -362,14 +379,14 @@ def set_custom_attribute_value(
     ref: int,
     attribute_id: int,
     value: Any,
-    version: int,
+    version: int | None = None,
 ) -> dict[str, Any]:
     """Set one custom-attribute value on a user story, task, issue or epic,
     identified by its per-project ref number. `attribute_id` is the numeric id
     from get_project's `*_custom_attributes` list (e.g. the "Code" attribute).
-    `version` is the custom-attributes-values resource's own version (from a
-    prior get_custom_attributes_values call, or 1 if never set before) - not
-    the entity's own `version` field.
+    `version` is optional: when omitted, the custom-attributes-values resource's
+    current version is used. If given, it is that resource's own version (from a
+    prior get_custom_attributes_values call) - not the entity's own `version` field.
     """
     resource = _get_by_ref(entity_type, project, ref)
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
@@ -381,7 +398,7 @@ def set_custom_attribute_value_by_id(
     id: int,  # noqa: A002
     attribute_id: int,
     value: Any,
-    version: int,
+    version: int | None = None,
 ) -> dict[str, Any]:
     """Set a custom-attribute value by database id.
 
@@ -391,6 +408,18 @@ def set_custom_attribute_value_by_id(
     client = get_client()
     resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
+
+
+def _membership_names(proj: Any, wanted: set[int]) -> dict[int, str | None]:
+    """Map user id -> full_name over a project's memberships, paging until `wanted` is covered."""
+    names: dict[int, str | None] = {}
+    page = 1
+    while True:
+        batch = to_jsonable(proj.list_memberships(page=page, page_size=DEFAULT_PAGE_SIZE))
+        names.update({m["user"]: m.get("full_name") for m in batch})
+        if len(batch) < DEFAULT_PAGE_SIZE or wanted <= names.keys():
+            return names
+        page += 1
 
 
 def _resolve_assigned_users(
@@ -403,8 +432,8 @@ def _resolve_assigned_users(
     field seen on other Taiga user blocks (`owner_extra_info`, `assigned_to_extra_info`,
     ...) - confirmed against a live instance. We still key our own output as
     `full_name_display`, for consistency with those other blocks; only the source field
-    read from the membership record differs. Fetches at most one membership page (up to
-    100 members) per distinct project id actually referenced.
+    read from the membership record differs. Pages through each distinct referenced
+    project's memberships until every assigned user id is found or the pages run out.
     """
     items = data if isinstance(data, list) else [data]
     if not any(item.get("assigned_users") for item in items):
@@ -417,8 +446,8 @@ def _resolve_assigned_users(
             continue
         project_id = item["project"]
         if project_id not in membership_maps:
-            memberships = to_jsonable(client.projects.get(project_id).list_memberships(**_paginated({})))
-            membership_maps[project_id] = {m["user"]: m.get("full_name") for m in memberships}
+            wanted = {uid for it in items if it.get("project") == project_id for uid in it.get("assigned_users") or []}
+            membership_maps[project_id] = _membership_names(client.projects.get(project_id), wanted)
         name_map = membership_maps[project_id]
         item["assigned_users_extra_info"] = [
             {"id": uid, "full_name_display": name_map.get(uid)} for uid in assigned_users
@@ -1016,13 +1045,21 @@ def delete_epic_by_id(id: int) -> dict[str, str]:  # noqa: A002
     return {"status": "deleted", "id": str(id)}
 
 
+def _link_epic(epic: Any, user_story_id: int) -> dict[str, Any]:
+    """Link a user story to an epic, surfacing the real failure message to the caller (see `_patch`)."""
+    try:
+        return to_jsonable(epic.add_related_user_story(user_story_id))
+    except Exception as exc:
+        raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+
+
 @mcp.tool()
 def link_epic_user_story(project: str | int, epic_ref: int, user_story_ref: int) -> dict[str, Any]:
     """Link a user story to an epic, identifying both by their per-project ref numbers."""
     proj = _resolve_project(project)
     epic = proj.get_epic_by_ref(epic_ref)
     user_story = proj.get_userstory_by_ref(user_story_ref)
-    return to_jsonable(epic.add_related_user_story(user_story.id))
+    return _link_epic(epic, user_story.id)
 
 
 @mcp.tool()
@@ -1033,7 +1070,7 @@ def link_epic_user_story_by_id(epic_id: int, user_story_id: int) -> dict[str, An
     """
     client = get_client()
     epic = client.epics.get(epic_id)
-    return to_jsonable(epic.add_related_user_story(user_story_id))
+    return _link_epic(epic, user_story_id)
 
 
 @mcp.tool()
@@ -1047,8 +1084,8 @@ def update_work_items(
     Each entry in `updates` is `{"entity_type": "user_story"|"task"|"issue"|"epic", "ref": <int>,
     "fields": {...}}` - `ref` is the per-project ref number (as in `update_user_story` etc.), and
     `fields` is the dict of attributes to change, exactly as a single-item `update_*` call would
-    take it. If Taiga needs a `version` for optimistic locking, put it inside that item's own
-    `fields`, same as today's single-item contract - this tool adds no new version handling.
+    take it. If `version` is omitted from an item's `fields`, the fetched item's current version
+    is used for optimistic locking; an explicit `version` wins.
 
     Not atomic: items are processed in order, each succeeds or fails independently, and a
     failure does not roll back or block any other item. Returns one result row per input item,
@@ -1058,30 +1095,52 @@ def update_work_items(
 
     Wiki pages are not supported here - they have no per-project ref number, and aren't part of
     the sprint-rollover workflow this tool targets. Use `update_wiki_page` directly.
+
+    If the write succeeds but the follow-up re-fetch for `return_representation` fails, the row is
+    `{"status": "updated", "entity_type": ..., "ref": ..., "id": ..., "readback_error": "<message>"}`
+    - the change was applied, so do not retry it.
     """
     results: list[dict[str, Any]] = []
+    proj = None
     for item in updates:
         try:
             entity_type = item["entity_type"]
             ref = item["ref"]
             fields = item["fields"]
-            resource = _get_by_ref(entity_type, project, ref)
-            resource.patch(list(fields.keys()), **fields)
+            if proj is None:  # Resolved lazily so a lookup failure becomes an error row, not an abort.
+                proj = _resolve_project(project)
+            resource = _get_by_ref_in(proj, entity_type, ref)
+            patch_fields = _with_version(resource, fields)
+            resource.patch(list(patch_fields.keys()), **patch_fields)
+        except Exception as exc:  # A single bad item must not abort the rest of the batch.
+            results.append(_batch_error(item, exc))
+            continue
+        try:
             if return_representation == "full":
                 client_attr = getattr(get_client(), _ENTITY_ATTR[entity_type])
                 results.append(to_jsonable(client_attr.get(resource.id)))
             else:
                 results.append(_represent(resource, fields, return_representation))
-        except Exception as exc:  # A single bad item must not abort the rest of the batch.
+        except Exception as exc:  # The write already succeeded: report it as such, not as a failure.
             results.append(
                 {
-                    "status": "error",
-                    "entity_type": item.get("entity_type"),
-                    "ref": item.get("ref"),
-                    "error": f"{type(exc).__name__}: {exc}",
+                    "status": "updated",
+                    "entity_type": entity_type,
+                    "ref": ref,
+                    "id": resource.id,
+                    "readback_error": f"{type(exc).__name__}: {exc}",
                 }
             )
     return results
+
+
+def _batch_error(item: dict[str, Any], exc: Exception) -> dict[str, Any]:
+    return {
+        "status": "error",
+        "entity_type": item.get("entity_type"),
+        "ref": item.get("ref"),
+        "error": f"{type(exc).__name__}: {exc}",
+    }
 
 
 # --- Milestones (sprints) -----------------------------------------------------------------

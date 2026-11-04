@@ -97,6 +97,6 @@ def test_add_related_user_story(mock_requestmaker_post):
         "/{endpoint}/{id}/related_userstories",
         endpoint=Epic.endpoint,
         id=epic.id,
-        payload={"user_story": 10},
+        payload={"user_story": 10, "epic": 1},
     )
     assert result == {"id": 5, "epic": 1, "user_story": 10}
