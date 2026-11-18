@@ -4,12 +4,19 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import io
+import os
+import re
+import stat
 from typing import Any, Literal
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from ..models import EpicAttributes, IssueAttributes, TaskAttributes, UserStoryAttributes
+from ..models.models import EpicAttachments, IssueAttachments, TaskAttachments, UserStoryAttachments, WikiAttachments
 from .auth import get_client
 from .serialize import apply_payload, to_jsonable
 
@@ -38,6 +45,14 @@ _ATTRIBUTE_FACTORY = {
     "epic": EpicAttributes,
 }
 
+_ATTACHMENT_FACTORY = {
+    "user_story": UserStoryAttachments,
+    "task": TaskAttachments,
+    "issue": IssueAttachments,
+    "epic": EpicAttachments,
+    "wiki_page": WikiAttachments,
+}
+
 _REF_METHOD = {
     "user_story": "get_userstory_by_ref",
     "task": "get_task_by_ref",
@@ -64,6 +79,162 @@ def _resolve_project(project: str | int) -> Any:
     if isinstance(project, int) or str(project).isdigit():
         return client.projects.get(int(project))
     return client.projects.get_by_slug(str(project))
+
+
+def _attachment_summary(attachment: Any) -> dict[str, Any]:
+    """Reduce an attachment resource to its documented shape (`url` comes from `attached_file`)."""
+    return {
+        "id": getattr(attachment, "id", None),
+        "name": getattr(attachment, "name", None),
+        "size": getattr(attachment, "size", None),
+        "description": getattr(attachment, "description", None),
+        "is_deprecated": getattr(attachment, "is_deprecated", None),
+        "url": getattr(attachment, "attached_file", None),
+        "object_id": getattr(attachment, "object_id", None),
+        "project": getattr(attachment, "project", None),
+    }
+
+
+def _env_cap(name: str, default: int) -> int:
+    """Read a positive-int limit from the environment; unset/blank gives `default`."""
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = int(raw.strip())
+    except ValueError:
+        value = 0
+    if value <= 0:
+        raise ToolError(f"{name} must be a positive integer, got {raw!r}")
+    return value
+
+
+def _clean_filename(filename: str) -> str:
+    """Reduce `filename` to a safe basename, rejecting empty, `.`/`..` and NUL-containing names."""
+    if "\x00" in filename:
+        raise ToolError("filename must not contain NUL characters")
+    name = re.split(r"[/\\]", filename)[-1].strip()
+    if not name or name in {".", ".."}:
+        raise ToolError(f"Invalid filename: {filename!r}")
+    return name
+
+
+def _attachment_target(entity_type: str, project: str | int, ref: int) -> tuple[int, Any]:
+    """Return `(project_id, item)` for the thing attachments hang off.
+
+    user_story/task/issue/epic are found by their per-project `ref`. For `wiki_page`, `ref` is the
+    page's database id (wiki pages have no ref); ids are global, so the page must belong to `project`.
+    """
+    if entity_type == "wiki_page":
+        project_id = _resolve_project_id(project)
+        page = get_client().wikipages.get(ref)
+        owner = getattr(page, "project", None)
+        if owner != project_id:
+            raise ToolError(f"Wiki page {ref} belongs to project {owner}, not {project_id}")
+        return project_id, page
+    proj = _resolve_project(project)
+    return proj.id, _get_by_ref_in(proj, entity_type, ref)
+
+
+def _upload(entity_type: str, project: str | int, ref: int, file_obj: Any, description: str) -> dict[str, Any]:
+    """Attach `file_obj` to the item identified by `ref` (see `_attachment_target`) and summarize the result."""
+    project_id, item = _attachment_target(entity_type, project, ref)
+    attachment = _ATTACHMENT_FACTORY[entity_type](get_client().raw_request).create(
+        project_id, item.id, file_obj, description=description
+    )
+    return _attachment_summary(attachment)
+
+
+def _resolve_upload(path: str, upload_dir: str) -> tuple[str, os.stat_result, str]:
+    """Return `(realpath, stat, resolved upload dir)` of a regular file strictly inside `upload_dir`, else raise `ToolError`.
+
+    Relative paths resolve against the upload directory; `~` is not expanded. Symlinks are followed
+    and the *resolved* target must stay inside the (resolved) upload directory. Every refusal uses
+    the same message so the response never reveals whether an outside path exists.
+    """
+    base = os.path.realpath(upload_dir)
+    if not os.path.isdir(base):
+        raise ToolError("TAIGA_MCP_UPLOAD_DIR is not an existing directory")
+    refusal = ToolError("Path is not a regular file inside the upload directory")
+    if "\x00" in path:
+        raise refusal
+    real = os.path.realpath(os.path.join(base, path))  # an absolute `path` replaces `base` in join
+    if os.path.commonpath([base, real]) != base or real == base:
+        raise refusal
+    try:
+        validated = os.stat(real)
+    except OSError:
+        raise refusal from None
+    if not stat.S_ISREG(validated.st_mode):
+        raise refusal
+    return real, validated, base
+
+
+def add_attachment_file(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki_page"],
+    project: str | int,
+    ref: int,
+    path: str,
+    description: str = "",
+) -> dict[str, Any]:
+    """Attach a file from the server's upload directory to a user story, task, issue, epic or wiki page.
+
+    `path` is relative to the upload directory (TAIGA_MCP_UPLOAD_DIR); absolute paths are accepted
+    only if they resolve inside it. Files over 26214400 bytes are refused by default (override with
+    TAIGA_MCP_MAX_FILE_BYTES). `ref` is the per-project number shown in the Taiga URL, not the
+    database id; for `wiki_page` it is the wiki page's id (which must belong to `project`).
+    Returns the attachment's id, name, size, description, is_deprecated, url, object_id (the
+    owning item's id) and project.
+    """
+    upload_dir = os.environ.get("TAIGA_MCP_UPLOAD_DIR", "").strip()
+    if not upload_dir:
+        raise ToolError("File uploads are not configured (TAIGA_MCP_UPLOAD_DIR is not set)")
+    real, validated, base = _resolve_upload(path, upload_dir)
+    cap = _env_cap("TAIGA_MCP_MAX_FILE_BYTES", 26214400)
+    refusal = "Path is not a regular file inside the upload directory"
+    # Open without following a final symlink and without blocking (a FIFO swapped in after the check
+    # must not hang the server), then re-validate the *open descriptor* against the checked stat.
+    try:
+        fd = os.open(real, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+    except OSError:
+        raise ToolError(refusal) from None
+    try:
+        opened = os.fstat(fd)
+        if not stat.S_ISREG(opened.st_mode) or (opened.st_ino, opened.st_dev) != (validated.st_ino, validated.st_dev):
+            raise ToolError(refusal)
+        try:  # where the descriptor really points: catches an intermediate directory swapped mid-resolve
+            opened_path = os.readlink(f"/proc/self/fd/{fd}")
+        except OSError:  # no /proc (non-Linux): rely on the inode check above
+            opened_path = real
+        try:
+            inside = os.path.commonpath([base, opened_path]) == base
+        except ValueError:  # a non-absolute target such as `anon_inode:[...]`
+            inside = False
+        if not inside:  # checked before the size, so a won race never discloses an outside file's size
+            raise ToolError(refusal)
+        if opened.st_size > cap:
+            raise ToolError(f"File is {opened.st_size} bytes, over the {cap}-byte limit (TAIGA_MCP_MAX_FILE_BYTES)")
+    except BaseException:
+        os.close(fd)
+        raise
+    handle = open(real, "rb", opener=lambda _path, _flags: fd)  # noqa: SIM115 - closed in `finally`; keeps `.name`
+    try:
+        return _upload(entity_type, project, ref, handle, description)
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+    finally:
+        handle.close()
+
+
+def _maybe_register_file_tool(server: MCPServer) -> bool:
+    """Register `add_attachment_file` on `server` only when TAIGA_MCP_UPLOAD_DIR is set and non-blank."""
+    if not os.environ.get("TAIGA_MCP_UPLOAD_DIR", "").strip():
+        return False
+    _env_cap("TAIGA_MCP_MAX_FILE_BYTES", 26214400)  # fail loudly at registration on a bad cap
+    server.tool()(add_attachment_file)
+    return True
 
 
 def _get_by_ref(entity_type: str, project: str | int, ref: int) -> Any:
@@ -416,6 +587,102 @@ def set_custom_attribute_value_by_id(
     client = get_client()
     resource = getattr(client, _ENTITY_ATTR[entity_type]).get(id)
     return to_jsonable(resource.set_attribute(attribute_id, value, version=version))
+
+
+@mcp.tool()
+def add_attachment_content(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki_page"],
+    project: str | int,
+    ref: int,
+    filename: str,
+    content_base64: str,
+    description: str = "",
+) -> dict[str, Any]:
+    """Attach a file, given as base64 text, to a user story, task, issue, epic or wiki page.
+
+    `ref` is the per-project number shown in the Taiga URL, not the database id; for `wiki_page`
+    it is the wiki page's id (which must belong to `project`). `content_base64` must be plain base64
+    (whitespace and line breaks are ignored; a `data:` URI prefix is refused) and decode to at most 65536 bytes
+    by default (override with TAIGA_MCP_MAX_CONTENT_BYTES); use `add_attachment_file` for larger
+    files when it is available. `filename` is reduced to its
+    basename. Returns the attachment's id, name, size, description, is_deprecated, url,
+    object_id (the owning item's id) and project.
+    """
+    name = _clean_filename(filename)
+    payload = re.sub(r"\s+", "", content_base64)
+    if payload.lower().startswith("data:"):
+        raise ToolError("content_base64 must be raw base64, not a data: URI")
+    try:
+        data = base64.b64decode(payload, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ToolError(f"content_base64 is not valid base64: {exc}") from exc
+    if not data:
+        raise ToolError("content_base64 decodes to empty content")
+    cap = _env_cap("TAIGA_MCP_MAX_CONTENT_BYTES", 65536)
+    if len(data) > cap:
+        raise ToolError(f"Content is {len(data)} bytes, over the {cap}-byte limit (TAIGA_MCP_MAX_CONTENT_BYTES)")
+    buf = io.BytesIO(data)
+    buf.name = name
+    try:
+        return _upload(entity_type, project, ref, buf, description)
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+
+
+@mcp.tool()
+def list_attachments(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki_page"],
+    project: str | int,
+    ref: int,
+) -> list[dict[str, Any]]:
+    """List the attachments of a user story, task, issue, epic or wiki page (read-only).
+
+    `ref` is the per-project number shown in the Taiga URL, not the database id; for `wiki_page`
+    it is the wiki page's id (which must belong to `project`). Returns, for each attachment, its
+    id, name, size, description, is_deprecated, url, object_id (the owning item's id) and project.
+    """
+    try:
+        _, item = _attachment_target(entity_type, project, ref)
+        return [_attachment_summary(a) for a in item.list_attachments()]
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+
+
+@mcp.tool()
+def delete_attachment(
+    entity_type: Literal["user_story", "task", "issue", "epic", "wiki_page"],
+    project: str | int,
+    attachment_id: int,
+    expected_name: str,
+) -> dict[str, str]:
+    """Delete an attachment from a user story, task, issue, epic or wiki page.
+
+    Destructive and irreversible: the attached file is removed from Taiga. `attachment_id` is the
+    numeric id from `list_attachments` for the same `entity_type`. Ids are numbered separately per
+    entity type and are global across projects, so the call is refused, and nothing deleted, unless
+    the attachment belongs to `project` and is named `expected_name` (case and surrounding spaces
+    ignored).
+    """
+    client = get_client()
+    try:
+        project_id = _resolve_project_id(project)
+        attachment = _ATTACHMENT_FACTORY[entity_type](client.raw_request).get(attachment_id)
+        owner = getattr(attachment, "project", None) or getattr(attachment, "project_id", None)
+        if owner != project_id:
+            raise ToolError(f"Attachment {attachment_id} belongs to project {owner}, not {project_id}; not deleted")
+        name = getattr(attachment, "name", None)
+        if str(name).strip().casefold() != expected_name.strip().casefold():
+            raise ToolError(f"Attachment {attachment_id} is named {name!r}, not {expected_name!r}; not deleted")
+        attachment.delete()
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError(f"{exc.__class__.__name__}: {exc}") from exc
+    return {"status": "deleted", "id": str(attachment_id), "name": name}
 
 
 @mcp.tool()
@@ -1394,3 +1661,7 @@ def update_wiki_page(
     if return_representation == "full":
         return to_jsonable(client.wikipages.get(id))
     return _represent(resource, fields, return_representation)
+
+
+_env_cap("TAIGA_MCP_MAX_CONTENT_BYTES", 65536)  # fail loudly at startup on a bad cap
+_maybe_register_file_tool(mcp)

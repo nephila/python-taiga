@@ -1,13 +1,23 @@
 from __future__ import annotations
 
+import ast
+import asyncio
+import os
+import re
+import shutil
+import subprocess
+import sys
 from types import SimpleNamespace
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+import requests
+from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from taiga.exceptions import TaigaRestException
 from taiga.mcp_server import server
+from taiga.requestmaker import RequestMaker
 
 _HISTORY_ENTRY = {
     "user": {"pk": 1, "name": "tester"},
@@ -2416,3 +2426,975 @@ def test_update_work_items_project_lookup_failure_is_a_per_item_error(mock_get_c
     assert result[0]["status"] == "error"
     assert result[1] == {"id": 5}
     assert mock_client.projects.get.call_count == 2
+
+
+def test_attachment_summary_maps_fields_and_url():
+    att = SimpleNamespace(
+        id=1,
+        name="a.txt",
+        size=3,
+        description="d",
+        is_deprecated=False,
+        attached_file="http://x/a.txt",
+        object_id=9,
+        project=42,
+    )
+    assert server._attachment_summary(att) == {
+        "id": 1,
+        "name": "a.txt",
+        "size": 3,
+        "description": "d",
+        "is_deprecated": False,
+        "url": "http://x/a.txt",
+        "object_id": 9,
+        "project": 42,
+    }
+    assert server._attachment_summary(SimpleNamespace(id=2)) == {
+        "id": 2,
+        "name": None,
+        "size": None,
+        "description": None,
+        "is_deprecated": None,
+        "url": None,
+        "object_id": None,
+        "project": None,
+    }
+
+
+def test_env_cap_default_and_override(monkeypatch):
+    monkeypatch.delenv("TAIGA_TEST_CAP", raising=False)
+    assert server._env_cap("TAIGA_TEST_CAP", 7) == 7
+    monkeypatch.setenv("TAIGA_TEST_CAP", "  ")
+    assert server._env_cap("TAIGA_TEST_CAP", 7) == 7
+    monkeypatch.setenv("TAIGA_TEST_CAP", "100")
+    assert server._env_cap("TAIGA_TEST_CAP", 7) == 100
+
+
+@pytest.mark.parametrize("value", ["abc", "0", "-5"])
+def test_env_cap_rejects_invalid(monkeypatch, value):
+    monkeypatch.setenv("TAIGA_TEST_CAP", value)
+    with pytest.raises(ToolError, match="TAIGA_TEST_CAP"):
+        server._env_cap("TAIGA_TEST_CAP", 7)
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [("a.txt", "a.txt"), ("x/y/a.txt", "a.txt"), ("..\\a.txt", "a.txt"), (" a.txt ", "a.txt")],
+)
+def test_clean_filename(raw, expected):
+    assert server._clean_filename(raw) == expected
+
+
+@pytest.mark.parametrize("raw", ["", "..", "/", "a\x00b"])
+def test_clean_filename_rejects(raw):
+    with pytest.raises(ToolError):
+        server._clean_filename(raw)
+
+
+def test_attachment_factory_covers_every_entity_type():
+    assert set(server._ATTACHMENT_FACTORY) == {"user_story", "task", "issue", "epic", "wiki_page"}
+    endpoints = {k: v.instance.endpoint for k, v in server._ATTACHMENT_FACTORY.items()}
+    assert endpoints == {
+        "user_story": "userstories/attachments",
+        "task": "tasks/attachments",
+        "issue": "issues/attachments",
+        "epic": "epics/attachments",
+        "wiki_page": "wiki/attachments",
+    }
+
+
+def _attachment_factories():
+    return {entity_type: MagicMock(name=entity_type) for entity_type in server._ATTACHMENT_FACTORY}
+
+
+def _attachment_client(mock_get_client, project_id=42, item_id=9):
+    mock_client = MagicMock()
+    mock_project = MagicMock(id=project_id)
+    for method in server._REF_METHOD.values():
+        getattr(mock_project, method).return_value = MagicMock(id=item_id)
+    mock_client.projects.get.return_value = mock_project
+    mock_client.projects.get_by_slug.return_value = mock_project
+    mock_get_client.return_value = mock_client
+    return mock_client
+
+
+@pytest.mark.parametrize("entity_type", ["user_story", "task", "issue", "epic"])
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_routes_every_entity_type(mock_get_client, entity_type):
+    mock_client = _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    factories[entity_type].return_value.create.return_value = SimpleNamespace(
+        id=3,
+        name="a.txt",
+        size=2,
+        description="",
+        is_deprecated=False,
+        attached_file="http://f",
+        object_id=9,
+        project=42,
+    )
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.add_attachment_content(entity_type, 42, 5, "a.txt", "aGk=")
+
+    factories[entity_type].assert_called_once_with(mock_client.raw_request)
+    args, kwargs = factories[entity_type].return_value.create.call_args
+    assert args[:2] == (42, 9)
+    assert kwargs == {"description": ""}
+    assert result["id"] == 3
+    assert result["url"] == "http://f"
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_sends_decoded_bytes_and_filename(mock_get_client):
+    _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.add_attachment_content("issue", 42, 5, "dir/report.txt", "aGVsbG8=", description="d")
+
+    args, kwargs = factories["issue"].return_value.create.call_args
+    assert args[2].read() == b"hello"
+    assert args[2].name == "report.txt"
+    assert kwargs == {"description": "d"}
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_accepts_wrapped_base64(mock_get_client):
+    _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.add_attachment_content("issue", 42, 5, "a.txt", "aGVs\nbG8 =\r\n")
+
+    assert factories["issue"].return_value.create.call_args[0][2].read() == b"hello"
+
+
+@pytest.mark.parametrize("content", ["data:text/plain;base64,aGk=", "!!notbase64!!", "", "  \n "])
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_rejects_bad_content(mock_get_client, content):
+    mock_client = _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError):
+        server.add_attachment_content("issue", 42, 5, "a.txt", content)
+
+    factories["issue"].return_value.create.assert_not_called()
+    mock_client.projects.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_rejects_bad_filename_before_request(mock_get_client):
+    mock_client = _attachment_client(mock_get_client)
+    with pytest.raises(ToolError):
+        server.add_attachment_content("issue", 42, 5, "..", "aGk=")
+    mock_client.projects.get.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_cap_boundary(mock_get_client, monkeypatch):
+    mock_client = _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    monkeypatch.setenv("TAIGA_MCP_MAX_CONTENT_BYTES", "4")
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.add_attachment_content("issue", 42, 5, "a.txt", "YWJjZA==")  # 4 bytes
+        assert factories["issue"].return_value.create.call_count == 1
+        mock_client.projects.get.reset_mock()
+        with pytest.raises(ToolError, match="TAIGA_MCP_MAX_CONTENT_BYTES"):
+            server.add_attachment_content("issue", 42, 5, "a.txt", "YWJjZGU=")  # 5 bytes
+
+    assert factories["issue"].return_value.create.call_count == 1
+    mock_client.projects.get.assert_not_called()
+
+
+@pytest.mark.parametrize("project", ["my-slug", "42"])
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_resolves_slug_and_numeric_string_project(mock_get_client, project):
+    mock_client = _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.add_attachment_content("task", project, 5, "a.txt", "aGk=")
+
+    if project == "my-slug":
+        mock_client.projects.get_by_slug.assert_called_once_with("my-slug")
+    else:
+        mock_client.projects.get.assert_called_once_with(42)
+    assert factories["task"].return_value.create.call_args[0][:2] == (42, 9)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_surfaces_taiga_error(mock_get_client):
+    _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    factories["issue"].return_value.create.side_effect = TaigaRestException("http://x", 400, "bad", "POST")
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError, match="TaigaRestException"):
+        server.add_attachment_content("issue", 42, 5, "a.txt", "aGk=")
+
+
+@patch("taiga.mcp_server.server._upload")
+def test_add_attachment_content_reraises_toolerror_untouched(mock_upload):
+    mock_upload.side_effect = ToolError("not found ref 5")
+    with pytest.raises(ToolError) as excinfo:
+        server.add_attachment_content("issue", 42, 5, "a.txt", "aGk=")
+    assert str(excinfo.value) == "not found ref 5"
+
+
+def _attachment_ns(id, name):
+    return SimpleNamespace(
+        id=id,
+        name=name,
+        size=2,
+        description="",
+        is_deprecated=False,
+        attached_file=f"http://f/{name}",
+        object_id=9,
+        project=42,
+    )
+
+
+@pytest.mark.parametrize("entity_type", ["user_story", "task", "issue", "epic"])
+@patch("taiga.mcp_server.server.get_client")
+def test_list_attachments_returns_summaries_for_every_entity_type(mock_get_client, entity_type):
+    _attachment_client(mock_get_client)
+    item = MagicMock(id=9)
+    item.list_attachments.return_value = [_attachment_ns(1, "a.txt"), _attachment_ns(2, "b.txt")]
+    mock_project = mock_get_client.return_value.projects.get.return_value
+    getattr(mock_project, server._REF_METHOD[entity_type]).return_value = item
+
+    result = server.list_attachments(entity_type, 42, 5)
+
+    assert [r["id"] for r in result] == [1, 2]
+    assert [r["name"] for r in result] == ["a.txt", "b.txt"]
+    assert result[0]["url"] == "http://f/a.txt"
+    assert set(result[0]) == set(server._attachment_summary(SimpleNamespace()))
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_attachments_empty_returns_empty_list(mock_get_client):
+    _attachment_client(mock_get_client)
+    mock_project = mock_get_client.return_value.projects.get.return_value
+    mock_project.get_issue_by_ref.return_value.list_attachments.return_value = []
+    assert server.list_attachments("issue", 42, 5) == []
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_attachments_surfaces_errors_as_toolerror(mock_get_client):
+    _attachment_client(mock_get_client)
+    mock_project = mock_get_client.return_value.projects.get.return_value
+    mock_project.get_issue_by_ref.return_value.list_attachments.side_effect = TaigaRestException(
+        "http://x", 500, "boom", "GET"
+    )
+    with pytest.raises(ToolError, match="TaigaRestException"):
+        server.list_attachments("issue", 42, 5)
+
+
+@patch("taiga.mcp_server.server._attachment_target")
+def test_list_attachments_reraises_toolerror_untouched(mock_target):
+    mock_target.side_effect = ToolError("original message")
+    with pytest.raises(ToolError) as excinfo:
+        server.list_attachments("issue", 42, 5)
+    assert str(excinfo.value) == "original message"
+
+
+def _attachment(project=42, **extra):
+    return SimpleNamespace(id=7, name="report.pdf", project=project, delete=MagicMock(), **extra)
+
+
+@pytest.mark.parametrize("entity_type", ["user_story", "task", "issue", "epic", "wiki_page"])
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_routes_every_entity_type(mock_get_client, entity_type):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    factories = _attachment_factories()
+    attachment = _attachment()
+    factories[entity_type].return_value.get.return_value = attachment
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.delete_attachment(entity_type, 42, 7, "report.pdf")
+
+    factories[entity_type].assert_called_once_with(mock_client.raw_request)
+    factories[entity_type].return_value.get.assert_called_once_with(7)
+    attachment.delete.assert_called_once_with()
+    assert result == {"status": "deleted", "id": "7", "name": "report.pdf"}
+
+
+@pytest.mark.parametrize("entity_type", ["user_story", "wiki_page"])
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_refuses_an_attachment_of_another_project(mock_get_client, entity_type):
+    mock_get_client.return_value = MagicMock()
+    factories = _attachment_factories()
+    attachment = _attachment(project=99)
+    factories[entity_type].return_value.get.return_value = attachment
+
+    with (
+        patch.dict(server._ATTACHMENT_FACTORY, factories),
+        pytest.raises(ToolError, match="belongs to project 99, not 42; not deleted"),
+    ):
+        server.delete_attachment(entity_type, 42, 7, "report.pdf")
+
+    attachment.delete.assert_not_called()
+
+
+@pytest.mark.parametrize("entity_type", ["task", "wiki_page"])
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_refuses_a_different_name(mock_get_client, entity_type):
+    mock_get_client.return_value = MagicMock()
+    factories = _attachment_factories()
+    attachment = _attachment()
+    attachment.name = "other.pdf"
+    factories[entity_type].return_value.get.return_value = attachment
+
+    with (
+        patch.dict(server._ATTACHMENT_FACTORY, factories),
+        pytest.raises(ToolError, match="is named 'other.pdf', not 'report.pdf'; not deleted"),
+    ):
+        server.delete_attachment(entity_type, 42, 7, "report.pdf")
+
+    attachment.delete.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_name_match_ignores_case_and_padding(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attachment_factories()
+    attachment = _attachment()
+    factories["issue"].return_value.get.return_value = attachment
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.delete_attachment("issue", 42, 7, "  REPORT.pdf ")
+
+    attachment.delete.assert_called_once_with()
+    assert result["name"] == "report.pdf"
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_refuses_an_attachment_with_no_owner(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attachment_factories()
+    attachment = SimpleNamespace(id=7, name="report.pdf", delete=MagicMock())
+    factories["epic"].return_value.get.return_value = attachment
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError, match="belongs to project None"):
+        server.delete_attachment("epic", 42, 7, "report.pdf")
+
+    attachment.delete.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_falls_back_to_project_id(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attachment_factories()
+    attachment = SimpleNamespace(id=7, name="report.pdf", project_id=42, delete=MagicMock())
+    factories["issue"].return_value.get.return_value = attachment
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.delete_attachment("issue", 42, 7, "report.pdf")
+
+    attachment.delete.assert_called_once_with()
+    assert result["status"] == "deleted"
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_resolves_a_project_slug(mock_get_client):
+    mock_client = MagicMock()
+    mock_client.projects.get_by_slug.return_value.id = 42
+    mock_get_client.return_value = mock_client
+    factories = _attachment_factories()
+    attachment = _attachment()
+    factories["task"].return_value.get.return_value = attachment
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.delete_attachment("task", "desktop-gym", 7, "report.pdf")
+
+    mock_client.projects.get_by_slug.assert_called_once_with("desktop-gym")
+    attachment.delete.assert_called_once_with()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_delete_attachment_surfaces_a_missing_attachment_and_deletes_nothing(mock_get_client):
+    mock_get_client.return_value = MagicMock()
+    factories = _attachment_factories()
+    factories["epic"].return_value.get.side_effect = TaigaRestException("url", 404, '{"_error_message": "Not found"}')
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError, match="Not found"):
+        server.delete_attachment("epic", 42, 7, "report.pdf")
+
+    factories["epic"].return_value.get.return_value.delete.assert_not_called()
+
+
+# --- add_attachment_file / upload-dir confinement ----------------------------------------
+
+
+@pytest.fixture
+def upload_dir(tmp_path, monkeypatch):
+    root = tmp_path / "uploads"
+    root.mkdir()
+    monkeypatch.setenv("TAIGA_MCP_UPLOAD_DIR", str(root))
+    return root
+
+
+def _resolve_real(path, upload_dir):
+    return server._resolve_upload(path, upload_dir)[0]
+
+
+def test_resolve_upload_accepts_relative_and_absolute(upload_dir):
+    (upload_dir / "sub").mkdir()
+    f = upload_dir / "sub" / "a.txt"
+    f.write_bytes(b"x")
+    real = os.path.realpath(f)
+    assert _resolve_real("sub/a.txt", str(upload_dir)) == real
+    assert _resolve_real(str(f), str(upload_dir)) == real
+
+
+def test_resolve_upload_refuses_traversal_and_absolute_outside(upload_dir, tmp_path):
+    (tmp_path / "outside.txt").write_bytes(b"secret")
+    for bad in ("../outside.txt", str(tmp_path / "outside.txt"), "sub/../../outside.txt"):
+        with pytest.raises(ToolError) as excinfo:
+            _resolve_real(bad, str(upload_dir))
+        assert "outside.txt" not in str(excinfo.value)
+
+
+def test_resolve_upload_refuses_symlink_escaping_dir(upload_dir, tmp_path):
+    (tmp_path / "outside.txt").write_bytes(b"secret")
+    (upload_dir / "link.txt").symlink_to(tmp_path / "outside.txt")
+    with pytest.raises(ToolError, match="upload directory"):
+        _resolve_real("link.txt", str(upload_dir))
+
+
+def test_resolve_upload_refuses_directory_missing_and_root(upload_dir):
+    (upload_dir / "d").mkdir()
+    messages = set()
+    for bad in ("d", "missing.txt", ".", ""):
+        with pytest.raises(ToolError) as excinfo:
+            _resolve_real(bad, str(upload_dir))
+        messages.add(str(excinfo.value))
+    assert len(messages) == 1  # missing, directory and root are indistinguishable
+
+
+def test_resolve_upload_refuses_nul(upload_dir):
+    with pytest.raises(ToolError, match="upload directory"):
+        _resolve_real("a\x00b", str(upload_dir))
+
+
+def test_resolve_upload_accepts_symlinked_upload_dir(upload_dir, tmp_path):
+    (upload_dir / "a.txt").write_bytes(b"x")
+    link = tmp_path / "link-dir"
+    link.symlink_to(upload_dir, target_is_directory=True)
+    assert _resolve_real("a.txt", str(link)) == os.path.realpath(upload_dir / "a.txt")
+    assert _resolve_real(str(link / "a.txt"), str(link)) == os.path.realpath(upload_dir / "a.txt")
+
+
+def test_resolve_upload_refuses_bad_upload_dir(tmp_path):
+    (tmp_path / "file").write_bytes(b"x")
+    for bad in (str(tmp_path / "nope"), str(tmp_path / "file")):
+        with pytest.raises(ToolError, match="TAIGA_MCP_UPLOAD_DIR"):
+            _resolve_real("a.txt", bad)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_uploads_basename_and_bytes_then_closes(mock_get_client, upload_dir):
+    _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    (upload_dir / "sub").mkdir()
+    (upload_dir / "sub" / "report.txt").write_bytes(b"hello")
+    seen = {}
+
+    def fake_create(project_id, item_id, file_obj, description=""):
+        seen.update(
+            file=file_obj, data=file_obj.read(), name=os.path.basename(file_obj.name), args=(project_id, item_id)
+        )
+        seen["description"] = description
+        return SimpleNamespace(id=3, name="report.txt", size=5)
+
+    factories["issue"].return_value.create.side_effect = fake_create
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.add_attachment_file("issue", 42, 5, "sub/report.txt", description="d")
+
+    assert seen["data"] == b"hello"
+    assert seen["name"] == "report.txt"
+    assert seen["args"] == (42, 9)
+    assert seen["description"] == "d"
+    assert seen["file"].closed
+    assert result["id"] == 3
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_closes_handle_when_create_raises(mock_get_client, upload_dir):
+    _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    (upload_dir / "a.txt").write_bytes(b"hello")
+    seen = {}
+
+    def fake_create(project_id, item_id, file_obj, description=""):
+        seen["file"] = file_obj
+        raise TaigaRestException("http://x", 400, "bad", "POST")
+
+    factories["issue"].return_value.create.side_effect = fake_create
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError, match="TaigaRestException"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    assert seen["file"].closed
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_cap_boundary(mock_get_client, upload_dir, monkeypatch):
+    mock_client = _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    monkeypatch.setenv("TAIGA_MCP_MAX_FILE_BYTES", "4")
+    (upload_dir / "four.bin").write_bytes(b"abcd")
+    (upload_dir / "five.bin").write_bytes(b"abcde")
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.add_attachment_file("issue", 42, 5, "four.bin")
+        assert factories["issue"].return_value.create.call_count == 1
+        mock_client.projects.get.reset_mock()
+        with pytest.raises(ToolError, match="TAIGA_MCP_MAX_FILE_BYTES"):
+            server.add_attachment_file("issue", 42, 5, "five.bin")
+
+    assert factories["issue"].return_value.create.call_count == 1
+    mock_client.projects.get.assert_not_called()
+
+
+def test_add_attachment_file_requires_upload_dir_at_call_time(monkeypatch):
+    monkeypatch.delenv("TAIGA_MCP_UPLOAD_DIR", raising=False)
+    with pytest.raises(ToolError, match="TAIGA_MCP_UPLOAD_DIR"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    monkeypatch.setenv("TAIGA_MCP_UPLOAD_DIR", "   ")
+    with pytest.raises(ToolError, match="TAIGA_MCP_UPLOAD_DIR"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_outside_path_without_request(mock_get_client, upload_dir, tmp_path):
+    (tmp_path / "outside.txt").write_bytes(b"secret")
+    with pytest.raises(ToolError, match="upload directory"):
+        server.add_attachment_file("issue", 42, 5, "../outside.txt")
+    mock_get_client.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_swapped_file(mock_get_client, upload_dir):
+    (upload_dir / "a.txt").write_bytes(b"hello")
+    real_fstat = os.fstat
+
+    def other_fstat(fd):
+        st = real_fstat(fd)
+        return SimpleNamespace(st_ino=st.st_ino + 1, st_dev=st.st_dev, st_size=st.st_size, st_mode=st.st_mode)
+
+    with patch("taiga.mcp_server.server.os.fstat", other_fstat), pytest.raises(ToolError, match="upload directory"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    mock_get_client.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_unopenable_file(mock_get_client, upload_dir):
+    (upload_dir / "a.txt").write_bytes(b"hello")
+    with (
+        patch("taiga.mcp_server.server.os.open", side_effect=PermissionError("/secret/path")),
+        pytest.raises(ToolError) as excinfo,
+    ):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    assert "/secret/path" not in str(excinfo.value)
+
+
+@patch("taiga.mcp_server.server._upload")
+def test_add_attachment_file_reraises_toolerror_untouched(mock_upload, upload_dir):
+    (upload_dir / "a.txt").write_bytes(b"hello")
+    mock_upload.side_effect = ToolError("not found ref 5")
+    with pytest.raises(ToolError) as excinfo:
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    assert str(excinfo.value) == "not found ref 5"
+
+
+def test_maybe_register_file_tool_absent_without_env(monkeypatch):
+    monkeypatch.delenv("TAIGA_MCP_UPLOAD_DIR", raising=False)
+    fresh = MCPServer("t")
+    assert server._maybe_register_file_tool(fresh) is False
+    assert "add_attachment_file" not in {t.name for t in asyncio.run(fresh.list_tools())}
+    monkeypatch.setenv("TAIGA_MCP_UPLOAD_DIR", "  ")
+    assert server._maybe_register_file_tool(MCPServer("t")) is False
+
+
+def test_maybe_register_file_tool_present_with_env(upload_dir):
+    fresh = MCPServer("t")
+    assert server._maybe_register_file_tool(fresh) is True
+    assert "add_attachment_file" in {t.name for t in asyncio.run(fresh.list_tools())}
+
+
+def test_global_server_lists_file_tool_only_when_configured(tmp_path):
+    code = (
+        "import asyncio; from taiga.mcp_server.server import mcp; "
+        "print(sorted(t.name for t in asyncio.run(mcp.list_tools())))"
+    )
+    root = os.path.dirname(os.path.dirname(os.path.abspath(server.__file__)))
+    base_env = {k: v for k, v in os.environ.items() if not k.startswith("TAIGA_")}
+    base_env["PYTHONPATH"] = os.path.dirname(root)
+
+    def names(extra):
+        out = subprocess.run(
+            [sys.executable, "-c", code], env={**base_env, **extra}, capture_output=True, text=True, check=True
+        )
+        return ast.literal_eval(out.stdout.strip().splitlines()[-1])
+
+    without = names({})
+    with_dir = names({"TAIGA_MCP_UPLOAD_DIR": str(tmp_path)})
+    always = {"add_attachment_content", "list_attachments", "delete_attachment"}
+    assert always <= set(without)
+    assert "add_attachment_file" not in without
+    assert always <= set(with_dir)
+    assert "add_attachment_file" in with_dir
+
+
+def _swap_after_resolve(monkeypatch, swap):
+    """Run `swap(real_path)` right after `_resolve_upload` validates, i.e. inside the race window."""
+    real_resolve = server._resolve_upload
+
+    def resolve(path, upload_dir):
+        result = real_resolve(path, upload_dir)
+        swap(result[0])
+        return result
+
+    monkeypatch.setattr(server, "_resolve_upload", resolve)
+
+
+def _spy_fds(monkeypatch):
+    opened = []
+    real_open = os.open
+
+    def spy(*args, **kwargs):
+        fd = real_open(*args, **kwargs)
+        opened.append(fd)
+        return fd
+
+    monkeypatch.setattr(server.os, "open", spy)
+    return opened
+
+
+def _assert_fds_closed(fds):
+    for fd in fds:
+        with pytest.raises(OSError):
+            os.fstat(fd)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_symlink_swapped_in_after_resolve(
+    mock_get_client, upload_dir, tmp_path, monkeypatch
+):
+    (tmp_path / "outside.txt").write_bytes(b"TOP-SECRET")
+    (upload_dir / "a.txt").write_bytes(b"hello")
+
+    def swap(real):
+        os.unlink(real)
+        os.symlink(tmp_path / "outside.txt", real)
+
+    _swap_after_resolve(monkeypatch, swap)
+    fds = _spy_fds(monkeypatch)
+    with pytest.raises(ToolError, match="upload directory"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    mock_get_client.assert_not_called()
+    _assert_fds_closed(fds)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_fifo_swapped_in_after_resolve_without_hanging(
+    mock_get_client, upload_dir, monkeypatch
+):
+    (upload_dir / "a.txt").write_bytes(b"hello")
+
+    def swap(real):
+        os.unlink(real)
+        os.mkfifo(real)
+
+    _swap_after_resolve(monkeypatch, swap)
+    fds = _spy_fds(monkeypatch)
+    with pytest.raises(ToolError, match="upload directory"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    mock_get_client.assert_not_called()
+    assert len(fds) == 1
+    _assert_fds_closed(fds)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_file_grown_after_resolve(mock_get_client, upload_dir, monkeypatch):
+    monkeypatch.setenv("TAIGA_MCP_MAX_FILE_BYTES", "4")
+    (upload_dir / "a.txt").write_bytes(b"abcd")
+
+    def swap(real):
+        with open(real, "ab") as f:
+            f.write(b"e")
+
+    _swap_after_resolve(monkeypatch, swap)
+    fds = _spy_fds(monkeypatch)
+    with pytest.raises(ToolError, match="TAIGA_MCP_MAX_FILE_BYTES"):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    mock_get_client.assert_not_called()
+    _assert_fds_closed(fds)
+
+
+def test_maybe_register_file_tool_validates_cap_at_registration(upload_dir, monkeypatch):
+    monkeypatch.setenv("TAIGA_MCP_MAX_FILE_BYTES", "nope")
+    with pytest.raises(ToolError, match="TAIGA_MCP_MAX_FILE_BYTES"):
+        server._maybe_register_file_tool(MCPServer("t"))
+    monkeypatch.setenv("TAIGA_MCP_MAX_FILE_BYTES", "0")
+    with pytest.raises(ToolError, match="TAIGA_MCP_MAX_FILE_BYTES"):
+        server._maybe_register_file_tool(MCPServer("t"))
+
+
+def test_maybe_register_file_tool_ignores_bad_cap_without_upload_dir(monkeypatch):
+    monkeypatch.delenv("TAIGA_MCP_UPLOAD_DIR", raising=False)
+    monkeypatch.setenv("TAIGA_MCP_MAX_FILE_BYTES", "nope")
+    assert server._maybe_register_file_tool(MCPServer("t")) is False
+
+
+def test_import_with_bad_cap_but_no_upload_dir_works():
+    code = "import taiga.mcp_server.server as s; print('ok')"
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(server.__file__))))
+    env = {k: v for k, v in os.environ.items() if not k.startswith("TAIGA_")}
+    env.update(PYTHONPATH=root, TAIGA_MCP_MAX_FILE_BYTES="nope")
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=False)
+    assert out.returncode == 0 and "ok" in out.stdout
+    env["TAIGA_MCP_UPLOAD_DIR"] = "/tmp"
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=False)
+    assert out.returncode != 0 and "TAIGA_MCP_MAX_FILE_BYTES" in out.stderr
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_intermediate_dir_swapped_mid_resolve(
+    mock_get_client, upload_dir, tmp_path, monkeypatch
+):
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "a.txt").write_bytes(b"TOP-SECRET")
+    (upload_dir / "sub").mkdir()
+    (upload_dir / "sub" / "a.txt").write_bytes(b"hello")
+    real_stat = os.stat
+    swapped = []
+
+    def stat_and_swap(path, *args, **kwargs):
+        if not swapped and str(path).endswith("sub/a.txt"):
+            swapped.append(path)
+            shutil.rmtree(upload_dir / "sub")
+            os.symlink(outside, upload_dir / "sub")
+        return real_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(server.os, "stat", stat_and_swap)
+    fds = _spy_fds(monkeypatch)
+    with pytest.raises(ToolError, match="upload directory"):
+        server.add_attachment_file("issue", 42, 5, "sub/a.txt")
+    assert swapped
+    mock_get_client.assert_not_called()
+    _assert_fds_closed(fds)
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_race_does_not_disclose_outside_file_size(
+    mock_get_client, upload_dir, tmp_path, monkeypatch
+):
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "a.txt").write_bytes(b"TOP-SECRET")  # 10 bytes, over the 2-byte cap below
+    (upload_dir / "sub").mkdir()
+    (upload_dir / "sub" / "a.txt").write_bytes(b"hi")
+    monkeypatch.setenv("TAIGA_MCP_MAX_FILE_BYTES", "2")
+    real_stat = os.stat
+    swapped = []
+
+    def stat_and_swap(path, *args, **kwargs):
+        if not swapped and str(path).endswith("sub/a.txt"):
+            swapped.append(path)
+            shutil.rmtree(upload_dir / "sub")
+            os.symlink(outside, upload_dir / "sub")
+        return real_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(server.os, "stat", stat_and_swap)
+    with pytest.raises(ToolError) as excinfo:
+        server.add_attachment_file("issue", 42, 5, "sub/a.txt")
+    assert swapped
+    assert "upload directory" in str(excinfo.value)
+    assert "bytes" not in str(excinfo.value) and "10" not in str(excinfo.value)
+    mock_get_client.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_refuses_a_non_absolute_proc_target(mock_get_client, upload_dir, monkeypatch):
+    (upload_dir / "a.txt").write_bytes(b"hello")
+    fds = _spy_fds(monkeypatch)
+    with (
+        patch.object(server.os, "readlink", return_value="anon_inode:[eventfd]"),
+        pytest.raises(ToolError, match="upload directory"),
+    ):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    mock_get_client.assert_not_called()
+    _assert_fds_closed(fds)
+
+
+def test_import_with_bad_content_cap_fails_loudly():
+    code = "import taiga.mcp_server.server as s; print('ok')"
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(server.__file__))))
+    env = {k: v for k, v in os.environ.items() if not k.startswith("TAIGA_")}
+    env.update(PYTHONPATH=root, TAIGA_MCP_MAX_CONTENT_BYTES="nope")
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=False)
+    assert out.returncode != 0 and "TAIGA_MCP_MAX_CONTENT_BYTES" in out.stderr
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_without_proc_falls_back_to_inode_check(mock_get_client, upload_dir):
+    _attachment_client(mock_get_client)
+    factories = _attachment_factories()
+    (upload_dir / "a.txt").write_bytes(b"hello")
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), patch.object(server.os, "readlink", side_effect=OSError):
+        server.add_attachment_file("issue", 42, 5, "a.txt")
+    assert factories["issue"].return_value.create.call_count == 1
+
+
+def _multipart_filenames(upload):
+    """Run `upload()` through the real Attachments.create + RequestMaker.post; return multipart filenames."""
+    bodies = []
+
+    def fake_post(url, headers, data, params, files, verify, proxies):
+        bodies.append(requests.Request("POST", url, headers=headers, data=data, files=files).prepare().body)
+        response = MagicMock(status_code=201)
+        response.json.return_value = {"id": 1, "name": "x", "attached_file": "u", "project": 42, "object_id": 9}
+        return response
+
+    client = MagicMock()
+    client.raw_request = RequestMaker("/api/v1", "http://h", "tok")
+    project = MagicMock(id=42)
+    project.get_issue_by_ref.return_value = MagicMock(id=9)
+    client.projects.get.return_value = project
+    with patch.object(server, "get_client", return_value=client), patch("taiga.requestmaker.requests.post", fake_post):
+        upload()
+    return re.findall(rb'filename="([^"]*)"', bodies[0])
+
+
+def test_add_attachment_content_multipart_filename_is_basename():
+    names = _multipart_filenames(lambda: server.add_attachment_content("issue", 42, 5, "dir/notes.txt", "aGVsbG8="))
+    assert names == [b"notes.txt"]
+
+
+def test_add_attachment_file_multipart_filename_is_basename(upload_dir):
+    (upload_dir / "sub").mkdir()
+    (upload_dir / "sub" / "rep ort.pdf").write_bytes(b"hello")
+    names = _multipart_filenames(lambda: server.add_attachment_file("issue", 42, 5, "sub/rep ort.pdf"))
+    assert names == [b"rep ort.pdf"]
+
+
+# --- wiki_page attachments (ref is the wiki page's id) -----------------------------------------
+
+
+def _wiki_client(mock_get_client, page_project=42, project_id=42, page_id=11):
+    mock_client = _attachment_client(mock_get_client, project_id=project_id)
+    page = MagicMock(id=page_id, project=page_project)
+    mock_client.wikipages.get.return_value = page
+    return mock_client, page
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_content_routes_wiki_page_by_page_id(mock_get_client):
+    mock_client, _ = _wiki_client(mock_get_client)
+    factories = _attachment_factories()
+    factories["wiki_page"].return_value.create.return_value = _attachment_ns(3, "a.txt")
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.add_attachment_content("wiki_page", 42, 11, "a.txt", "aGk=")
+
+    mock_client.wikipages.get.assert_called_once_with(11)
+    factories["wiki_page"].assert_called_once_with(mock_client.raw_request)
+    args, kwargs = factories["wiki_page"].return_value.create.call_args
+    assert args[:2] == (42, 11)
+    assert kwargs == {"description": ""}
+    assert result["id"] == 3
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_routes_wiki_page(mock_get_client, upload_dir):
+    mock_client, _ = _wiki_client(mock_get_client)
+    factories = _attachment_factories()
+    (upload_dir / "w.txt").write_bytes(b"hi")
+    factories["wiki_page"].return_value.create.return_value = _attachment_ns(4, "w.txt")
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        result = server.add_attachment_file("wiki_page", 42, 11, "w.txt")
+
+    mock_client.wikipages.get.assert_called_once_with(11)
+    assert factories["wiki_page"].return_value.create.call_args[0][:2] == (42, 11)
+    assert result["id"] == 4
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_wiki_page_of_another_project_is_refused_without_upload(mock_get_client):
+    _wiki_client(mock_get_client, page_project=99)
+    factories = _attachment_factories()
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError, match="belongs to project 99"):
+        server.add_attachment_content("wiki_page", 42, 11, "a.txt", "aGk=")
+    with pytest.raises(ToolError, match="belongs to project 99, not 42"):
+        server.list_attachments("wiki_page", 42, 11)
+
+    factories["wiki_page"].return_value.create.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_wiki_page_project_slug_is_resolved_for_the_guard(mock_get_client):
+    mock_client, _ = _wiki_client(mock_get_client, page_project=42)
+    factories = _attachment_factories()
+    factories["wiki_page"].return_value.create.return_value = _attachment_ns(3, "a.txt")
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories):
+        server.add_attachment_content("wiki_page", "my-slug", 11, "a.txt", "aGk=")
+
+    mock_client.projects.get_by_slug.assert_called_with("my-slug")
+    factories["wiki_page"].return_value.create.assert_called_once()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_missing_wiki_page_raises_toolerror_and_uploads_nothing(mock_get_client):
+    mock_client, _ = _wiki_client(mock_get_client)
+    mock_client.wikipages.get.side_effect = TaigaRestException("http://x", 404, "nope", "GET")
+    factories = _attachment_factories()
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError, match="TaigaRestException"):
+        server.add_attachment_content("wiki_page", 42, 11, "a.txt", "aGk=")
+    with pytest.raises(ToolError, match="TaigaRestException"):
+        server.list_attachments("wiki_page", 42, 11)
+
+    factories["wiki_page"].return_value.create.assert_not_called()
+
+
+@patch("taiga.mcp_server.server.get_client")
+def test_list_attachments_routes_wiki_page(mock_get_client):
+    mock_client, page = _wiki_client(mock_get_client)
+    page.list_attachments.return_value = [_attachment_ns(1, "a.txt")]
+
+    result = server.list_attachments("wiki_page", 42, 11)
+
+    mock_client.wikipages.get.assert_called_once_with(11)
+    assert [r["id"] for r in result] == [1]
+
+
+@pytest.mark.parametrize("missing", [False, True])
+@patch("taiga.mcp_server.server.get_client")
+def test_add_attachment_file_closes_fds_when_wiki_guard_refuses(mock_get_client, upload_dir, monkeypatch, missing):
+    mock_client, _ = _wiki_client(mock_get_client, page_project=99)
+    if missing:
+        mock_client.wikipages.get.side_effect = TaigaRestException("http://x", 404, "nope", "GET")
+    factories = _attachment_factories()
+    (upload_dir / "w.txt").write_bytes(b"hi")
+    fds = _spy_fds(monkeypatch)
+
+    with patch.dict(server._ATTACHMENT_FACTORY, factories), pytest.raises(ToolError):
+        server.add_attachment_file("wiki_page", 42, 11, "w.txt")
+
+    assert fds
+    _assert_fds_closed(fds)
+    factories["wiki_page"].return_value.create.assert_not_called()
+
+
+@pytest.mark.parametrize("tool", [server.add_attachment_content, server.list_attachments, server.delete_attachment])
+def test_attachment_tools_accept_wiki_page_in_entity_type(tool):
+    import typing
+
+    hint = typing.get_type_hints(tool)["entity_type"]
+    assert "wiki_page" in typing.get_args(hint)
