@@ -43,7 +43,9 @@ Configuration
 ****************
 
 Credentials are read from environment variables, or from equivalent
-command-line flags (flags take precedence over the environment):
+command-line flags (flags take precedence over the environment). The
+``TAIGA_MCP_*`` variables for the attachment tools are described in
+:ref:`mcp-attachments`:
 
 .. list-table::
    :header-rows: 1
@@ -153,6 +155,9 @@ not in any particular project. Check it went through with:
 
     claude mcp get taiga
 
+To enable the file-upload tool, add ``-e TAIGA_MCP_UPLOAD_DIR=/path/to/uploads``
+to the ``claude mcp add`` command above (see :ref:`mcp-attachments`).
+
 .. warning:: **Some MCP clients require every declared parameter to be passed
              explicitly, even ones with a documented default.** Every
              parameter below that shows a default (e.g. ``payload="full"``,
@@ -247,6 +252,53 @@ Available tools
     attribute on another kind) and are global across projects, so take the id
     from the ``get_project`` list matching ``entity_type``; the call is refused,
     and nothing deleted, unless the attribute belongs to ``project`` and is
+    named ``expected_name`` (case and surrounding spaces ignored). Returns
+    ``{"status": "deleted", "id": ..., "name": ...}``.
+
+``add_attachment_content``
+    Attach a file, given as base64 text, to a user story, task, issue, epic or
+    wiki page (``entity_type``: ``user_story``, ``task``, ``issue``, ``epic`` or
+    ``wiki_page``; ``project``, ``ref``, ``filename``, ``content_base64``,
+    optional ``description``). ``ref`` is the per-project number shown in the
+    Taiga URL, not the database id; for ``wiki_page`` it is the wiki page's id
+    (the one ``get_wiki_page`` takes), and the page must belong to ``project``
+    or the call is refused before anything is uploaded. ``content_base64`` must be
+    plain base64
+    (whitespace and line breaks are ignored; a ``data:`` URI is refused) and
+    decode to non-empty content of at most 65536 bytes by default
+    (``TAIGA_MCP_MAX_CONTENT_BYTES``). ``filename`` is reduced to its basename.
+    Returns the attachment's ``id``, ``name``, ``size``, ``description``,
+    ``is_deprecated``, ``url``, ``object_id`` and ``project``. The default cap is
+    sized for what a model can realistically emit as base64 in a single tool
+    call, not a measured limit; for larger files use ``add_attachment_file``.
+
+``add_attachment_file``
+    Attach a file read from the server's upload directory (``entity_type``,
+    ``project``, ``ref``, ``path``, optional ``description``); ``entity_type``
+    and ``ref`` work as for ``add_attachment_content``, including ``wiki_page``
+    with ``ref`` = the page's id. Only registered
+    when ``TAIGA_MCP_UPLOAD_DIR`` is set, otherwise the tool does not exist. See
+    :ref:`mcp-attachments` for the path rules and security model. Files over
+    26214400 bytes (25 MiB) are refused by default
+    (``TAIGA_MCP_MAX_FILE_BYTES``). Returns the same shape as
+    ``add_attachment_content``.
+
+``list_attachments``
+    List the attachments of an item (``entity_type``, ``project``, ``ref``);
+    ``entity_type`` may be ``wiki_page``, in which case ``ref`` is the wiki
+    page's id and the page must belong to ``project``. Read-only. Returns, for
+    each attachment, ``id``, ``name``, ``size``,
+    ``description``, ``is_deprecated``, ``url``, ``object_id`` and ``project``.
+
+``delete_attachment``
+    Delete an attachment (``entity_type``, ``project``, ``attachment_id``,
+    ``expected_name``); ``entity_type`` may be ``wiki_page`` (wiki attachment
+    ids are numbered separately too). Destructive and irreversible: the
+    attached file is removed from Taiga. Like ``delete_custom_attribute``, ids
+    are numbered
+    separately per entity type and are global across projects, so take the id
+    from ``list_attachments`` for the same ``entity_type``; the call is refused,
+    and nothing deleted, unless the attachment belongs to ``project`` and is
     named ``expected_name`` (case and surrounding spaces ignored). Returns
     ``{"status": "deleted", "id": ..., "name": ...}``.
 
@@ -485,6 +537,70 @@ Available tools
          As with the single-item tools, a missing ``version`` in an item's
          ``fields`` is filled in from the item just fetched.
 
+.. _mcp-attachments:
+
+*************************************
+Attachments and the upload directory
+*************************************
+
+Three optional environment variables configure the attachment tools (they have
+no CLI flags):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Environment variable
+     - Meaning
+   * - ``TAIGA_MCP_UPLOAD_DIR``
+     - Directory ``add_attachment_file`` may read from. Unset or blank: the tool
+       is not registered at all.
+   * - ``TAIGA_MCP_MAX_FILE_BYTES``
+     - Size limit for ``add_attachment_file``. Defaults to ``26214400`` (25 MiB).
+       Check it against your Taiga instance's own maximum upload size.
+   * - ``TAIGA_MCP_MAX_CONTENT_BYTES``
+     - Limit on the *decoded* size for ``add_attachment_content``. Defaults to
+       ``65536`` (64 KiB).
+
+Both limits must be positive integers. An invalid ``TAIGA_MCP_MAX_CONTENT_BYTES``
+makes the server fail at start, and so does an invalid
+``TAIGA_MCP_MAX_FILE_BYTES`` when ``TAIGA_MCP_UPLOAD_DIR`` is set. Neither
+falls back silently to the default.
+
+``add_attachment_file`` is the only tool that lets the assistant read files on
+the machine running the server, so it is confined to ``TAIGA_MCP_UPLOAD_DIR``:
+
+* ``path`` is relative to the upload directory; an absolute path is accepted
+  only if it resolves inside it. ``~`` is not expanded.
+* Symlinks are followed, and the *resolved* target must still be inside the
+  directory, so a link pointing outside it is refused. A symlink inside the
+  directory that points at another file inside it is accepted, and the file is
+  uploaded under the *target's* name, not the link's.
+* Only regular files are accepted (no directories, FIFOs or devices), and the
+  directory itself cannot be uploaded.
+* Every path refusal returns the same message, so the response never reveals whether
+  a path outside the directory exists (the size-limit and bad-upload-directory
+  messages differ, but are only produced for files inside the directory).
+* The path is checked on its resolved form and re-verified on the opened file
+  (no final symlink followed, same file as the one checked, still a regular
+  file, size within the limit, and the descriptor's real path still inside the
+  directory) before anything is read.
+* The tool needs a POSIX system: it relies on ``O_NOFOLLOW`` and fails closed
+  elsewhere.
+
+.. warning:: Use a dedicated directory that contains only files meant to be
+             uploaded. Pointing ``TAIGA_MCP_UPLOAD_DIR`` at ``/`` or at a home
+             directory confines nothing: the assistant could attach any file
+             in it, including keys and credentials, to a Taiga item.
+
+.. note:: The confinement has residual limits. An intermediate directory
+          swapped for a symlink during path resolution is caught by checking
+          the opened descriptor's real path, which works on Linux (via
+          ``/proc``); where ``/proc`` is unavailable that race remains
+          possible. A hardlink inside the directory to a file outside it cannot
+          be detected. Make the upload directory writable only by users you
+          trust.
+
 ****************
 Security notes
 ****************
@@ -498,4 +614,7 @@ project membership if you want to limit the blast radius.
 
 ``create_custom_attribute``/``delete_custom_attribute``, ``set_custom_attribute_value``/``set_custom_attribute_value_by_id`` and
 ``link_epic_user_story``/``link_epic_user_story_by_id`` are also writes and
-fall under the same destructive-tools framing above.
+fall under the same destructive-tools framing above. So are
+``add_attachment_content``/``add_attachment_file`` (they add files to real
+items) and ``delete_attachment``, which is irreversible. See
+:ref:`mcp-attachments` for the upload-directory security model.
